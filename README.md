@@ -40,3 +40,8 @@ npm run build
 ```
 
 Cada script chama os comandos dos pacotes copiados. Consulte `docs/plans` para o desenho e a sequência de migração.
+
+## Documentação arquitetural
+
+- [Corte inicial do monorepo](docs/plans/2026-08-27-initial-monorepo-migration-design.md)
+- [Migração do Supabase para serviços locais ENS](docs/plans/2026-08-27-supabase-to-local-services-migration-design.md)
