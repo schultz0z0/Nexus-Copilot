@@ -1,0 +1,36 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Runtime data — never version Hermes state
+data/
+.hermes/
+**/state.db*
+**/auth.json
+**/sessions/
+**/memories/
+**/logs/
+**/mcp-tokens/
+
+# Tool and editor state
+.venv/
+.pytest_cache/
+.tools/
+.cache/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+outputs/
+*.log

@@ -1,0 +1,77 @@
+{
+  "delegation_token": "TOKEN_DO_TURNO_FORNECIDO_PELO_SISTEMA",
+  "workspace_id": "11111111-1111-4111-8111-111111111111",
+  "revision_request": "Preservar a referência e sua logo, aplicar o degradê do KV na área de leitura e diagramar apenas o texto à esquerda.",
+  "composition_plan": {
+    "version": 1,
+    "base_prompt": "Composição determinística ENS baseada no contexto oficial do curso e no KV recuperado. Preservar integralmente os elementos essenciais da referência; sem geração FAL, sem reconstrução de logo e sem texto generativo.",
+    "pipeline": [
+      {
+        "op": "compose",
+        "size": "1080x1080",
+        "overlays": [
+          {
+            "type": "image",
+            "src": "references/kv-curso.png",
+            "zone": { "x": 0, "y": 0, "unit": "px" },
+            "anchor": "top-left",
+            "width": 1080,
+            "height": 1080,
+            "fit": "cover",
+            "position": "center",
+            "depth": "background"
+          },
+          {
+            "type": "gradient-overlay",
+            "gradient": "linear-gradient(90deg, rgba(0,85,99,0.78) 0%, rgba(0,85,99,0.64) 38%, rgba(0,85,99,0.14) 68%, rgba(0,85,99,0) 100%)",
+            "opacity": 1,
+            "blend": "normal",
+            "depth": "overlay"
+          },
+          {
+            "type": "satori-text",
+            "jsx": {
+              "tag": "div",
+              "props": {
+                "style": {
+                  "display": "flex",
+                  "flexDirection": "column",
+                  "justifyContent": "center",
+                  "width": "100%",
+                  "height": "100%",
+                  "fontFamily": "Outfit",
+                  "color": "#FFFFFF",
+                  "gap": 24
+                }
+              },
+              "children": [
+                {
+                  "tag": "span",
+                  "props": { "style": { "fontSize": 34, "fontWeight": 600, "letterSpacing": "0.08em" } },
+                  "children": ["PÓS-GRADUAÇÃO"]
+                },
+                {
+                  "tag": "span",
+                  "props": { "style": { "fontSize": 78, "fontWeight": 700, "lineHeight": 1.02 } },
+                  "children": ["Gestão Estratégica"]
+                },
+                {
+                  "tag": "span",
+                  "props": { "style": { "fontSize": 36, "fontWeight": 500, "lineHeight": 1.2 } },
+                  "children": ["Amplie sua visão de gestão."]
+                }
+              ]
+            },
+            "zone": { "x": 72, "y": 150, "unit": "px" },
+            "anchor": "top-left",
+            "width": 500,
+            "height": 620,
+            "depth": "frame"
+          }
+        ]
+      }
+    ],
+    "final_path": "final/pos-gestao-estrategica-revisada.png"
+  },
+  "idempotency_key": "picture-revise-reference-example-001"
+}

@@ -1,0 +1,17 @@
+name: ens
+version: 0.1.0
+description: "Agente ENS para desenvolvimento local e execução controlada na VPS"
+hermes_requires: ">=0.12.0"
+author: "ENS"
+license: "UNLICENSED"
+env_requires:
+  - name: NEXUS_MARKETING_OPS_MCP_URL
+    description: "URL HTTP interna do MCP Marketing Ops"
+    required: true
+distribution_owned:
+  - distribution.yaml
+  - SOUL.md
+  - config.yaml
+  - mcp.json
+  - skills/
+  - cron/

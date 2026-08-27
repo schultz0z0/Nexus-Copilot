@@ -1,0 +1,20 @@
+.git
+.github
+.env
+.env.*
+node_modules
+dist
+test-results
+coverage
+.trae
+descartavel
+descartável
+NOSSOS AGENTES
+bridge
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+Dockerfile*
+docker-compose*.yml
+README.md

@@ -1,0 +1,1948 @@
+openapi: 3.1.0
+info:
+  title: Nexus Marketing Ops API
+  version: 1.0.0
+  description: REST contract for the operational campaign workspace.
+servers:
+  - url: /v1
+security:
+  - bearerAuth: []
+paths:
+  /capabilities:
+    get:
+      operationId: getCapabilities
+      summary: Read service capabilities
+      security: []
+      responses:
+        '200':
+          description: Current contract and feature flags
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Capabilities' }
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      summary: List authorized campaigns
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/CampaignStatus' } }
+        - { name: referenceType, in: query, schema: { $ref: '#/components/schemas/ReferenceType' } }
+        - { name: referenceKey, in: query, schema: { type: string, minLength: 1, maxLength: 200 } }
+        - { name: channel, in: query, schema: { $ref: '#/components/schemas/CampaignChannel' } }
+        - { name: responsible, in: query, schema: { type: string, format: uuid } }
+        - { name: periodFrom, in: query, schema: { type: string, format: date } }
+        - { name: periodTo, in: query, schema: { type: string, format: date } }
+        - { name: cursor, in: query, schema: { type: string, minLength: 1, maxLength: 1024 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: course, in: query, deprecated: true, schema: { $ref: '#/components/schemas/CourseSlug' } }
+        - { name: owner, in: query, deprecated: true, schema: { type: string, format: uuid } }
+        - { name: from, in: query, deprecated: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, deprecated: true, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Authorized campaigns and cursor page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignPage' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createCampaign
+      summary: Create a campaign draft
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignCreate' }
+      responses:
+        '201':
+          description: Draft created
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{id}:
+    get:
+      operationId: getCampaign
+      summary: Read a campaign workspace
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      responses:
+        '200':
+          description: Campaign detail
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateCampaign
+      summary: Update campaign fields
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignPatch' }
+      responses:
+        '200':
+          description: Campaign updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{id}/transitions:
+    post:
+      operationId: transitionCampaign
+      summary: Change campaign status
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignTransition' }
+      responses:
+        '200':
+          description: Campaign status changed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{id}/archive:
+    post:
+      operationId: archiveCampaign
+      summary: Archive a campaign
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Campaign archived
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/participants:
+    get:
+      operationId: listCampaignParticipants
+      summary: List campaign participants
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+      responses:
+        '200':
+          description: Campaign participants
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParticipantListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: addCampaignParticipant
+      summary: Add a campaign participant
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParticipantCreate' }
+      responses:
+        '201':
+          description: Participant added
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParticipantMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/participant-candidates:
+    get:
+      operationId: listCampaignParticipantCandidates
+      summary: List eligible participant candidates
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { name: q, in: query, schema: { type: string, maxLength: 100, default: '' } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Active tenant candidates with safe profile fields
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParticipantCandidateListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/participants/{userId}:
+    patch:
+      operationId: updateCampaignParticipant
+      summary: Update a campaign participant
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/UserId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParticipantPatch' }
+      responses:
+        '200':
+          description: Participant updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParticipantMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      operationId: removeCampaignParticipant
+      summary: Remove a campaign participant
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/UserId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Participant removed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParticipantRemovalEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/materials:
+    get:
+      operationId: listCampaignMaterials
+      summary: List campaign materials
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+      responses:
+        '200':
+          description: Linked campaign materials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/materials/upload:
+    post:
+      operationId: uploadCampaignMaterial
+      summary: Upload and link campaign material
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/Filename' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.presentationml.presentation:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          text/plain:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          text/csv:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/png:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/jpeg:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/webp:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+      responses:
+        '201':
+          description: Material uploaded and linked
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/materials/link:
+    post:
+      operationId: linkCampaignMaterial
+      summary: Link an existing artifact
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MaterialLink' }
+      responses:
+        '201':
+          description: Existing artifact linked
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/materials/{materialId}:
+    delete:
+      operationId: unlinkCampaignMaterial
+      summary: Unlink campaign material
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/MaterialId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Material link removed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialRemovalEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/materials/{materialId}/access-link:
+    post:
+      operationId: createCampaignMaterialAccessLink
+      summary: Create a short-lived material link
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/MaterialId' }
+      responses:
+        '200':
+          description: Short-lived authorized access link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialAccessEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/timeline:
+    get:
+      operationId: listCampaignTimeline
+      summary: List safe campaign activity
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { name: cursor, in: query, schema: { type: string, minLength: 1, maxLength: 1024 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Safe campaign activity projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TimelinePage' }
+        default: { $ref: '#/components/responses/Error' }
+  /references/courses:
+    get:
+      operationId: searchCourseReferences
+      summary: Search official course references
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 200 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 25, default: 10 } }
+      responses:
+        '200':
+          description: Reduced official course references from the read-only RAG MCP
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CourseReferenceListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items:
+    get:
+      operationId: listProductionSchedule
+      summary: List the canonical production schedule
+      parameters:
+        - name: view
+          in: query
+          description: Allowlisted presentation view used only for operational metrics
+          schema:
+            type: string
+            enum: [list, week, month]
+            default: list
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: campaignId, in: query, schema: { type: string, format: uuid } }
+        - { name: kind, in: query, schema: { $ref: '#/components/schemas/ItemKind' } }
+        - { name: channel, in: query, schema: { $ref: '#/components/schemas/CampaignChannel' } }
+        - { name: assigneeId, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ItemStatus' } }
+        - { name: priority, in: query, schema: { $ref: '#/components/schemas/ItemPriority' } }
+        - { name: cursor, in: query, schema: { type: string, minLength: 1, maxLength: 1024 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Authorized items from the canonical query
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionSchedulePage' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createProductionItem
+      summary: Create a production item
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductionItemCreate' }
+      responses:
+        '201':
+          description: Production item created
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionItemEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/batch:
+    post:
+      operationId: executeProductionItemBatch
+      summary: Apply one reversible action to versioned production items
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductionBatchInput' }
+      responses:
+        '200':
+          description: Explicit deterministic result for every requested item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionBatchEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}:
+    get:
+      operationId: getProductionItem
+      summary: Read a production item
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      responses:
+        '200':
+          description: Production item detail
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionItemEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateProductionItem
+      summary: Update production item fields
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductionItemPatch' }
+      responses:
+        '200':
+          description: Production item updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionItemEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}/transition:
+    post:
+      operationId: transitionProductionItem
+      summary: Move a production item through the Phase 3 state machine
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductionItemTransition' }
+      responses:
+        '200':
+          description: Production item status changed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductionItemEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}/dependencies:
+    get:
+      operationId: listProductionItemDependencies
+      summary: List direct production item dependencies
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      responses:
+        '200':
+          description: Direct dependency edges
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDependencyListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: addProductionItemDependency
+      summary: Add an acyclic dependency edge
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemDependencyInput' }
+      responses:
+        '201':
+          description: Dependency added
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDependencyMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      operationId: removeProductionItemDependency
+      summary: Remove a direct dependency edge
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemDependencyInput' }
+      responses:
+        '200':
+          description: Dependency removed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDependencyRemovalEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}/content-assets:
+    get:
+      operationId: listProductionItemContentAssets
+      summary: List stable content assets for an item
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      responses:
+        '200':
+          description: Content assets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentAssetListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createProductionItemContentAsset
+      summary: Create a stable content asset
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentAssetCreate' }
+      responses:
+        '201':
+          description: Content asset created
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentAssetMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /content-assets/{assetId}/versions:
+    get:
+      operationId: listContentVersions
+      summary: List immutable content versions
+      parameters:
+        - { $ref: '#/components/parameters/AssetId' }
+      responses:
+        '200':
+          description: Immutable content history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentVersionListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createContentVersion
+      summary: Append a content version
+      parameters:
+        - { $ref: '#/components/parameters/AssetId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentVersionCreate' }
+      responses:
+        '201':
+          description: Immutable content version created
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentVersionMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}/artifacts:
+    get:
+      operationId: listProductionItemArtifacts
+      summary: List active artifact links
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      responses:
+        '200':
+          description: Active item artifacts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemArtifactListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: attachProductionItemArtifact
+      summary: Upload or link an item artifact
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/FilenameOptional' }
+        - { $ref: '#/components/parameters/AssetIdOptional' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemArtifactLink' }
+          application/pdf:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          application/vnd.openxmlformats-officedocument.presentationml.presentation:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          text/plain:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          text/csv:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/png:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/jpeg:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+          image/webp:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+      responses:
+        '201':
+          description: Item artifact attached
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemArtifactMutationEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      operationId: unlinkProductionItemArtifact
+      summary: Logically unlink an item artifact
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemArtifactRemoval' }
+      responses:
+        '200':
+          description: Artifact link removed
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemArtifactRemovalEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaign-items/{itemId}/artifacts/{artifactLinkId}/access-link:
+    post:
+      operationId: createProductionItemArtifactAccessLink
+      summary: Create a short-lived artifact access link
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/ArtifactLinkId' }
+      responses:
+        '200':
+          description: Short-lived authorized access link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialAccessEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /in-app-notifications:
+    get:
+      operationId: listInAppNotifications
+      summary: Project and list the current user's in-app notifications
+      parameters:
+        - { name: unreadOnly, in: query, schema: { type: boolean, default: false } }
+        - { name: cursor, in: query, schema: { type: string, minLength: 1, maxLength: 1024 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Current user's tenant-isolated notification page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InAppNotificationPage' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: markInAppNotificationsRead
+      summary: Idempotently mark owned in-app notifications as read
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InAppNotificationRead' }
+      responses:
+        '200':
+          description: Notifications marked as read
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InAppNotificationListEnvelope' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/items:
+    post:
+      operationId: createCampaignItem
+      summary: Create a legacy campaign item
+      deprecated: true
+      description: Compatibility endpoint retained from Phase 1; item expansion is outside Phase 2.
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignItemCreate' }
+      responses:
+        '201':
+          description: Item draft created
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+        default: { $ref: '#/components/responses/Error' }
+  /campaigns/{campaignId}/items/{itemId}:
+    patch:
+      operationId: updateCampaignItem
+      summary: Update a legacy campaign item
+      deprecated: true
+      description: Compatibility endpoint retained from Phase 1; item expansion is outside Phase 2.
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+        - { $ref: '#/components/parameters/ItemId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignItemPatch' }
+      responses:
+        '200':
+          description: Item draft updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+        default: { $ref: '#/components/responses/Error' }
+  /audit-events:
+    get:
+      operationId: listAuditEvents
+      summary: List detailed audit events
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Detailed minimized audit events for authorized manager or admin
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests:
+    get:
+      operationId: listApprovalRequests
+      summary: List the tenant approval queue
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ApprovalStatus' } }
+        - { name: kind, in: query, schema: { $ref: '#/components/schemas/ApprovalKind' } }
+        - { name: riskLevel, in: query, schema: { $ref: '#/components/schemas/ApprovalRisk' } }
+        - { name: campaignId, in: query, schema: { type: string, format: uuid } }
+        - { name: requestedBy, in: query, schema: { type: string, format: uuid } }
+        - { name: expiresBefore, in: query, schema: { type: string, format: date-time } }
+        - { name: expiresAfter, in: query, schema: { type: string, format: date-time } }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 1024 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Authorized approval queue
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalPageResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests/{requestId}:
+    get:
+      operationId: getApprovalRequest
+      summary: Read approval detail and minimized history
+      parameters:
+        - { $ref: '#/components/parameters/ApprovalRequestId' }
+      responses:
+        '200':
+          description: Approval request
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests/editorial:
+    post:
+      operationId: submitEditorialApproval
+      summary: Submit an exact frozen content version
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EditorialApprovalSubmission' }
+      responses:
+        '201':
+          description: Editorial request created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests/operational:
+    post:
+      operationId: submitOperationalApproval
+      summary: Submit an immutable operational action package
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationalApprovalSubmission' }
+      responses:
+        '201':
+          description: Operational request created without external execution
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests/{requestId}/decisions:
+    post:
+      operationId: decideApprovalRequest
+      summary: Record the single effective human decision
+      parameters:
+        - { $ref: '#/components/parameters/ApprovalRequestId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApprovalDecisionInput' }
+      responses:
+        '200':
+          description: Decision recorded
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+  /approval-requests/{requestId}/cancel:
+    post:
+      operationId: cancelApprovalRequest
+      summary: Cancel a pending request by its requester
+      parameters:
+        - { $ref: '#/components/parameters/ApprovalRequestId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Request cancelled
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
+        default: { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  headers:
+    ETag:
+      description: Quoted current resource or aggregate version.
+      schema: { type: string, pattern: '^"[1-9][0-9]*"$' }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    CampaignId: { name: campaignId, in: path, required: true, schema: { type: string, format: uuid } }
+    ItemId: { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    AssetId: { name: assetId, in: path, required: true, schema: { type: string, format: uuid } }
+    ArtifactLinkId: { name: artifactLinkId, in: path, required: true, schema: { type: string, format: uuid } }
+    MaterialId: { name: materialId, in: path, required: true, schema: { type: string, format: uuid } }
+    UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    ApprovalRequestId: { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+    Filename: { name: X-Nexus-Filename, in: header, required: true, schema: { type: string, minLength: 1, maxLength: 255 } }
+    FilenameOptional: { name: X-Nexus-Filename, in: header, required: false, schema: { type: string, minLength: 1, maxLength: 255 } }
+    AssetIdOptional: { name: X-Nexus-Asset-Id, in: header, required: false, schema: { type: string, format: uuid } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 1, maxLength: 128 } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string, pattern: '^(W/)?("[1-9][0-9]*"|[1-9][0-9]*)$' } }
+  responses:
+    Error:
+      description: Stable public error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  schemas:
+    ApprovalKind: { type: string, enum: [editorial, operational] }
+    ApprovalStatus: { type: string, enum: [pending, approved, rejected, changes_requested, cancelled, expired] }
+    ApprovalRisk: { type: string, enum: [low, medium, high, critical] }
+    ApprovalSubmissionBase:
+      type: object
+      required: [campaignId, reason, expiresAt]
+      properties:
+        campaignId: { type: string, format: uuid }
+        reason: { type: string, minLength: 1, maxLength: 4000 }
+        riskLevel: { $ref: '#/components/schemas/ApprovalRisk' }
+        expiresAt: { type: string, format: date-time }
+        supersedesRequestId: { type: string, format: uuid }
+    EditorialApprovalSubmission:
+      allOf:
+        - { $ref: '#/components/schemas/ApprovalSubmissionBase' }
+        - type: object
+          additionalProperties: false
+          required: [campaignId, reason, expiresAt, assetId, versionNumber]
+          properties:
+            campaignId: { type: string, format: uuid }
+            reason: { type: string, minLength: 1, maxLength: 4000 }
+            riskLevel: { $ref: '#/components/schemas/ApprovalRisk' }
+            expiresAt: { type: string, format: date-time }
+            supersedesRequestId: { type: string, format: uuid }
+            assetId: { type: string, format: uuid }
+            versionNumber: { type: integer, minimum: 1 }
+    CanonicalActionPackage:
+      type: object
+      additionalProperties: false
+      required: [actionType, channel, audienceSnapshot, timeZone, configuration, payload]
+      properties:
+        actionType: { type: string, minLength: 1, maxLength: 100 }
+        channel: { type: string, minLength: 1, maxLength: 64 }
+        audienceSnapshot: { type: object }
+        scheduledFor: { type: [string, 'null'], format: date-time }
+        timeZone: { type: string, minLength: 1, maxLength: 100 }
+        configuration: { type: object }
+        successCriteria: { type: [string, 'null'], maxLength: 2000 }
+        riskSummary: { type: [string, 'null'], maxLength: 2000 }
+        payload: { type: object }
+    OperationalApprovalSubmission:
+      allOf:
+        - { $ref: '#/components/schemas/ApprovalSubmissionBase' }
+        - type: object
+          additionalProperties: false
+          required: [campaignId, reason, expiresAt, actionPackage]
+          properties:
+            campaignId: { type: string, format: uuid }
+            reason: { type: string, minLength: 1, maxLength: 4000 }
+            riskLevel: { $ref: '#/components/schemas/ApprovalRisk' }
+            expiresAt: { type: string, format: date-time }
+            supersedesRequestId: { type: string, format: uuid }
+            actionPackage: { $ref: '#/components/schemas/CanonicalActionPackage' }
+    ApprovalDecisionInput:
+      type: object
+      additionalProperties: false
+      required: [decision]
+      properties:
+        decision: { type: string, enum: [approved, rejected, changes_requested] }
+        comment: { type: string, maxLength: 4000 }
+    ApprovalDecision:
+      type: object
+      required: [id, requestId, decision, decidedBy, deciderRole, origin, comment, eligibilitySnapshot, correlationId, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        requestId: { type: string, format: uuid }
+        decision: { type: string, enum: [approved, rejected, changes_requested, cancelled, expired] }
+        decidedBy: { type: [string, "null"], format: uuid }
+        deciderRole: { type: [string, "null"], enum: [member, manager, admin, null] }
+        origin: { type: string, enum: [human, system] }
+        comment: { type: [string, 'null'], maxLength: 4000 }
+        eligibilitySnapshot: { type: object }
+        correlationId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    ActionPackage:
+      allOf:
+        - { $ref: '#/components/schemas/CanonicalActionPackage' }
+        - type: object
+          required: [id, campaignId, payloadHash, status, version, createdBy, createdAt, updatedAt, expiresAt]
+          properties:
+            id: { type: string, format: uuid }
+            campaignId: { type: string, format: uuid }
+            payloadHash: { type: string, pattern: '^[0-9a-f]{64}$' }
+            status: { type: string, enum: [pending_approval, authorized, invalidated, expired] }
+            authorizedByRequestId: { type: [string, 'null'], format: uuid }
+            authorizedAt: { type: [string, 'null'], format: date-time }
+            expiresAt: { type: string, format: date-time }
+            invalidatedAt: { type: [string, 'null'], format: date-time }
+            invalidationReason: { type: [string, 'null'] }
+            version: { type: integer, minimum: 1 }
+            createdBy: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+    EditorialTarget:
+      type: object
+      required: [assetKind, title, body, metadata, frozenAt]
+      properties:
+        assetKind: { type: string }
+        title: { type: string }
+        body: { type: [string, 'null'] }
+        metadata: { type: object }
+        frozenAt: { type: string, format: date-time }
+    ApprovalRequest:
+      type: object
+      required: [id, campaignId, kind, status, requestedBy, reason, riskLevel, targetHash, expiresAt, version, createdAt, updatedAt, decision, actionPackage, editorialTarget, capabilities]
+      properties:
+        id: { type: string, format: uuid }
+        campaignId: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/ApprovalKind' }
+        status: { $ref: '#/components/schemas/ApprovalStatus' }
+        requestedBy: { type: string, format: uuid }
+        reason: { type: string }
+        riskLevel: { $ref: '#/components/schemas/ApprovalRisk' }
+        contentAssetId: { type: [string, 'null'], format: uuid }
+        contentVersionNumber: { type: [integer, 'null'] }
+        actionPackageId: { type: [string, 'null'], format: uuid }
+        targetHash: { type: string, pattern: '^[0-9a-f]{64}$' }
+        supersedesRequestId: { type: [string, 'null'], format: uuid }
+        expiresAt: { type: string, format: date-time }
+        version: { type: integer, minimum: 1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        decision: { oneOf: [{ $ref: '#/components/schemas/ApprovalDecision' }, { type: 'null' }] }
+        actionPackage: { oneOf: [{ $ref: '#/components/schemas/ActionPackage' }, { type: 'null' }] }
+        editorialTarget: { oneOf: [{ $ref: '#/components/schemas/EditorialTarget' }, { type: 'null' }] }
+        capabilities:
+          type: object
+          required: [decide, cancel]
+          properties:
+            decide: { type: boolean }
+            cancel: { type: boolean }
+    ApprovalRequestResponse:
+      type: object
+      required: [data]
+      properties: { data: { $ref: '#/components/schemas/ApprovalRequest' } }
+    ApprovalPageResponse:
+      type: object
+      required: [data, page]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ApprovalRequest' } }
+        page:
+          type: object
+          required: [limit, count, nextCursor]
+          properties:
+            limit: { type: integer }
+            count: { type: integer }
+            nextCursor: { type: [string, 'null'] }
+    PublicErrorCode:
+      type: string
+      enum:
+        - validation_error
+        - unauthorized
+        - auth_unavailable
+        - tenant_required
+        - forbidden
+        - not_found
+        - origin_forbidden
+        - feature_disabled
+        - idempotency_key_required
+        - precondition_required
+        - payload_too_large
+        - idempotency_conflict
+        - idempotency_in_progress
+        - approval_conflict
+        - approval_expired
+        - approval_target_changed
+        - self_approval_forbidden
+        - invalid_supersession
+        - version_conflict
+        - invalid_transition
+        - campaign_requirements_missing
+        - campaign_read_only
+        - primary_owner_required
+        - participant_role_invalid
+        - participant_exists
+        - participant_not_found
+        - reference_not_verified
+        - artifact_not_owned
+        - artifact_not_found
+        - artifact_compensation_failed
+        - material_type_not_allowed
+        - material_too_large
+        - material_empty
+        - material_exists
+        - material_not_found
+        - version_conflict
+        - invalid_item_transition
+        - item_requirements_missing
+        - item_content_required
+        - item_blocked
+        - item_terminal
+        - assignee_not_authorized
+        - dependency_exists
+        - dependency_not_found
+        - dependency_self
+        - dependency_cycle
+        - dependency_campaign_mismatch
+        - dependency_terminal
+        - artifact_exists
+        - artifact_asset_mismatch
+        - artifact_link_not_found
+        - content_hash_mismatch
+        - dependency_unavailable
+        - dependency_invalid_response
+        - rate_limited
+        - internal_error
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, correlationId]
+          properties:
+            code: { $ref: '#/components/schemas/PublicErrorCode' }
+            message: { type: string }
+            correlationId: { type: string, minLength: 1, maxLength: 128 }
+            details: {}
+    CampaignStatus: { type: string, enum: [draft, planned, active, completed, archived] }
+    ReferenceType: { type: string, enum: [course, product, initiative] }
+    CampaignChannel:
+      type: string
+      enum: [email, instagram, linkedin, facebook, whatsapp, website, paid_media, events, press, other]
+    CourseSlug: { type: string, pattern: '^[a-z0-9][a-z0-9-]{1,127}$' }
+    CampaignEditableProperties:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        objective: { type: [string, 'null'], maxLength: 2000 }
+        referenceType:
+          oneOf: [{ $ref: '#/components/schemas/ReferenceType' }, { type: 'null' }]
+        referenceKey: { type: [string, 'null'], maxLength: 200 }
+        referenceTitleSnapshot: { type: [string, 'null'], maxLength: 300 }
+        referenceDocumentId: { type: [string, 'null'], format: uuid }
+        audience: { type: [string, 'null'], maxLength: 2000 }
+        startsOn: { type: [string, 'null'], format: date }
+        endsOn: { type: [string, 'null'], format: date }
+        primaryChannel:
+          oneOf: [{ $ref: '#/components/schemas/CampaignChannel' }, { type: 'null' }]
+        secondaryChannels:
+          type: array
+          maxItems: 9
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/CampaignChannel' }
+        briefing: { type: [string, 'null'], maxLength: 20000 }
+        notes: { type: [string, 'null'], maxLength: 10000 }
+    CampaignCreate:
+      allOf:
+        - { $ref: '#/components/schemas/CampaignEditableProperties' }
+        - type: object
+          additionalProperties: false
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+            courseSlug:
+              allOf: [{ $ref: '#/components/schemas/CourseSlug' }]
+              deprecated: true
+      unevaluatedProperties: false
+    CampaignPatch:
+      allOf:
+        - { $ref: '#/components/schemas/CampaignEditableProperties' }
+      minProperties: 1
+      unevaluatedProperties: false
+    CampaignTransition:
+      type: object
+      additionalProperties: false
+      required: [to]
+      properties:
+        to: { type: string, enum: [draft, planned, active, completed] }
+    Campaign:
+      allOf:
+        - { $ref: '#/components/schemas/CampaignEditableProperties' }
+        - type: object
+          required: [id, tenantId, name, status, version, createdBy, updatedBy, createdAt, updatedAt, secondaryChannels]
+          properties:
+            id: { type: string, format: uuid }
+            tenantId: { type: string, format: uuid }
+            courseSlug: { type: [string, 'null'] }
+            status: { $ref: '#/components/schemas/CampaignStatus' }
+            version: { type: integer, minimum: 1 }
+            createdBy: { type: string, format: uuid }
+            updatedBy: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            archivedAt: { type: [string, 'null'], format: date-time }
+    CampaignEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Campaign' }
+    CampaignResponsibleSummary:
+      type: object
+      additionalProperties: false
+      required: [userId, displayName, isPrimary]
+      properties:
+        userId: { type: string, format: uuid }
+        displayName: { type: string, minLength: 1, maxLength: 300 }
+        isPrimary: { type: boolean }
+    CampaignAttention:
+      type: string
+      enum: [missing_primary_owner, planned_start_due, active_past_end]
+    CampaignSummary:
+      allOf:
+        - { $ref: '#/components/schemas/Campaign' }
+        - type: object
+          required: [responsibles, attention]
+          properties:
+            responsibles:
+              type: array
+              maxItems: 100
+              items: { $ref: '#/components/schemas/CampaignResponsibleSummary' }
+            attention:
+              type: array
+              maxItems: 3
+              uniqueItems: true
+              items: { $ref: '#/components/schemas/CampaignAttention' }
+    Page:
+      type: object
+      additionalProperties: false
+      required: [limit, count, nextCursor]
+      properties:
+        limit: { type: integer, minimum: 1, maximum: 100 }
+        count: { type: integer, minimum: 0, maximum: 100 }
+        nextCursor: { type: [string, 'null'] }
+    CampaignPage:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/CampaignSummary' } }
+        page: { $ref: '#/components/schemas/Page' }
+    ParticipantCreate:
+      type: object
+      additionalProperties: false
+      required: [userId, memberRole]
+      properties:
+        userId: { type: string, format: uuid }
+        memberRole: { type: string, enum: [owner, editor, viewer] }
+        isPrimary: { type: boolean, default: false }
+    ParticipantPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        memberRole: { type: string, enum: [owner, editor, viewer] }
+        isPrimary: { type: boolean }
+    Participant:
+      type: object
+      additionalProperties: false
+      required: [userId, displayName, avatarUrl, memberRole, isPrimary]
+      properties:
+        userId: { type: string, format: uuid }
+        displayName: { type: string }
+        avatarUrl: { type: [string, 'null'] }
+        memberRole: { type: string, enum: [owner, editor, viewer] }
+        isPrimary: { type: boolean }
+    ParticipantCandidate:
+      type: object
+      additionalProperties: false
+      required: [userId, displayName, avatarUrl, tenantRole]
+      properties:
+        userId: { type: string, format: uuid }
+        displayName: { type: string }
+        avatarUrl: { type: [string, 'null'] }
+        tenantRole: { type: string, enum: [member, manager, admin] }
+    ParticipantListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Participant' } }
+    ParticipantCandidateListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ParticipantCandidate' } }
+    ParticipantMutationEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [participant, campaignVersion]
+          properties:
+            participant: { $ref: '#/components/schemas/Participant' }
+            campaignVersion: { type: integer, minimum: 1 }
+    ParticipantRemovalEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [removedUserId, campaignVersion]
+          properties:
+            removedUserId: { type: string, format: uuid }
+            campaignVersion: { type: integer, minimum: 1 }
+    MaterialLink:
+      type: object
+      additionalProperties: false
+      required: [artifactId]
+      properties:
+        artifactId: { type: string, format: uuid }
+    Material:
+      type: object
+      additionalProperties: false
+      required: [id, campaignId, artifactId, artifactOwnerId, filename, contentType, sizeBytes, sha256, source, createdBy, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        campaignId: { type: string, format: uuid }
+        artifactId: { type: string, format: uuid }
+        artifactOwnerId: { type: string, format: uuid }
+        filename: { type: string }
+        contentType: { type: string }
+        sizeBytes: { type: integer, minimum: 1, maximum: 26214400 }
+        sha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        source: { type: string, enum: [upload, existing_artifact] }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    MaterialListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Material' } }
+    MaterialMutationEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [material, campaignVersion]
+          properties:
+            material: { $ref: '#/components/schemas/Material' }
+            campaignVersion: { type: integer, minimum: 1 }
+    MaterialRemovalEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [materialId, campaignVersion]
+          properties:
+            materialId: { type: string, format: uuid }
+            campaignVersion: { type: integer, minimum: 1 }
+    MaterialAccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [url, expiresAt]
+          properties:
+            url: { type: string, format: uri }
+            expiresAt: { type: string, format: date-time }
+    TimelineChange:
+      type: object
+      additionalProperties: false
+      required: [field, kind]
+      properties:
+        field: { type: string, maxLength: 100 }
+        kind: { type: string, enum: [added, removed, changed] }
+    TimelineEvent:
+      type: object
+      additionalProperties: false
+      required: [id, action, occurredAt, actor, origin, changes, correlationId]
+      properties:
+        id: { type: string, format: uuid }
+        action: { type: string, maxLength: 200 }
+        occurredAt: { type: string, format: date-time }
+        actor:
+          type: object
+          additionalProperties: false
+          required: [displayName]
+          properties:
+            displayName: { type: string, maxLength: 300 }
+        origin: { type: string, enum: [rest, mcp, internal] }
+        changes: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/TimelineChange' } }
+        correlationId: { type: string, format: uuid }
+    TimelinePage:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/TimelineEvent' } }
+        page: { $ref: '#/components/schemas/Page' }
+    CourseReferenceListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/CourseReference' } }
+    CourseReference:
+      type: object
+      additionalProperties: false
+      required: [referenceKey, title, documentId, collection, category, courseType, offerMetadata, verifiedAt]
+      properties:
+        referenceKey: { type: string, minLength: 1, maxLength: 200 }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        documentId: { type: string, format: uuid }
+        collection: { const: courses }
+        category: { type: [string, 'null'] }
+        courseType: { type: [string, 'null'] }
+        offerMetadata:
+          type: object
+          additionalProperties: false
+          required: [modalities, locations, statuses]
+          properties:
+            modalities: { type: array, items: { type: string } }
+            locations: { type: array, items: { type: string } }
+            statuses: { type: array, items: { type: string } }
+        verifiedAt: { type: string, format: date-time }
+    ItemKind:
+      type: string
+      enum: [task, email, whatsapp, post, creative, review, milestone]
+    ItemStatus:
+      type: string
+      enum: [draft, ready, in_review, completed, cancelled]
+    ItemPriority:
+      type: string
+      enum: [low, normal, high, urgent]
+    ProductionItemEditableProperties:
+      type: object
+      properties:
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        assigneeUserId: { type: [string, 'null'], format: uuid }
+        priority: { $ref: '#/components/schemas/ItemPriority' }
+        channel:
+          oneOf: [{ $ref: '#/components/schemas/CampaignChannel' }, { type: 'null' }]
+        description: { type: [string, 'null'], maxLength: 10000 }
+        startsAt: { type: [string, 'null'], format: date-time }
+        dueAt: { type: [string, 'null'], format: date-time }
+        metadata: { type: object, maxProperties: 1000 }
+    ProductionItemCreate:
+      allOf:
+        - { $ref: '#/components/schemas/ProductionItemEditableProperties' }
+        - type: object
+          required: [campaignId, kind, title]
+          properties:
+            campaignId: { type: string, format: uuid }
+      unevaluatedProperties: false
+    ProductionItemPatch:
+      allOf:
+        - { $ref: '#/components/schemas/ProductionItemEditableProperties' }
+      minProperties: 1
+      unevaluatedProperties: false
+    ProductionItemTransition:
+      type: object
+      additionalProperties: false
+      required: [to]
+      properties:
+        to: { $ref: '#/components/schemas/ItemStatus' }
+    ProductionItem:
+      allOf:
+        - { $ref: '#/components/schemas/ProductionItemEditableProperties' }
+        - type: object
+          required:
+            - id
+            - tenantId
+            - campaignId
+            - kind
+            - title
+            - assigneeUserId
+            - priority
+            - channel
+            - description
+            - startsAt
+            - dueAt
+            - metadata
+            - content
+            - status
+            - version
+            - createdBy
+            - updatedBy
+            - createdAt
+            - updatedAt
+            - completedAt
+            - cancelledAt
+          properties:
+            id: { type: string, format: uuid }
+            tenantId: { type: string, format: uuid }
+            campaignId: { type: string, format: uuid }
+            content: {}
+            status: { $ref: '#/components/schemas/ItemStatus' }
+            version: { type: integer, minimum: 1 }
+            createdBy: { type: string, format: uuid }
+            updatedBy: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            completedAt: { type: [string, 'null'], format: date-time }
+            cancelledAt: { type: [string, 'null'], format: date-time }
+    ProductionItemEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ProductionItem' }
+    ProductionScheduleItem:
+      allOf:
+        - { $ref: '#/components/schemas/ProductionItem' }
+        - type: object
+          required: [campaignName, effectiveAt, isOverdue, isBlocked]
+          properties:
+            campaignName: { type: string, minLength: 1, maxLength: 200 }
+            effectiveAt: { type: [string, 'null'], format: date-time }
+            isOverdue: { type: boolean }
+            isBlocked: { type: boolean }
+    ProductionSchedulePage:
+      type: object
+      additionalProperties: false
+      required: [data, page, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ProductionScheduleItem' }
+        page: { $ref: '#/components/schemas/Page' }
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timeZone]
+          properties:
+            timeZone: { type: string, minLength: 1, maxLength: 100 }
+    ProductionBatchItem:
+      type: object
+      additionalProperties: false
+      required: [itemId, version]
+      properties:
+        itemId: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+    ProductionBatchAction:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [type, assigneeUserId]
+          properties:
+            type: { const: reassign }
+            assigneeUserId: { type: [string, 'null'], format: uuid }
+        - type: object
+          additionalProperties: false
+          required: [type, priority]
+          properties:
+            type: { const: priority }
+            priority: { $ref: '#/components/schemas/ItemPriority' }
+        - type: object
+          additionalProperties: false
+          required: [type]
+          minProperties: 2
+          properties:
+            type: { const: reschedule }
+            startsAt: { type: [string, 'null'], format: date-time }
+            dueAt: { type: [string, 'null'], format: date-time }
+      discriminator:
+        propertyName: type
+    ProductionBatchInput:
+      type: object
+      additionalProperties: false
+      required: [items, action]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ProductionBatchItem' }
+        action: { $ref: '#/components/schemas/ProductionBatchAction' }
+    ProductionBatchError:
+      type: object
+      additionalProperties: false
+      required: [code, status, message]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 100 }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        message: { type: string, minLength: 1, maxLength: 500 }
+        currentVersion: { type: integer, minimum: 1 }
+    ProductionBatchResult:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [itemId, ok, item]
+          properties:
+            itemId: { type: string, format: uuid }
+            ok: { const: true }
+            item: { $ref: '#/components/schemas/ProductionItem' }
+        - type: object
+          additionalProperties: false
+          required: [itemId, ok, error]
+          properties:
+            itemId: { type: string, format: uuid }
+            ok: { const: false }
+            error: { $ref: '#/components/schemas/ProductionBatchError' }
+    ProductionBatchEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [results, succeeded, failed]
+          properties:
+            results:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items: { $ref: '#/components/schemas/ProductionBatchResult' }
+            succeeded: { type: integer, minimum: 0, maximum: 100 }
+            failed: { type: integer, minimum: 0, maximum: 100 }
+    InAppNotificationType:
+      type: string
+      enum: [assignment, due_soon, overdue]
+    InAppNotification:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - eventKey
+        - notificationType
+        - campaignId
+        - itemId
+        - label
+        - payload
+        - occurredAt
+        - readAt
+        - createdAt
+      properties:
+        id: { type: string, format: uuid }
+        eventKey: { type: string, minLength: 1, maxLength: 255 }
+        notificationType: { $ref: '#/components/schemas/InAppNotificationType' }
+        campaignId: { type: string, format: uuid }
+        itemId: { type: string, format: uuid }
+        label: { type: string, minLength: 1, maxLength: 200 }
+        payload:
+          type: object
+          additionalProperties: false
+          required: [campaignId, itemId, dueAt, priority]
+          properties:
+            campaignId: { type: string, format: uuid }
+            itemId: { type: string, format: uuid }
+            dueAt: { type: [string, 'null'], format: date-time }
+            priority: { $ref: '#/components/schemas/ItemPriority' }
+        occurredAt: { type: string, format: date-time }
+        readAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+    InAppNotificationRead:
+      type: object
+      additionalProperties: false
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { type: string, format: uuid }
+    InAppNotificationListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/InAppNotification' }
+    InAppNotificationPage:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/InAppNotification' }
+        page: { $ref: '#/components/schemas/Page' }
+    ItemDependencyInput:
+      type: object
+      additionalProperties: false
+      required: [dependsOnItemId]
+      properties:
+        dependsOnItemId: { type: string, format: uuid }
+    ItemDependency:
+      type: object
+      additionalProperties: false
+      required:
+        - itemId
+        - dependsOnItemId
+        - predecessorTitle
+        - predecessorStatus
+        - createdBy
+        - createdAt
+        - isBlocking
+      properties:
+        itemId: { type: string, format: uuid }
+        dependsOnItemId: { type: string, format: uuid }
+        predecessorTitle: { type: string, minLength: 1, maxLength: 200 }
+        predecessorStatus: { $ref: '#/components/schemas/ItemStatus' }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        isBlocking: { type: boolean }
+    ItemDependencyListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ItemDependency' }
+    ItemDependencyMutationEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - { $ref: '#/components/schemas/ItemDependency' }
+            - type: object
+              required: [itemVersion]
+              properties:
+                itemVersion: { type: integer, minimum: 1 }
+    ItemDependencyRemovalEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [itemId, dependsOnItemId, itemVersion, removed]
+          properties:
+            itemId: { type: string, format: uuid }
+            dependsOnItemId: { type: string, format: uuid }
+            itemVersion: { type: integer, minimum: 1 }
+            removed: { const: true }
+    ContentAssetCreate:
+      type: object
+      additionalProperties: false
+      required: [assetKind, title]
+      properties:
+        assetKind:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[a-z][a-z0-9_-]*$'
+        title: { type: string, minLength: 1, maxLength: 200 }
+    ContentAsset:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - itemId
+        - campaignId
+        - assetKind
+        - title
+        - currentVersionNumber
+        - version
+        - createdBy
+        - updatedBy
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: string, format: uuid }
+        itemId: { type: string, format: uuid }
+        campaignId: { type: string, format: uuid }
+        assetKind: { type: string, minLength: 1, maxLength: 64 }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        currentVersionNumber: { type: integer, minimum: 0 }
+        version: { type: integer, minimum: 1 }
+        createdBy: { type: string, format: uuid }
+        updatedBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ContentAssetListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ContentAsset' }
+    ContentAssetMutationEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - { $ref: '#/components/schemas/ContentAsset' }
+            - type: object
+              required: [itemVersion]
+              properties:
+                itemVersion: { type: integer, minimum: 1 }
+    ContentVersionCreate:
+      type: object
+      additionalProperties: false
+      required: [body, metadata, freeze]
+      properties:
+        body: { type: [string, 'null'], maxLength: 1048576 }
+        metadata: { type: object, maxProperties: 1000 }
+        freeze: { type: boolean }
+    ContentVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - assetId
+        - versionNumber
+        - body
+        - metadata
+        - contentHash
+        - createdBy
+        - createdAt
+        - frozenAt
+      properties:
+        assetId: { type: string, format: uuid }
+        versionNumber: { type: integer, minimum: 1 }
+        body: { type: [string, 'null'], maxLength: 1048576 }
+        metadata: { type: object }
+        contentHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        frozenAt: { type: [string, 'null'], format: date-time }
+    ContentVersionListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ContentVersion' }
+    ContentVersionMutationEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - { $ref: '#/components/schemas/ContentVersion' }
+            - type: object
+              required: [assetVersion]
+              properties:
+                assetVersion: { type: integer, minimum: 1 }
+    ItemArtifactLink:
+      type: object
+      additionalProperties: false
+      required: [artifactId]
+      properties:
+        artifactId: { type: string, format: uuid }
+        assetId: { type: string, format: uuid }
+    ItemArtifactRemoval:
+      type: object
+      additionalProperties: false
+      required: [artifactLinkId]
+      properties:
+        artifactLinkId: { type: string, format: uuid }
+    ItemArtifact:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - itemId
+        - campaignId
+        - assetId
+        - artifactId
+        - artifactOwnerId
+        - filename
+        - contentType
+        - sizeBytes
+        - sha256
+        - createdBy
+        - createdAt
+      properties:
+        id: { type: string, format: uuid }
+        itemId: { type: string, format: uuid }
+        campaignId: { type: string, format: uuid }
+        assetId: { type: [string, 'null'], format: uuid }
+        artifactId: { type: string, format: uuid }
+        artifactOwnerId: { type: string, format: uuid }
+        filename: { type: string, minLength: 1, maxLength: 255 }
+        contentType: { type: string, minLength: 1, maxLength: 255 }
+        sizeBytes: { type: integer, minimum: 1, maximum: 26214400 }
+        sha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    ItemArtifactListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ItemArtifact' }
+    ItemArtifactMutationEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [artifact, itemVersion]
+          properties:
+            artifact: { $ref: '#/components/schemas/ItemArtifact' }
+            itemVersion: { type: integer, minimum: 1 }
+    ItemArtifactRemovalEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [artifactLinkId, itemVersion]
+          properties:
+            artifactLinkId: { type: string, format: uuid }
+            itemVersion: { type: integer, minimum: 1 }
+    CampaignItemCreate:
+      type: object
+      additionalProperties: false
+      required: [kind, content]
+      properties:
+        kind: { type: string, minLength: 1, maxLength: 80 }
+        title: { type: string, maxLength: 200 }
+        content: {}
+    CampaignItemPatch:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties:
+        title: { type: string, maxLength: 200 }
+        content: {}
+    Capabilities:
+      type: object
+      required: [service, contractVersion, features, resources, transports]
+      properties:
+        service: { const: marketing-ops }
+        contractVersion: { const: 1 }
+        features:
+          type: object
+          required: [read, write]
+          properties:
+            read: { type: boolean }
+            write: { type: boolean }
+        resources: { type: array, items: { type: string } }
+        transports: { type: array, items: { type: string } }

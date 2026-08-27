@@ -1,0 +1,12 @@
+.env
+auth.json
+state.db*
+sessions/
+memories/
+logs/
+mcp-tokens/
+local/
+workspace/
+plans/
+home/
+*_cache/

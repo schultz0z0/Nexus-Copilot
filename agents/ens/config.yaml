@@ -1,0 +1,15 @@
+# Configuração distribuível do agente ENS.
+# Modelos, credenciais e ajustes específicos do ambiente ficam no profile local.
+
+terminal:
+  cwd: "."
+
+mcp_servers:
+  nexus_marketing_ops:
+    url: "${NEXUS_MARKETING_OPS_MCP_URL}"
+    enabled: true
+    timeout: 120
+    connect_timeout: 15
+    supports_parallel_tool_calls: false
+    tools:
+      resources: true

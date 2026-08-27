@@ -1,0 +1,39 @@
+{
+  "name": "nexus-marketing-ops",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run --exclude src/campaignList.performance.test.ts --exclude src/schedule.performance.test.ts --exclude src/approvals.performance.test.ts",
+    "test:campaign-list-performance": "vitest run src/campaignList.performance.test.ts --pool=forks --maxWorkers=1",
+    "test:schedule-performance": "vitest run src/schedule.performance.test.ts --pool=forks --maxWorkers=1",
+    "test:approvals-performance": "vitest run src/approvals.performance.test.ts --pool=forks --maxWorkers=1",
+    "test:approvals-concurrency": "node scripts/test_approval_decision_concurrency.mjs",
+    "test:approvals-expiry-worker": "node scripts/test_approval_expiry_worker.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "express": "4.22.2",
+    "jose": "6.2.3",
+    "pg": "8.22.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.25",
+    "@types/node": "22.19.20",
+    "@types/pg": "8.20.0",
+    "@types/supertest": "6.0.3",
+    "supertest": "7.1.4",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "3.2.6",
+    "yaml": "^2.9.0"
+  }
+}
