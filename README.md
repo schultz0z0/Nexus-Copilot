@@ -1,5 +1,8 @@
 # ENS — monorepo de migração
 
+> Para entender o objetivo, a arquitetura, as decisões e o próximo trabalho,
+> comece pelo [índice da documentação](docs/README.md).
+
 Este repositório é a nova base do produto ENS. Ele nasce a partir de um corte controlado do projeto `projeto-ens-unificado`, preservando o frontend e os serviços de domínio que ainda serão adaptados para a arquitetura final.
 
 ## Estado inicial

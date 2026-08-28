@@ -1,0 +1,36 @@
+# Operações e runbooks
+
+Este diretório guardará procedimentos executáveis da plataforma. Um runbook só
+é considerado aceito depois de ser exercitado em ambiente seguro e registrar a
+data, o resultado e as premissas usadas.
+
+## Runbooks exigidos
+
+| Runbook | Marco | Estado |
+| --- | --- | --- |
+| Hermes local no Windows | M1 | Planejado |
+| Primeiro deploy Hermes na VPS | M1 | Planejado |
+| Configuração manual de provider e OAuth | M1 | Planejado |
+| Atualização e rollback do Hermes/profile | M1 | Planejado |
+| Backup e restore do volume Hermes | M1 | Planejado |
+| Backup e restore do PostgreSQL | M3 | Pendente |
+| Incidente de Auth/sessão | M4 | Pendente |
+| Backup e restore de artefatos | M5 | Pendente |
+| Ensaio e cutover de dados | M6 | Pendente |
+| Retirada do dashboard Hermes público | M7 | Pendente |
+
+## Estrutura mínima de um runbook
+
+1. objetivo e impacto;
+2. pré-requisitos e permissões;
+3. variáveis necessárias, sem valores secretos;
+4. checagens prévias e backup;
+5. passos numerados e comandos seguros;
+6. resultado esperado a cada passo;
+7. verificação funcional;
+8. rollback;
+9. evidências e data do último exercício.
+
+Comandos destrutivos devem identificar alvos absolutos, validar o alvo antes da
+ação e oferecer caminho de recuperação quando possível.
+
