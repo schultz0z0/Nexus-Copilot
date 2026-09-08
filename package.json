@@ -12,6 +12,7 @@
     "test:marketing-ops": "npm --prefix services/marketing-ops test",
     "test:chat-bridge": "npm --prefix services/chat-bridge test",
     "test:artifact-server": "npm --prefix services/artifact-server test",
+    "smoke:hermes": "node scripts/smoke-hermes-runtime.mjs",
     "typecheck": "npm run typecheck:chat-web && npm run typecheck:marketing-ops",
     "typecheck:chat-web": "npm --prefix apps/chat-web run typecheck",
     "typecheck:marketing-ops": "npm --prefix services/marketing-ops run typecheck",
