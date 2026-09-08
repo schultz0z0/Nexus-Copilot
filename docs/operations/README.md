@@ -11,8 +11,8 @@ data, o resultado e as premissas usadas.
 | [Hermes local no Windows](hermes-local-development.md) | M1 | Implementado; exercício pendente |
 | [Primeiro deploy Hermes na VPS](hermes-first-deploy.md) | M1 | Implementado; exercício pendente |
 | Configuração manual de provider e OAuth | M1 | Incluído no primeiro deploy; exercício pendente |
-| Atualização e rollback do Hermes/profile | M1 | Planejado |
-| Backup e restore do volume Hermes | M1 | Planejado |
+| [Atualização e rollback do Hermes/profile](hermes-update-rollback.md) | M1 | Implementado; ensaio pendente |
+| [Backup e restore do volume Hermes](hermes-backup-restore.md) | M1 | Implementado; ensaio pendente |
 | Backup e restore do PostgreSQL | M3 | Pendente |
 | Incidente de Auth/sessão | M4 | Pendente |
 | Backup e restore de artefatos | M5 | Pendente |
