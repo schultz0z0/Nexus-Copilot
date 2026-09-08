@@ -58,6 +58,24 @@ Resultado focado atual: 13 testes Hermes aprovados, 4 cenários POSIX skipped e
 zero falhas. Os runbooks ainda não foram exercitados; portanto, M1 continua em
 execução e nenhum deploy é declarado aceito.
 
+O terceiro lote documentou atualização/rollback e backup/restore, registrou o
+bloqueio do ensaio Docker Desktop e executou a auditoria final permitida. A
+verificação fresca aprovou:
+
+- Profile Distribution: válida;
+- contratos Hermes: 13 aprovados, 4 POSIX skipped, 0 falhas;
+- Compose base e produção: renderização aprovada, sem iniciar containers;
+- corte inicial: 397 arquivos, 0 divergências e 0 caminhos proibidos;
+- Chat Bridge: 90 testes aprovados;
+- Artifact Server: 13 testes aprovados;
+- verificador do corte: 3 testes aprovados para fim de linha, diferença real e
+  binários.
+
+Durante essa auditoria, `verify:cut` inicialmente falhou porque comparava bytes
+da árvore histórica em CRLF/CRCRLF com o checkout LF do monorepo. A correção
+normaliza apenas fim de linha em texto UTF-8 e mantém igualdade byte a byte para
+binários; diferenças substantivas continuam reprovadas.
+
 ### Gate Docker Desktop
 
 **Bloqueado para ensaio em 2026-09-08.** Por se tratar de computador
@@ -67,6 +85,10 @@ container ou volume de teste. A implementação não simulou esse resultado.
 Já comprovado sem runtime: Compose v5.4.0 renderiza, pin/digest e isolamento
 estrutural passam nos testes. Pendente: execução POSIX do init, runtime real,
 health/capabilities, persistência, backup/restore e rollback.
+
+Situação de aceite: **implementação pronta para ensaio, não pronta para deploy**.
+Runs API no Bridge e retirada do contrato Hermes legado do navegador continuam
+fora do M1, respectivamente em M2 e M4.
 
 ## Dívida de dependências herdada
 

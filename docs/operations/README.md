@@ -19,6 +19,15 @@ data, o resultado e as premissas usadas.
 | Ensaio e cutover de dados | M6 | Pendente |
 | Retirada do dashboard Hermes público | M7 | Pendente |
 
+## Situação do gate M1
+
+Em 2026-09-08, os runbooks M1 foram implementados, mas nenhum foi marcado como
+exercitado. O computador corporativo não recebeu pull de imagem, container ou
+volume de teste sem autorização específica. A implementação está pronta para
+ensaio; persistência, backup/restore, rollback e HTTPS/OAuth real continuam
+pendentes. A classificação por critério está na
+[matriz de aceite M1](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-08).
+
 ## Estrutura mínima de um runbook
 
 1. objetivo e impacto;

@@ -63,8 +63,11 @@ corporativo além do escopo aprovado.
 **Situação em 2026-09-08:** código, Compose, smoke e runbooks foram
 implementados. O ensaio Docker Desktop está **Bloqueado para ensaio** até haver
 autorização específica para pull, containers e volume descartável no computador
-corporativo. M1 não está concluído nem pronto para deploy enquanto os gates de
-POSIX, runtime, backup/restore e rollback permanecerem sem exercício.
+corporativo. A verificação estática e focada está verde, mas M1 não está
+concluído: a implementação está pronta para ensaio e ainda não está pronta para
+deploy enquanto os gates de POSIX, runtime, persistência, backup/restore,
+rollback e HTTPS/OAuth real permanecerem sem exercício. A matriz detalhada está
+no [plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-08).
 
 ## M2 — Protocolo oficial do agente
 
