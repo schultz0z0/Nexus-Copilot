@@ -1,7 +1,7 @@
 name: ens
 version: 0.1.0
 description: "Agente ENS para desenvolvimento local e execução controlada na VPS"
-hermes_requires: ">=0.12.0"
+hermes_requires: ">=0.20.6"
 author: "ENS"
 license: "UNLICENSED"
 env_requires:
@@ -14,4 +14,3 @@ distribution_owned:
   - config.yaml
   - mcp.json
   - skills/
-  - cron/

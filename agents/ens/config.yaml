@@ -1,5 +1,7 @@
 # Configuração distribuível do agente ENS.
 # Modelos, credenciais e ajustes específicos do ambiente ficam no profile local.
+# Hermes v0.20.6 carrega MCPs de mcp_servers; mcp.json ainda não é consumido
+# pelo runtime oficial dessa versão.
 
 terminal:
   cwd: "."

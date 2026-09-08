@@ -7,6 +7,7 @@
     "build:chat-web": "npm --prefix apps/chat-web run build",
     "build:marketing-ops": "npm --prefix services/marketing-ops run build",
     "test": "npm run test:chat-web && npm run test:marketing-ops && npm run test:chat-bridge && npm run test:artifact-server",
+    "test:hermes": "node --test test/hermes/*.test.mjs",
     "test:chat-web": "npm --prefix apps/chat-web test",
     "test:marketing-ops": "npm --prefix services/marketing-ops test",
     "test:chat-bridge": "npm --prefix services/chat-bridge test",
@@ -14,7 +15,8 @@
     "typecheck": "npm run typecheck:chat-web && npm run typecheck:marketing-ops",
     "typecheck:chat-web": "npm --prefix apps/chat-web run typecheck",
     "typecheck:marketing-ops": "npm --prefix services/marketing-ops run typecheck",
-    "verify:cut": "node scripts/verify-initial-cut.mjs"
+    "verify:cut": "node scripts/verify-initial-cut.mjs",
+    "validate:hermes-profile": "node scripts/validate-hermes-distribution.mjs agents/ens"
   },
   "engines": {
     "node": ">=22"
