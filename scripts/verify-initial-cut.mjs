@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import path from "node:path";
+
+import { copiedFileContentsAreEquivalent } from "./lib/copied-file-content.mjs";
 
 const destinationRoot = path.resolve(import.meta.dirname, "..");
 const sourceRoot = path.resolve(
@@ -28,10 +29,6 @@ function git(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 }
 
-function sha256(filePath) {
-  return createHash("sha256").update(readFileSync(filePath)).digest("hex");
-}
-
 const copiedFiles = git(destinationRoot, [
   "ls-files",
   "--cached",
@@ -53,9 +50,9 @@ for (const relativePath of copiedFiles) {
     continue;
   }
 
-  const sourceHash = sha256(sourcePath);
-  const destinationHash = sha256(destinationPath);
-  if (sourceHash !== destinationHash) {
+  const sourceContents = readFileSync(sourcePath);
+  const destinationContents = readFileSync(destinationPath);
+  if (!copiedFileContentsAreEquivalent(sourceContents, destinationContents)) {
     mismatches.push(`${relativePath}: content differs`);
   }
 }
