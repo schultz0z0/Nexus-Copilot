@@ -6,6 +6,12 @@ import test from 'node:test';
 
 const repositoryRoot = resolve(import.meta.dirname, '..', '..');
 const composeFile = join(repositoryRoot, 'infra', 'hermes', 'compose.yaml');
+const productionComposeFile = join(
+  repositoryRoot,
+  'infra',
+  'hermes',
+  'compose.production.yaml',
+);
 const environmentFile = join(repositoryRoot, 'infra', 'hermes', 'hermes.env.example');
 const expectedImage =
   'nousresearch/hermes-agent:v2026.8.27@sha256:e0df6adebddf29b91112aefc999d4aaf6846c9eb544faca5672a16a13590ff79';
@@ -15,16 +21,21 @@ function dockerComposeAvailable() {
   return result.status === 0;
 }
 
-function renderCompose() {
+function renderCompose({ production = false } = {}) {
+  const composeArguments = ['compose', '--env-file', environmentFile, '-f', composeFile];
+  if (production) composeArguments.push('-f', productionComposeFile);
+  composeArguments.push('config', '--format', 'json');
+
   return spawnSync(
     'docker',
-    ['compose', '--env-file', environmentFile, '-f', composeFile, 'config', '--format', 'json'],
+    composeArguments,
     {
       cwd: repositoryRoot,
       encoding: 'utf8',
       env: {
         ...process.env,
         API_SERVER_KEY: 'contract-test-only-key',
+        HERMES_DASHBOARD_OAUTH_CLIENT_ID: 'agent:contract-test',
       },
     },
   );
@@ -99,3 +110,63 @@ test('the example environment file contains no configured provider or credential
   assert.doesNotMatch(source, /^(?:.*PROVIDER|.*MODEL)=/im);
   assert.doesNotMatch(source, /^(?:.*SECRET|.*TOKEN)=.+/im);
 });
+
+test(
+  'production Compose exposes only the OAuth-protected dashboard through Traefik',
+  { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
+  () => {
+    const result = renderCompose({ production: true });
+    assert.equal(
+      result.status,
+      0,
+      `docker compose config failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    );
+
+    const configuration = JSON.parse(result.stdout);
+    const runtime = configuration.services.hermes;
+    const labels = runtime.labels ?? {};
+    const routerRules = Object.entries(labels).filter(
+      ([name]) => name.startsWith('traefik.http.routers.') && name.endsWith('.rule'),
+    );
+
+    assert.deepEqual(routerRules, [
+      [
+        'traefik.http.routers.ens-hermes-dashboard.rule',
+        'Host(`hermes.solucoes-nexus.tech`)',
+      ],
+    ]);
+    assert.equal(labels['traefik.enable'], 'true');
+    assert.equal(
+      labels['traefik.http.routers.ens-hermes-dashboard.entrypoints'],
+      'websecure',
+    );
+    assert.equal(labels['traefik.http.routers.ens-hermes-dashboard.tls'], 'true');
+    assert.equal(
+      labels['traefik.http.routers.ens-hermes-dashboard.tls.certresolver'],
+      'letsencrypt',
+    );
+    assert.equal(
+      labels['traefik.http.routers.ens-hermes-dashboard.service'],
+      'ens-hermes-dashboard',
+    );
+    assert.equal(
+      labels['traefik.http.services.ens-hermes-dashboard.loadbalancer.server.port'],
+      '9119',
+    );
+    assert.equal(runtime.environment.HERMES_DASHBOARD_OAUTH_CLIENT_ID, 'agent:contract-test');
+    assert.equal(
+      runtime.environment.HERMES_DASHBOARD_PUBLIC_URL,
+      'https://hermes.solucoes-nexus.tech',
+    );
+    assert.equal(runtime.ports, undefined);
+    assert.equal(configuration.networks?.traefik, undefined);
+    for (const network of Object.values(configuration.networks ?? {})) {
+      assert.notEqual(network.external, true);
+    }
+
+    const serialized = JSON.stringify(configuration).toLowerCase();
+    assert.doesNotMatch(serialized, /api-hermes|basicauth|docker\.sock/);
+    assert.doesNotMatch(serialized, /loadbalancer[^}]*8642/);
+    assert.doesNotMatch(serialized, /host\(`[^`]*\/v1/);
+  },
+);

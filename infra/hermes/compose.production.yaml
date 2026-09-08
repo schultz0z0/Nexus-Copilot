@@ -1,0 +1,13 @@
+services:
+  hermes:
+    environment:
+      HERMES_DASHBOARD_OAUTH_CLIENT_ID: ${HERMES_DASHBOARD_OAUTH_CLIENT_ID:?HERMES_DASHBOARD_OAUTH_CLIENT_ID must be configured for production}
+      HERMES_DASHBOARD_PUBLIC_URL: https://${NEXUS_PUBLIC_HERMES_DASHBOARD_HOST:-hermes.solucoes-nexus.tech}
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.ens-hermes-dashboard.rule: Host(`${NEXUS_PUBLIC_HERMES_DASHBOARD_HOST:-hermes.solucoes-nexus.tech}`)
+      traefik.http.routers.ens-hermes-dashboard.entrypoints: ${NEXUS_TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.ens-hermes-dashboard.tls: "true"
+      traefik.http.routers.ens-hermes-dashboard.tls.certresolver: ${NEXUS_TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      traefik.http.routers.ens-hermes-dashboard.service: ens-hermes-dashboard
+      traefik.http.services.ens-hermes-dashboard.loadbalancer.server.port: "9119"
