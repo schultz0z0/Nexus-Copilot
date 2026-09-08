@@ -45,6 +45,19 @@ Compatibilidade conhecida do pin: o Hermes `0.20.6` distribui `mcp.json`, mas se
 runtime ainda carrega MCPs de `config.yaml#mcp_servers`. O ENS mantém somente a
 definição funcional em `config.yaml` e valida que não exista duplicação.
 
+O segundo lote M1, também em 2026-09-08, acrescentou:
+
+- override de produção com um único router Traefik para o dashboard `9119`;
+- OAuth Nous obrigatório para o dashboard público;
+- smoke autenticado para liveness, readiness e capabilities do Runs API;
+- falha fechada para provider ausente, salvo tolerância explícita no primeiro
+  deploy;
+- runbooks de desenvolvimento Windows e primeiro deploy na VPS.
+
+Resultado focado atual: 13 testes Hermes aprovados, 4 cenários POSIX skipped e
+zero falhas. Os runbooks ainda não foram exercitados; portanto, M1 continua em
+execução e nenhum deploy é declarado aceito.
+
 ## Dívida de dependências herdada
 
 - Frontend: 2 vulnerabilidades moderadas e 2 altas reportadas por `npm ci`.

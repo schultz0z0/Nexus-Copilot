@@ -55,6 +55,9 @@ adivinhe compatibilidade.
 | 2026-09-08 | 1. Contrato da distribuição | Concluída | Validador e 2 testes aprovados; `hermes_requires >=0.20.6`; nenhum segredo/provider distribuído |
 | 2026-09-08 | 2. Inicializador idempotente | Implementada, gate Linux pendente | Contrato estrutural aprovado; 4 cenários POSIX automatizados ficaram skipped porque este Windows não possui shell POSIX e nada foi instalado |
 | 2026-09-08 | 3. Compose base | Concluída estruturalmente | Compose v5.4.0 renderizou; 3 testes aprovados; imagem fixada por digest; API sem `ports`; sem Docker socket |
+| 2026-09-08 | 4. Dashboard/Traefik | Concluída estruturalmente | Override de produção renderizou; router único para `9119`; OAuth Nous obrigatório; nenhuma rota API ou rede Traefik externa |
+| 2026-09-08 | 5. Smoke do runtime | Concluída | 6 testes HTTP aprovados para liveness, readiness, capabilities, timeout, autenticação, JSON inválido e redaction da chave |
+| 2026-09-08 | 6. Runbooks iniciais | Implementada, exercício pendente | Desenvolvimento Windows e primeiro deploy VPS documentados com impacto, resultados esperados, parada segura e rollback recuperável |
 
 Commits do lote: `e819c04`, `cdf2fbd`, `e8f244d` na branch
 `codex/hermes-m1`. Nenhuma imagem foi baixada e nenhum container foi iniciado.
@@ -63,6 +66,10 @@ Durante a Tarefa 1, a auditoria do tag fixado confirmou que o runtime `0.20.6`
 ainda lê `mcp_servers` de `config.yaml`, não o `mcp.json` da distribuição. O
 desenho registra a camada de compatibilidade adotada e o requisito de reavaliá-la
 quando o pin mudar.
+
+Segundo lote: commits `10c0932`, `caddc56` e `b5e2b1c`. A verificação
+agregada terminou com 13 testes aprovados e 4 cenários POSIX skipped. O Compose
+foi apenas renderizado; nenhuma imagem/container foi iniciada.
 
 ## Estrutura final esperada do marco
 

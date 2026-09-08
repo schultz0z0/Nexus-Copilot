@@ -40,6 +40,8 @@ Estado mutável permanece fora do Git e separado por ambiente:
 npm run typecheck
 npm test
 npm run build
+npm run validate:hermes-profile
+npm run test:hermes
 ```
 
 Cada script chama os comandos dos pacotes copiados. Consulte `docs/plans` para o desenho e a sequência de migração.
@@ -48,3 +50,6 @@ Cada script chama os comandos dos pacotes copiados. Consulte `docs/plans` para o
 
 - [Corte inicial do monorepo](docs/plans/2026-08-27-initial-monorepo-migration-design.md)
 - [Migração do Supabase para serviços locais ENS](docs/plans/2026-08-27-supabase-to-local-services-migration-design.md)
+- [Hermes oficial e Profile Distribution ENS](docs/plans/2026-08-28-hermes-official-runtime-design.md)
+- [Plano de implementação do runtime Hermes](docs/plans/2026-08-28-hermes-official-runtime-implementation.md)
+- [Runbooks operacionais](docs/operations/README.md)
