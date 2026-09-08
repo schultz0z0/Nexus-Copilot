@@ -22,6 +22,29 @@ O comando agregado `npm test` não está verde porque o Marketing Ops ainda depe
 
 Isso será resolvido quando `db/migrations` receber a baseline PostgreSQL vanilla e Marketing Ops for adaptado ao novo contrato de identidade/delegação. A falha não foi mascarada nem removida dos scripts.
 
+## Hermes oficial — M1 em execução
+
+Em 2026-09-08, o primeiro lote do runtime oficial foi implementado na branch
+`codex/hermes-m1`:
+
+- contrato automatizado da Profile Distribution ENS aprovado;
+- requisito mínimo fixado em Hermes `0.20.6`;
+- inicializador idempotente `install/update/use` implementado sem
+  `--force-config`;
+- Compose base renderizado com a imagem oficial fixada por tag e digest;
+- volume `/opt/data` compartilhado sequencialmente entre init e runtime;
+- API `8642` mantida sem publicação de porta e nenhum Docker socket montado;
+- provider e credenciais continuam ausentes do repositório.
+
+O teste comportamental POSIX do inicializador está escrito, mas seus quatro
+cenários ficaram skipped neste computador: não há shell POSIX instalado. Por
+segurança, nada foi instalado e nenhum container/imagem foi iniciado. Esse gate
+deve rodar no container Linux ou na VPS antes da aceitação do M1.
+
+Compatibilidade conhecida do pin: o Hermes `0.20.6` distribui `mcp.json`, mas seu
+runtime ainda carrega MCPs de `config.yaml#mcp_servers`. O ENS mantém somente a
+definição funcional em `config.yaml` e valida que não exista duplicação.
+
 ## Dívida de dependências herdada
 
 - Frontend: 2 vulnerabilidades moderadas e 2 altas reportadas por `npm ci`.

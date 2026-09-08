@@ -8,7 +8,7 @@
 
 **Tech Stack:** Docker Compose v2, imagem oficial Nous Research, shell POSIX apenas dentro do container Linux, Node.js 22 para validadores e testes de contrato, Markdown para runbooks.
 
-**Status:** Planejado  
+**Status:** Em execução — primeiro lote implementado em 2026-09-08  
 **Marco:** M1  
 **Requisitos:** RF-005, RF-006, RF-010 a RF-014; RNF-001 a RNF-003, RNF-007 a RNF-010  
 **ADR:** [ADR-0001](../decisions/ADR-0001-official-hermes-container-and-ens-profile.md)  
@@ -48,6 +48,22 @@ Se o upstream contradisser um nome de variável durante a implementação, pare,
 registre a evidência no desenho e ajuste este plano antes de prosseguir. Não
 adivinhe compatibilidade.
 
+## Registro de execução
+
+| Data | Tarefa | Estado | Evidência |
+| --- | --- | --- | --- |
+| 2026-09-08 | 1. Contrato da distribuição | Concluída | Validador e 2 testes aprovados; `hermes_requires >=0.20.6`; nenhum segredo/provider distribuído |
+| 2026-09-08 | 2. Inicializador idempotente | Implementada, gate Linux pendente | Contrato estrutural aprovado; 4 cenários POSIX automatizados ficaram skipped porque este Windows não possui shell POSIX e nada foi instalado |
+| 2026-09-08 | 3. Compose base | Concluída estruturalmente | Compose v5.4.0 renderizou; 3 testes aprovados; imagem fixada por digest; API sem `ports`; sem Docker socket |
+
+Commits do lote: `e819c04`, `cdf2fbd`, `e8f244d` na branch
+`codex/hermes-m1`. Nenhuma imagem foi baixada e nenhum container foi iniciado.
+
+Durante a Tarefa 1, a auditoria do tag fixado confirmou que o runtime `0.20.6`
+ainda lê `mcp_servers` de `config.yaml`, não o `mcp.json` da distribuição. O
+desenho registra a camada de compatibilidade adotada e o requisito de reavaliá-la
+quando o pin mudar.
+
 ## Estrutura final esperada do marco
 
 ```text
@@ -57,7 +73,6 @@ agents/ens/
   mcp.json
   SOUL.md
   skills/
-  cron/
 infra/hermes/
   compose.yaml
   compose.production.yaml
@@ -134,8 +149,10 @@ Expected: FAIL porque o validador ainda não existe e o requisito atual é
 
 - atualizar `hermes_requires` para o menor requisito upstream compatível
   confirmado para `0.20.6`;
-- escolher `mcp.json` como fonte canônica do Marketing Ops e remover a definição
-  duplicada de `config.yaml` se o Hermes `0.20.6` confirmar esse formato;
+- usar `config.yaml#mcp_servers` como fonte canônica do Marketing Ops no pin
+  `0.20.6`, pois a auditoria confirmou que o runtime ainda não consome o
+  `mcp.json` distribuído;
+- manter `mcp.json` vazio e impedir duplicação entre as duas fontes;
 - manter provider e modelo ausentes;
 - manter `${NEXUS_MARKETING_OPS_MCP_URL}` como variável, nunca um endpoint real;
 - não usar `--force-config` como solução para mudança de configuração.

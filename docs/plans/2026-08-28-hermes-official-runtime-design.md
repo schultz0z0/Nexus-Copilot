@@ -173,6 +173,26 @@ Pode controlar:
 - jobs `cron/` explicitamente aprovados;
 - configurações padrão que não contenham provider, modelo, credenciais ou estado local.
 
+### Compatibilidade MCP no pin v0.20.6
+
+A auditoria do código oficial fixado em `v2026.8.27` confirmou uma assimetria
+upstream: Profile Distribution reconhece e distribui `mcp.json`, mas o carregador
+MCP do runtime `0.20.6` consulta `mcp_servers` em `config.yaml` e os MCPs portáteis
+de plugins. Ele não consulta o `mcp.json` instalado pelo profile.
+
+Por isso, enquanto o core permanecer em `0.20.6`:
+
+- `config.yaml#mcp_servers` é a única fonte funcional do MCP Marketing Ops;
+- `mcp.json` permanece vazio, versionado apenas para manter o formato oficial da
+  distribuição e facilitar uma migração futura;
+- o validador rejeita definição duplicada entre os dois arquivos;
+- provider, modelo, credenciais e estado continuam fora da distribuição;
+- uma atualização de endpoint/configuração MCP em profile já instalado exige
+  migration explícita, pois `profile update` preserva `config.yaml` por padrão.
+
+Essa exceção é uma camada de compatibilidade da distribuição ENS, não uma
+alteração do core Hermes. O contrato deve ser reavaliado ao mudar o pin.
+
 ### Ambiente e operador
 
 Controlam:
@@ -329,6 +349,8 @@ A distribuição e o core têm ciclos independentes.
 - profiles existentes usam `hermes profile update ens --yes`;
 - provider, `.env`, `auth.json`, memória, sessões e estado são preservados;
 - `config.yaml` não é forçado;
+- no pin `0.20.6`, mudanças ENS em `mcp_servers` exigem migration explícita e
+  seletiva, sem substituir provider ou ajustes manuais do operador;
 - a aplicação do profile deve ser idempotente;
 - a versão aplicada deve ficar verificável com `hermes profile info ens`.
 
