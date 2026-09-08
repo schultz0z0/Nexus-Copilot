@@ -54,7 +54,7 @@ O segundo lote M1, também em 2026-09-08, acrescentou:
   deploy;
 - runbooks de desenvolvimento Windows e primeiro deploy na VPS.
 
-Resultado focado atual: 13 testes Hermes aprovados, 4 cenários POSIX skipped e
+Resultado focado atual: 15 testes Hermes aprovados, 4 cenários POSIX skipped e
 zero falhas. Os runbooks ainda não foram exercitados; portanto, M1 continua em
 execução e nenhum deploy é declarado aceito.
 
@@ -63,7 +63,7 @@ bloqueio do ensaio Docker Desktop e executou a auditoria final permitida. A
 verificação fresca aprovou:
 
 - Profile Distribution: válida;
-- contratos Hermes: 13 aprovados, 4 POSIX skipped, 0 falhas;
+- contratos Hermes: 15 aprovados, 4 POSIX skipped, 0 falhas;
 - Compose base e produção: renderização aprovada, sem iniciar containers;
 - corte inicial: 397 arquivos, 0 divergências e 0 caminhos proibidos;
 - Chat Bridge: 90 testes aprovados;
@@ -89,6 +89,19 @@ health/capabilities, persistência, backup/restore e rollback.
 Situação de aceite: **implementação pronta para ensaio, não pronta para deploy**.
 Runs API no Bridge e retirada do contrato Hermes legado do navegador continuam
 fora do M1, respectivamente em M2 e M4.
+
+O próximo lote foi preparado para continuidade em outro computador com Docker
+Desktop. O handoff usa projeto `ens-hermes-m1`, volume isolado
+`ens-hermes-m1-data` e override que publica somente a API em
+`127.0.0.1:18642`, com dashboard desabilitado. A autorização não inclui apagar o
+volume, tocar o Hermes local, configurar provider ou acessar a VPS. Nenhuma
+dessas ações foi executada neste computador.
+
+Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
+frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não
+copiadas e PostgreSQL em `127.0.0.1:55322`. O comando interrompe antes de Bridge
+e Artifact Server, que seguem aprovados quando executados separadamente. Essa
+falha herdada não foi removida nem atribuída ao lote Hermes.
 
 ## Dívida de dependências herdada
 

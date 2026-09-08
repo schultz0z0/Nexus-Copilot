@@ -60,8 +60,8 @@ adivinhe compatibilidade.
 | 2026-09-08 | 5. Smoke do runtime | Concluída | 6 testes HTTP aprovados para liveness, readiness, capabilities, timeout, autenticação, JSON inválido e redaction da chave |
 | 2026-09-08 | 6. Runbooks iniciais | Implementada, exercício pendente | Desenvolvimento Windows e primeiro deploy VPS documentados com impacto, resultados esperados, parada segura e rollback recuperável |
 | 2026-09-08 | 7. Update, backup e rollback | Implementada, exercício pendente | Runbooks separam core/profile, preservam `/opt/data`, usam backup identificado e restore inicial em volume de teste |
-| 2026-09-08 | 8. Paridade Docker Desktop | Bloqueada para ensaio | Sem autorização específica neste computador corporativo; nenhuma imagem, container ou volume foi criado |
-| 2026-09-08 | 9. Verificação final | Executada até os gates autorizados | Profile, contratos, Compose renderizado, cut, Bridge e Artifact Server aprovados; 4 cenários POSIX skipped e gates de runtime permanecem abertos |
+| 2026-09-08 | 8. Paridade Docker Desktop | Preparada; execução transferida | Computador corporativo permaneceu intocado; override isolado e handoff receberam autorização limitada para o próximo computador de teste |
+| 2026-09-08 | 9. Verificação final | Executada até os gates autorizados | Profile, 15 contratos aprovados, Compose renderizado, cut, Bridge e Artifact Server aprovados; 4 cenários POSIX skipped e gates de runtime permanecem abertos |
 
 Commits do lote: `e819c04`, `cdf2fbd`, `e8f244d` na branch
 `codex/hermes-m1`. Nenhuma imagem foi baixada e nenhum container foi iniciado.
@@ -116,6 +116,7 @@ agents/ens/
   skills/
 infra/hermes/
   compose.yaml
+  compose.parity.yaml
   compose.production.yaml
   hermes.env.example
   profile-init.sh
@@ -128,6 +129,7 @@ test/hermes/
   compose-contract.test.mjs
 docs/operations/
   hermes-local-development.md
+  hermes-docker-desktop-parity.md
   hermes-first-deploy.md
   hermes-update-rollback.md
   hermes-backup-restore.md
@@ -698,6 +700,13 @@ Critério atendido: RF-014, RNF-003, RNF-010.
 **Precondition:** autorização explícita do usuário para iniciar containers no
 computador corporativo. Sem autorização, registrar **Bloqueado para ensaio**, não
 simular sucesso e não executar Docker.
+
+**Handoff em 2026-09-08:** o computador corporativo continua fora do escopo de
+execução. O usuário autorizou o ensaio somente no próximo computador de teste,
+limitado ao projeto `ens-hermes-m1`, volume `ens-hermes-m1-data` e operações
+descritas em `docs/operations/hermes-docker-desktop-parity.md`. O override de
+paridade publica somente a API em loopback e desabilita o dashboard; produção
+continua sem porta publicada.
 
 **Step 1: Verificar sem mudar estado**
 

@@ -1,0 +1,6 @@
+services:
+  hermes:
+    environment:
+      HERMES_DASHBOARD: "0"
+    ports:
+      - 127.0.0.1:${HERMES_PARITY_API_PORT:-18642}:8642

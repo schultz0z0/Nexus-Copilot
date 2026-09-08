@@ -69,6 +69,11 @@ deploy enquanto os gates de POSIX, runtime, persistência, backup/restore,
 rollback e HTTPS/OAuth real permanecerem sem exercício. A matriz detalhada está
 no [plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-08).
 
+Próximo passo autorizado: executar o
+[ensaio Docker Desktop](../operations/hermes-docker-desktop-parity.md) em outro
+computador, com projeto e volume isolados. O bloqueio permanece até as
+evidências desse host serem registradas.
+
 ## M2 — Protocolo oficial do agente
 
 **Objetivo:** remover dependências do fork no caminho Chat Bridge -> Hermes.

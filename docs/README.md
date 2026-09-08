@@ -23,7 +23,7 @@ nova.
 | Item | Estado | Documento |
 | --- | --- | --- |
 | Fundação documental | Concluída | este índice, PRD, arquitetura e roadmap |
-| Runtime Hermes oficial | Planejado | [plano de implementação](plans/2026-08-28-hermes-official-runtime-implementation.md) |
+| Runtime Hermes oficial | Em execução; próximo ensaio preparado | [plano de implementação](plans/2026-08-28-hermes-official-runtime-implementation.md) e [handoff Docker Desktop](operations/hermes-docker-desktop-parity.md) |
 | Migração de Supabase | Desenhada, ainda não implementada | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
 

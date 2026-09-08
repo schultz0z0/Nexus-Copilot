@@ -54,4 +54,4 @@ services:
 
 volumes:
   hermes-data:
-    name: ens-hermes-data
+    name: ${HERMES_DATA_VOLUME_NAME:-ens-hermes-data}

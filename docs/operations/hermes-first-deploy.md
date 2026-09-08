@@ -21,6 +21,11 @@ POSIX do inicializador, init real, runtime/health, persistência, segundo init,
 backup/restore e rollback em volume descartável. Esta seção não comprova
 paridade nem deploy VPS.
 
+O ensaio foi preparado e recebeu autorização limitada para execução em outro
+computador. Siga o runbook de
+[paridade no Docker Desktop](hermes-docker-desktop-parity.md); este computador
+corporativo permanece intocado.
+
 ## Objetivo e impacto
 
 Criar o runtime Hermes oficial `0.20.6` na VPS Linux usando a imagem fixada por

@@ -12,6 +12,7 @@ const productionComposeFile = join(
   'hermes',
   'compose.production.yaml',
 );
+const parityComposeFile = join(repositoryRoot, 'infra', 'hermes', 'compose.parity.yaml');
 const environmentFile = join(repositoryRoot, 'infra', 'hermes', 'hermes.env.example');
 const expectedImage =
   'nousresearch/hermes-agent:v2026.8.27@sha256:e0df6adebddf29b91112aefc999d4aaf6846c9eb544faca5672a16a13590ff79';
@@ -21,9 +22,10 @@ function dockerComposeAvailable() {
   return result.status === 0;
 }
 
-function renderCompose({ production = false } = {}) {
+function renderCompose({ production = false, parity = false, environment = {} } = {}) {
   const composeArguments = ['compose', '--env-file', environmentFile, '-f', composeFile];
   if (production) composeArguments.push('-f', productionComposeFile);
+  if (parity) composeArguments.push('-f', parityComposeFile);
   composeArguments.push('config', '--format', 'json');
 
   return spawnSync(
@@ -36,6 +38,7 @@ function renderCompose({ production = false } = {}) {
         ...process.env,
         API_SERVER_KEY: 'contract-test-only-key',
         HERMES_DASHBOARD_OAUTH_CLIENT_ID: 'agent:contract-test',
+        ...environment,
       },
     },
   );
@@ -100,6 +103,46 @@ test(
     assert.ok(runtime.healthcheck, 'runtime healthcheck must exist');
     assert.equal(runtime.ports, undefined);
     assert.equal(initializer.ports, undefined);
+  },
+);
+
+test(
+  'parity override exposes only the API on loopback and keeps the dashboard private',
+  { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
+  () => {
+    const result = renderCompose({ parity: true });
+    assert.equal(result.status, 0, result.stderr);
+
+    const configuration = JSON.parse(result.stdout);
+    assert.equal(configuration.services.hermes.environment.HERMES_DASHBOARD, '0');
+    assert.deepEqual(configuration.services.hermes.ports, [
+      {
+        mode: 'ingress',
+        target: 8642,
+        published: '18642',
+        protocol: 'tcp',
+        host_ip: '127.0.0.1',
+      },
+    ]);
+  },
+);
+
+test(
+  'a parity run can use a dedicated volume without changing the production default',
+  { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
+  () => {
+    const defaultResult = renderCompose();
+    const parityResult = renderCompose({
+      environment: { HERMES_DATA_VOLUME_NAME: 'ens-hermes-m1-data' },
+    });
+
+    assert.equal(defaultResult.status, 0, defaultResult.stderr);
+    assert.equal(parityResult.status, 0, parityResult.stderr);
+
+    const defaultConfiguration = JSON.parse(defaultResult.stdout);
+    const parityConfiguration = JSON.parse(parityResult.stdout);
+    assert.equal(defaultConfiguration.volumes['hermes-data'].name, 'ens-hermes-data');
+    assert.equal(parityConfiguration.volumes['hermes-data'].name, 'ens-hermes-m1-data');
   },
 );
 
