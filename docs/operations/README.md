@@ -8,9 +8,9 @@ data, o resultado e as premissas usadas.
 
 | Runbook | Marco | Estado |
 | --- | --- | --- |
-| Hermes local no Windows | M1 | Planejado |
-| Primeiro deploy Hermes na VPS | M1 | Planejado |
-| Configuração manual de provider e OAuth | M1 | Planejado |
+| [Hermes local no Windows](hermes-local-development.md) | M1 | Implementado; exercício pendente |
+| [Primeiro deploy Hermes na VPS](hermes-first-deploy.md) | M1 | Implementado; exercício pendente |
+| Configuração manual de provider e OAuth | M1 | Incluído no primeiro deploy; exercício pendente |
 | Atualização e rollback do Hermes/profile | M1 | Planejado |
 | Backup e restore do volume Hermes | M1 | Planejado |
 | Backup e restore do PostgreSQL | M3 | Pendente |

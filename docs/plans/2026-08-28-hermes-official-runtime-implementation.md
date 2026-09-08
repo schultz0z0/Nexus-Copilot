@@ -495,6 +495,16 @@ Critério atendido: CA-006, RNF-007.
 
 ### Task 6: Documentar desenvolvimento local e primeiro deploy
 
+**Checklist de revisão documental registrada em 2026-09-08:**
+
+- [x] pré-requisitos e permissões identificados;
+- [x] comandos ancorados na raiz do repositório ou em caminho absoluto explícito;
+- [x] resultado esperado e condição de parada para cada etapa;
+- [x] nenhum valor secreto ou placeholder confundível com credencial real;
+- [x] rollback/limpeza preserva o volume e oferece recuperação;
+- [x] Windows local, Docker Desktop e VPS Linux diferenciados;
+- [x] comandos que alteram profile, processos, imagens ou arquivos explicam o impacto.
+
 **Files:**
 
 - Create: `docs/operations/hermes-local-development.md`
