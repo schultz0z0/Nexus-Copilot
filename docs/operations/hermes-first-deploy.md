@@ -2,6 +2,25 @@
 
 Status: implementado, ainda não exercitado em VPS.
 
+## Evidência do ensaio Docker Desktop
+
+**Estado em 2026-09-08: Bloqueado para ensaio.** O responsável autorizou a
+implementação e validações estruturais, mas não autorizou especificamente pull
+da imagem nem criação de containers/volume neste computador corporativo.
+
+Evidência disponível sem executar o runtime:
+
+- Docker Compose v5.4.0 encontrado;
+- Compose base e produção renderizados com placeholders não sensíveis;
+- tag/digest, mounts, dependência do init, healthcheck e labels validados por
+  testes de contrato;
+- nenhuma imagem foi puxada e nenhum container/volume foi criado.
+
+Pendente após autorização específica: digest observado no daemon, quatro testes
+POSIX do inicializador, init real, runtime/health, persistência, segundo init,
+backup/restore e rollback em volume descartável. Esta seção não comprova
+paridade nem deploy VPS.
+
 ## Objetivo e impacto
 
 Criar o runtime Hermes oficial `0.20.6` na VPS Linux usando a imagem fixada por

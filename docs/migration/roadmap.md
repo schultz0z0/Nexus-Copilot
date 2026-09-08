@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-08-28
+**Atualizado em:** 2026-09-08
 
 ## Regra de progressão
 
@@ -12,7 +12,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | Marco | Estado | Resultado principal |
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
-| M1 — Hermes oficial | Planejado | runtime oficial fixado e Profile ENS reproduzível |
+| M1 — Hermes oficial | Em execução; ensaio bloqueado | runtime/contratos prontos, exercício Docker e VPS pendentes |
 | M2 — protocolo do agente | Pendente | Bridge compatível com Runs/SSE/aprovações oficiais |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
@@ -59,6 +59,12 @@ corporativo além do escopo aprovado.
 
 **Plano ativo:**
 [2026-08-28-hermes-official-runtime-implementation.md](../plans/2026-08-28-hermes-official-runtime-implementation.md).
+
+**Situação em 2026-09-08:** código, Compose, smoke e runbooks foram
+implementados. O ensaio Docker Desktop está **Bloqueado para ensaio** até haver
+autorização específica para pull, containers e volume descartável no computador
+corporativo. M1 não está concluído nem pronto para deploy enquanto os gates de
+POSIX, runtime, backup/restore e rollback permanecerem sem exercício.
 
 ## M2 — Protocolo oficial do agente
 

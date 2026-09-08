@@ -58,6 +58,16 @@ Resultado focado atual: 13 testes Hermes aprovados, 4 cenários POSIX skipped e
 zero falhas. Os runbooks ainda não foram exercitados; portanto, M1 continua em
 execução e nenhum deploy é declarado aceito.
 
+### Gate Docker Desktop
+
+**Bloqueado para ensaio em 2026-09-08.** Por se tratar de computador
+corporativo, não houve autorização específica para pull da imagem, criação de
+container ou volume de teste. A implementação não simulou esse resultado.
+
+Já comprovado sem runtime: Compose v5.4.0 renderiza, pin/digest e isolamento
+estrutural passam nos testes. Pendente: execução POSIX do init, runtime real,
+health/capabilities, persistência, backup/restore e rollback.
+
 ## Dívida de dependências herdada
 
 - Frontend: 2 vulnerabilidades moderadas e 2 altas reportadas por `npm ci`.
