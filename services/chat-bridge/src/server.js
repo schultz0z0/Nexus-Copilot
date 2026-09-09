@@ -3,9 +3,13 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { decodeJwt } from "jose";
-import WebSocket from "ws";
 
 import { HermesRunsClient } from "./hermes-runs-client.js";
+import {
+  HermesApprovalRegistry,
+  toApprovalStreamPayload,
+  toOfficialApprovalChoice,
+} from "./hermes-approvals.js";
 
 import {
   buildHermesRunSessionId,
@@ -150,12 +154,6 @@ const normalizeBaseUrl = (value) => {
   } catch {
     return null;
   }
-};
-
-const toWebSocketUrl = (baseUrl, pathname) => {
-  const wsUrl = new URL(pathname, baseUrl);
-  wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
-  return wsUrl.toString();
 };
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -828,9 +826,10 @@ const issueRunPictureDelegation = async (run) => {
 
 
 class HermesBridge {
-  constructor({ store, hermesStateRepository }) {
+  constructor({ store, hermesStateRepository, approvalRegistry }) {
     this.store = store;
     this.hermesStateRepository = hermesStateRepository;
+    this.approvalRegistry = approvalRegistry;
     this.activeRunConsumers = new Set();
   }
 
@@ -1009,6 +1008,19 @@ class HermesBridge {
   appendEvent(run, event) {
     const normalizedEvent = this.normalizeEventArtifactUrls(run, event);
     run.events.push(normalizedEvent);
+    if (normalizedEvent.event === "approval") {
+      this.approvalRegistry.register({
+        userId: run.user_id,
+        bridgeRunId: run.id,
+        hermesRunId: run.hermes_run_id,
+        requestId: normalizedEvent.data?.request_id,
+        choices: normalizedEvent.data?.choices,
+        summary: normalizedEvent.data?.summary,
+      });
+    }
+    if (normalizedEvent.event === "meta" && normalizedEvent.data?.event === "approval.resolved") {
+      this.approvalRegistry.complete(normalizedEvent.data?.request_id, normalizedEvent.data?.choice);
+    }
     applyMemoryDiagnosticEvent(run.memory_diagnostics, normalizedEvent);
     if (normalizedEvent.event === "delta" && typeof normalizedEvent.data?.delta === "string") {
       run.output_text += normalizedEvent.data.delta;
@@ -1666,6 +1678,7 @@ class HermesBridge {
 }
 
 const store = new RunStore({ dataDir: config.dataDir });
+const approvalRegistry = new HermesApprovalRegistry();
 const hermesStateRepository = config.supabaseUrl && config.supabaseServiceRoleKey
   ? createSupabaseHermesStateRepository({
       supabaseUrl: config.supabaseUrl,
@@ -1701,7 +1714,7 @@ const pictureModeService = createPictureModeService({
   },
 });
 
-const bridge = new HermesBridge({ store, hermesStateRepository });
+const bridge = new HermesBridge({ store, hermesStateRepository, approvalRegistry });
 
 const writeSseHeaders = (req, res) => {
   res.writeHead(200, {
@@ -1986,105 +1999,77 @@ const handleRequest = async (req, res) => {
     jsonResponse(res, 200, { run }, corsHeaders);
     return;
   }
-  // ===========================================================================
-  // Frontend approval proxy (Opcao C - 2026-06-27).
-  // Adiciona 2 rotas que fazem proxy pro hermes-api:
-  //   - POST /api/approvals/respond : frontend -> bridge -> hermes-api
-  //   - GET  /api/approvals/stream  : SSE frontend -> bridge -> WS hermes-api
-  // ===========================================================================
   if (req.method === "POST" && url.pathname === "/api/approvals/respond") {
     const user = await verifyUser(req);
     const body = await readJsonBody(req);
-    const hermesBaseUrl = normalizeBaseUrl(config.hermesBaseUrl);
-    if (!hermesBaseUrl) {
-      jsonResponse(res, 503, { error: "hermes_unreachable" }, corsHeaders);
-      return;
+    const choice = toOfficialApprovalChoice(body);
+    const approval = approvalRegistry.claim({
+      userId: user.id,
+      requestId: body.request_id,
+      choice,
+    });
+    const run = store.get(approval.bridgeRunId);
+    if (
+      !run
+      || run.user_id !== user.id
+      || terminalStatuses.has(run.status)
+      || run.hermes_run_id !== approval.hermesRunId
+    ) {
+      approvalRegistry.release(approval.requestId);
+      const error = new Error("approval_run_not_active");
+      error.code = "approval_run_not_active";
+      error.status = 409;
+      throw error;
     }
+
     try {
-      const upstream = await fetch(`${hermesBaseUrl}/api/approvals/respond`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(config.hermesApiKey ? { Authorization: `Bearer ${config.hermesApiKey}` } : {}),
-        },
-        body: JSON.stringify(body || {}),
-      });
-      const data = await upstream.json().catch(() => ({}));
-      jsonResponse(res, upstream.status, data, corsHeaders);
-    } catch (err) {
-      jsonResponse(res, 502, { error: "hermes_proxy_failed", detail: String(err) }, corsHeaders);
+      const hermesBaseUrl = normalizeBaseUrl(config.hermesBaseUrl);
+      if (!hermesBaseUrl) {
+        const error = new Error("hermes_unreachable");
+        error.code = "hermes_unreachable";
+        error.status = 503;
+        throw error;
+      }
+      const client = bridge.createRunsClient(run, hermesBaseUrl);
+      await client.respondApproval(approval.hermesRunId, { choice });
+      approvalRegistry.complete(approval.requestId, choice);
+      jsonResponse(res, 200, { ok: true, request_id: approval.requestId, choice }, corsHeaders);
+    } catch (error) {
+      approvalRegistry.release(approval.requestId);
+      throw error;
     }
     return;
   }
 
-  // SSE proxy: o frontend continua com fetch/event-stream, enquanto a bridge
-  // assina o WebSocket real do Hermes em /api/approvals/ws.
   if (req.method === "GET" && url.pathname === "/api/approvals/stream") {
-    await verifyUser(req);
-    const hermesBaseUrl = normalizeBaseUrl(config.hermesBaseUrl);
-    if (!hermesBaseUrl) {
-      jsonResponse(res, 503, { error: "hermes_unreachable" }, corsHeaders);
-      return;
-    }
+    const user = await verifyUser(req);
 
     writeSseHeaders(req, res);
     res.write(": connected\n\n");
 
-    const upstream = new WebSocket(toWebSocketUrl(hermesBaseUrl, "/api/approvals/ws"), {
-      headers: config.hermesApiKey ? { Authorization: `Bearer ${config.hermesApiKey}` } : {},
+    const unsubscribe = approvalRegistry.subscribe(user.id, (approval) => {
+      if (!res.writableEnded) {
+        res.write(emitSse("approval_request", toApprovalStreamPayload(approval)));
+      }
     });
     const heartbeat = setInterval(() => {
       if (!res.writableEnded) res.write(": heartbeat\n\n");
     }, 25_000);
     let closed = false;
 
-    const closeUpstream = (terminate = false) => {
-      if (upstream.readyState === WebSocket.CONNECTING || upstream.readyState === WebSocket.OPEN) {
-        if (terminate) upstream.terminate();
-        else upstream.close();
-      }
-    };
-    const cleanup = ({ endResponse = true, terminate = false } = {}) => {
+    const cleanup = ({ endResponse = true } = {}) => {
       if (closed) return;
       closed = true;
       clearInterval(heartbeat);
+      unsubscribe();
       req.off("close", onClientClose);
       req.off("aborted", onClientClose);
-      upstream.removeAllListeners();
-      closeUpstream(terminate);
       if (endResponse && !res.writableEnded) res.end();
     };
-    const onClientClose = () => cleanup({ endResponse: false, terminate: true });
+    const onClientClose = () => cleanup({ endResponse: false });
 
     req.on("close", onClientClose);
     req.on("aborted", onClientClose);
-    upstream.on("open", () => {
-      if (!res.writableEnded) res.write(emitSse("ready", { ok: true }));
-    });
-    upstream.on("message", (data) => {
-      if (res.writableEnded) return;
-      const text = Array.isArray(data)
-        ? Buffer.concat(data).toString("utf8")
-        : Buffer.isBuffer(data)
-          ? data.toString("utf8")
-          : data instanceof ArrayBuffer
-            ? Buffer.from(data).toString("utf8")
-            : String(data);
-      let payload;
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        payload = { type: "message", data: text };
-      }
-      res.write(emitSse(payload?.type || "message", payload));
-    });
-    upstream.on("error", (err) => {
-      if (!res.writableEnded) {
-        res.write(emitSse("error", { error: "upstream_ws_error", detail: err.message || String(err) }));
-      }
-      cleanup({ terminate: true });
-    });
-    upstream.on("close", () => cleanup());
     return;
   }
 

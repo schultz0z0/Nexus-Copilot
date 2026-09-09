@@ -43,7 +43,7 @@ test("text runs use the official client and persist the Hermes id before consumi
 });
 
 test("Runs execution permits only one upstream consumer per Bridge run", () => {
-  const constructorBlock = extractBlock(source, "constructor({ store, hermesStateRepository })", "async createRun({ user, payload })");
+  const constructorBlock = extractBlock(source, "constructor({ store, hermesStateRepository, approvalRegistry })", "async createRun({ user, payload })");
   const runsBlock = extractBlock(source, "async executeRunsApi(run, hermesBaseUrl)", "async executeSessionApi");
 
   assert.match(constructorBlock, /this\.activeRunConsumers = new Set\(\)/);
@@ -83,16 +83,18 @@ test("chat delete route collects Hermes session ids before storage cleanup", () 
   assert.match(deleteRouteBlock, /hermesSessionIds: Array\.from\(hermesSessionIds\)/);
 });
 
-test("approval stream bridges the Hermes approval websocket instead of dashboard event SSE", () => {
+test("approval routes use the run-scoped registry and official Runs client", () => {
   const approvalRouteBlock = extractBlock(
     source,
-    'url.pathname === "/api/approvals/stream"',
+    'url.pathname === "/api/approvals/respond"',
     'jsonResponse(res, 404',
   );
 
-  assert.match(approvalRouteBlock, /\/api\/approvals\/ws/);
-  assert.doesNotMatch(approvalRouteBlock, /\/api\/events\?channel=approvals/);
-  assert.doesNotMatch(approvalRouteBlock, /Accept: "text\/event-stream"/);
+  assert.match(approvalRouteBlock, /approvalRegistry\.claim/);
+  assert.match(approvalRouteBlock, /respondApproval/);
+  assert.match(approvalRouteBlock, /approvalRegistry\.subscribe/);
+  assert.doesNotMatch(source, /\/api\/approvals\/ws/);
+  assert.doesNotMatch(source, /hermesBaseUrl.*\/api\/approvals\/respond/);
 });
 
 test("Hermes headers forward tenant and user context for memory MCP routing", () => {
