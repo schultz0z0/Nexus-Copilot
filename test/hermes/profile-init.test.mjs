@@ -19,14 +19,22 @@ function findPosixShell() {
   return candidates.find((candidate) => existsSync(candidate));
 }
 
-function createHarness({ profileExists = false, failAction } = {}) {
+function createHarness({ profileExists = false, failAction, configVersion } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'ens-hermes-profile-init-'));
   const distribution = join(root, 'distribution');
+  const hermesHome = join(root, 'hermes-home');
+  const profileHome = join(hermesHome, 'profiles', 'ens');
   const fakeHermes = join(root, 'fake-hermes.sh');
+  const fakePython = join(root, 'fake-python.sh');
+  const fakeMigrator = join(root, 'docker-config-migrate.py');
   const calls = join(root, 'calls.log');
   const state = join(root, 'profile-installed');
   mkdirSync(distribution);
+  mkdirSync(profileHome, { recursive: true });
   writeFileSync(join(distribution, 'distribution.yaml'), 'name: ens\n', 'utf8');
+  const versionLine = configVersion === undefined ? '' : `_config_version: ${configVersion}\n`;
+  writeFileSync(join(hermesHome, 'config.yaml'), `${versionLine}terminal: {}\n`, 'utf8');
+  writeFileSync(join(profileHome, 'config.yaml'), `${versionLine}terminal: {}\n`, 'utf8');
   if (profileExists) writeFileSync(state, '', 'utf8');
   writeFileSync(
     fakeHermes,
@@ -47,13 +55,26 @@ fi
     'utf8',
   );
   chmodSync(fakeHermes, 0o755);
+  writeFileSync(
+    fakePython,
+    `#!/bin/sh
+set -eu
+printf 'migrate %s %s\n' "$HERMES_HOME" "$*" >> "$CALLS_LOG"
+`,
+    'utf8',
+  );
+  chmodSync(fakePython, 0o755);
+  writeFileSync(fakeMigrator, '# test migrator\n', 'utf8');
 
   const env = {
     ...process.env,
     CALLS_LOG: calls,
     PROFILE_STATE: state,
     HERMES_CLI: fakeHermes,
+    HERMES_CONFIG_MIGRATOR: fakeMigrator,
     HERMES_DISTRIBUTION_DIR: distribution,
+    HERMES_HOME: hermesHome,
+    HERMES_PYTHON: fakePython,
     PATH: `${root}${delimiter}${process.env.PATH ?? ''}`,
   };
   if (failAction) env.FAIL_ACTION = failAction;
@@ -81,6 +102,8 @@ test('initializer has the safe idempotent command contract', () => {
   assert.match(source, /profile install/);
   assert.match(source, /profile update/);
   assert.match(source, /profile use/);
+  assert.match(source, /gateway stop/);
+  assert.match(source, /docker_config_migrate/);
   assert.doesNotMatch(source, /--force-config/);
 });
 
@@ -94,6 +117,11 @@ test(
     assert.deepEqual(recordedCalls(harness), [
       'profile info ens',
       `profile install ${harness.env.HERMES_DISTRIBUTION_DIR} --name ens --yes`,
+      '-p default config set _config_version 12',
+      `migrate ${harness.env.HERMES_HOME} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p ens config set _config_version 12',
+      `migrate ${join(harness.env.HERMES_HOME, 'profiles', 'ens')} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p default gateway stop',
       'profile use ens',
       'profile info ens',
     ]);
@@ -110,8 +138,28 @@ test(
     assert.deepEqual(recordedCalls(harness), [
       'profile info ens',
       'profile update ens --yes',
+      '-p default config set _config_version 12',
+      `migrate ${harness.env.HERMES_HOME} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p ens config set _config_version 12',
+      `migrate ${join(harness.env.HERMES_HOME, 'profiles', 'ens')} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p default gateway stop',
       'profile use ens',
       'profile info ens',
+    ]);
+  },
+);
+
+test(
+  'refuses an explicit config schema below the supported migration floor',
+  { skip: shell ? false : 'POSIX shell is not available on this Windows host' },
+  () => {
+    const harness = createHarness({ profileExists: true, configVersion: 11 });
+    const result = execute(harness);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /below the supported floor 12/);
+    assert.deepEqual(recordedCalls(harness), [
+      'profile info ens',
+      'profile update ens --yes',
     ]);
   },
 );

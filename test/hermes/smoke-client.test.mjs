@@ -13,7 +13,7 @@ const requiredFeatures = {
   run_status: true,
   run_events_sse: true,
   run_stop: true,
-  run_approval: true,
+  run_approval_response: true,
 };
 
 async function withServer(handler, run) {
@@ -80,7 +80,15 @@ test('smoke checks liveness, authenticated readiness, and required capabilities'
       if (request.url === '/health/detailed') {
         return json(response, 200, {
           status: 'degraded',
-          readiness: { checks: { provider: { status: 'provider_unconfigured' } } },
+          readiness: {
+            status: 'degraded',
+            checks: {
+              state_db: { status: 'ok' },
+              config: { status: 'ok' },
+              model: { status: 'degraded' },
+              gateway: { status: 'ok' },
+            },
+          },
         });
       }
       if (request.url === '/v1/capabilities') {
@@ -111,12 +119,39 @@ test('provider_unconfigured fails unless explicitly allowed', async () => {
     if (request.url === '/health') return json(response, 200, { status: 'ok' });
     return json(response, 200, {
       status: 'degraded',
-      readiness: { checks: [{ code: 'provider_unconfigured' }] },
+      readiness: {
+        status: 'degraded',
+        checks: {
+          state_db: { status: 'ok' },
+          model: { status: 'degraded' },
+          gateway: { status: 'ok' },
+        },
+      },
     });
   }, (baseUrl) => runSmoke(baseUrl));
 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /readiness is degraded: provider_unconfigured/);
+});
+
+test('allow-provider-unconfigured still fails closed on any other degraded check', async () => {
+  const result = await withServer((request, response) => {
+    if (request.url === '/health') return json(response, 200, { status: 'ok' });
+    return json(response, 200, {
+      status: 'degraded',
+      readiness: {
+        status: 'degraded',
+        checks: {
+          config: { status: 'degraded' },
+          model: { status: 'degraded' },
+          gateway: { status: 'ok' },
+        },
+      },
+    });
+  }, (baseUrl) => runSmoke(baseUrl, ['--allow-provider-unconfigured']));
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /readiness is degraded: degraded/);
 });
 
 test('authentication failures are distinct and never reveal the API key', async () => {

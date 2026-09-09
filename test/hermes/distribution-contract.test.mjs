@@ -77,6 +77,7 @@ test('the validator reports every contract violation in one run', () => {
   assert.match(result.stderr, /forbidden state path: auth\.json/);
   assert.match(result.stderr, /provider or model setting/);
   assert.match(result.stderr, /secret-like setting/);
+  assert.match(result.stderr, /_config_version must be exactly 12/);
   assert.match(result.stderr, /nexus_marketing_ops must be defined exactly once/);
   assert.match(result.stderr, /environment variable is not declared: UNDECLARED_MCP_URL/);
 });

@@ -79,6 +79,7 @@ test(
     const runtime = configuration.services.hermes;
     assert.equal(initializer.image, expectedImage);
     assert.equal(runtime.image, expectedImage);
+  assert.deepEqual(runtime.command, ['hermes', '-p', 'ens', 'gateway', 'run', '--no-supervise']);
     assert.equal(initializer.restart, 'no');
     assert.equal(runtime.restart, 'unless-stopped');
     assert.equal(runtime.depends_on['hermes-profile-init'].condition, 'service_completed_successfully');

@@ -24,6 +24,13 @@ services:
 
   hermes:
     <<: *hermes-image
+    command:
+      - hermes
+      - -p
+      - ${HERMES_PROFILE_NAME:-ens}
+      - gateway
+      - run
+      - --no-supervise
     restart: unless-stopped
     depends_on:
       hermes-profile-init:

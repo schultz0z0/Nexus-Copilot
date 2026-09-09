@@ -3,6 +3,7 @@ import { basename, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MINIMUM_HERMES_VERSION = [0, 20, 6];
+const PINNED_CONFIG_VERSION = '12';
 const FORBIDDEN_PATH_PARTS = new Set([
   '.env',
   'auth.json',
@@ -120,6 +121,9 @@ export function validateHermesDistribution(inputDirectory) {
     .split(/\r?\n/)
     .filter((line) => !line.trimStart().startsWith('#'))
     .join('\n');
+  if (parseTopLevelScalar(config, '_config_version') !== PINNED_CONFIG_VERSION) {
+    errors.push(`config.yaml _config_version must be exactly ${PINNED_CONFIG_VERSION}`);
+  }
   if (/^\s*(provider|model)\s*:/im.test(meaningfulConfig)) {
     errors.push('config.yaml must not contain a provider or model setting');
   }

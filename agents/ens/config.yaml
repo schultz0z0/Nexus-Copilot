@@ -3,6 +3,8 @@
 # Hermes v0.20.6 carrega MCPs de mcp_servers; mcp.json ainda não é consumido
 # pelo runtime oficial dessa versão.
 
+_config_version: 12
+
 terminal:
   cwd: "."
 

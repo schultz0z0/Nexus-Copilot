@@ -1,5 +1,5 @@
 name: ens
-version: 0.1.0
+version: 0.1.1
 description: "Agente ENS para desenvolvimento local e execução controlada na VPS"
 hermes_requires: ">=0.20.6"
 author: "ENS"

@@ -6,7 +6,7 @@ const REQUIRED_FEATURES = [
   'run_status',
   'run_events_sse',
   'run_stop',
-  'run_approval',
+  'run_approval_response',
 ];
 
 export function parseArguments(argumentsList) {
@@ -78,23 +78,14 @@ async function requestJson({ baseUrl, path, apiKey, timeoutMs, authenticated }) 
   }
 }
 
-function containsString(value, expected) {
-  if (typeof value === 'string') return value.toLowerCase() === expected;
-  if (Array.isArray(value)) return value.some((item) => containsString(item, expected));
-  if (value && typeof value === 'object') {
-    return Object.values(value).some((item) => containsString(item, expected));
-  }
-  return false;
-}
+function isOnlyModelUnconfigured(value) {
+  const checks = value?.readiness?.checks ?? value?.checks;
+  if (!checks || typeof checks !== 'object' || Array.isArray(checks)) return false;
 
-function containsUnexpectedReadinessFailure(value) {
-  const failures = new Set(['error', 'failed', 'unhealthy', 'unavailable']);
-  if (typeof value === 'string') return failures.has(value.toLowerCase());
-  if (Array.isArray(value)) return value.some(containsUnexpectedReadinessFailure);
-  if (value && typeof value === 'object') {
-    return Object.values(value).some(containsUnexpectedReadinessFailure);
-  }
-  return false;
+  const entries = Object.entries(checks);
+  const model = checks.model;
+  if (model?.status !== 'degraded') return false;
+  return entries.every(([name, check]) => name === 'model' || check?.status === 'ok');
 }
 
 export async function smokeHermes(options, logger = console) {
@@ -119,9 +110,8 @@ export async function smokeHermes(options, logger = console) {
   if (readiness?.status === 'ok') {
     logger.log('PASS readiness');
   } else {
-    const providerUnconfigured = containsString(readiness, 'provider_unconfigured');
-    const otherFailure = containsUnexpectedReadinessFailure(readiness);
-    if (!options.allowProviderUnconfigured || !providerUnconfigured || otherFailure) {
+    const providerUnconfigured = isOnlyModelUnconfigured(readiness);
+    if (!options.allowProviderUnconfigured || !providerUnconfigured) {
       const reason = providerUnconfigured ? 'provider_unconfigured' : readiness?.status ?? 'unknown';
       throw new Error(`readiness is degraded: ${reason}`);
     }
