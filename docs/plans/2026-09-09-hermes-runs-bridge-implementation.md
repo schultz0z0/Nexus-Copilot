@@ -457,6 +457,33 @@ externo ou ambiente de produção foi alterado.
 
 Commits funcionais do checkpoint: `3a71e71`, `fc5ea44` e `99e4631`.
 
+### 2026-09-09 — Checkpoint B aprovado localmente
+
+| Tarefa | Evidência | Resultado |
+| --- | --- | --- |
+| 4 — executor Runs | testes focados de client/events/runtime | ID upstream persistido antes do SSE, um consumidor por Run, status após fechamento não terminal e `provider_unconfigured` distinto |
+| 5 — approvals | `node --test services/chat-bridge/test/hermes-approvals.test.js services/chat-bridge/test/server-runtime-scope.test.js` | registro user/Bridge Run/Hermes Run/request, claim único, replay e tradução para endpoint oficial |
+| 6 — stop | testes de `hermes-run-control` e `chatStreamClient` | 404 indistinguível para cross-user, 409 para terminal/duplicado, claim local antes do upstream e rollback em falha |
+| regressão do Bridge | `npm test --prefix services/chat-bridge` | 124/124 |
+| regressão do frontend | `npm test --prefix apps/chat-web -- --run` | 39 arquivos, 147/147 |
+| tipos do frontend | `npm run typecheck --prefix apps/chat-web` | aprovado |
+
+O WebSocket `/api/approvals/ws` e o POST privado de approval do fork foram
+retirados do Bridge. O frontend continua usando suas rotas de produto; somente o
+Bridge conhece os IDs oficiais do Hermes. Uma revisão manual do diff encontrou e
+corrigiu uma corrida de stop: o Run agora assume `stopping` e persiste esse claim
+antes da chamada upstream, impedindo duas solicitações simultâneas. Se a chamada
+falhar, o status anterior é restaurado e a falha operacional é registrada.
+
+A tentativa de revisão independente por agente não produziu parecer porque o
+workspace estava sem créditos; essa limitação não foi tratada como aprovação.
+A revisão manual, os testes completos e o typecheck foram executados em seu
+lugar. `npm ci` do frontend reproduziu o lockfile e reportou nove vulnerabilidades
+herdadas (uma baixa, cinco moderadas e três altas); nenhum `npm audit fix`
+automático foi aplicado neste lote.
+
+Commits funcionais do checkpoint: `79b3c0b`, `0b5f747`, `3afc20f` e `d8cff6b`.
+
 ## Checkpoints
 
 - **Checkpoint A — após Tasks 1–3:** cliente, eventos e seletor puros aprovados.

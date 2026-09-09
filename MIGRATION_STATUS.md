@@ -125,6 +125,23 @@ Na VPS, o responsável humano executa todos os comandos. O agente atua somente
 como copiloto, preparando passos e validando saídas/logs redigidos; não abre SSH
 nem opera a infraestrutura diretamente.
 
+## Hermes Runs Bridge — M2 em execução
+
+Em 2026-09-09, os checkpoints A e B foram aprovados localmente. Texto e arquivos
+com conteúdo extraído seguem pelo Runs API oficial; Picture, imagens e binários
+sem extração permanecem no Session API. O Bridge agora:
+
+- verifica capabilities obrigatórias de forma fail-closed;
+- cria Runs com idempotência e persiste o ID Hermes antes do consumidor SSE;
+- normaliza approvals, stopping, cancellation e provider ausente;
+- mantém um consumidor upstream por Run e replay por cursor somente no Bridge;
+- responde approvals e stop pelos endpoints oficiais com autorização cross-user;
+- preserva o contrato do frontend sem expor Hermes ao navegador.
+
+Evidência fresca: Chat Bridge 124/124, frontend 147/147 e typecheck aprovado.
+O contrato Docker fixado, smoke sem provider e aceite real com provider pertencem
+ao checkpoint C. Nenhuma operação de produção foi realizada neste lote.
+
 Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
 frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não
 copiadas e PostgreSQL em `127.0.0.1:55322`. O comando interrompe antes de Bridge

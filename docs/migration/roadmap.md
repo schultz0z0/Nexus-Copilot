@@ -13,7 +13,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
 | M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
-| M2 — protocolo do agente | Em execução; checkpoint A aprovado | cliente Runs, eventos oficiais e roteamento híbrido comprovados |
+| M2 — protocolo do agente | Em execução; checkpoint B aprovado | executor, approvals e stop oficiais comprovados localmente |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
 | M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
@@ -94,13 +94,15 @@ capabilities; contrato externo estável para o frontend; erros e observabilidade
 - ausência de provider é distinguida de indisponibilidade do processo;
 - smoke test real passa com o profile ENS.
 
-**Situação em 2026-09-09:** o checkpoint A do
+**Situação em 2026-09-09:** os checkpoints A e B do
 [plano de implementação](../plans/2026-09-09-hermes-runs-bridge-implementation.md)
-foi aprovado localmente. O Bridge possui cliente tipado para os endpoints
+foram aprovados localmente. O Bridge possui cliente tipado para os endpoints
 oficiais de Runs, valida capabilities de forma fail-closed, normaliza approval,
 stopping e cancellation e seleciona Runs somente para texto/arquivos extraídos.
 Picture, imagens e binários sem extração permanecem em Session. A integração
-do executor, rotas de approval/stop e o smoke com provider continuam pendentes.
+do executor persiste o ID upstream antes do SSE e limita cada Run a um consumidor.
+Approval e stop agora usam endpoints oficiais, mantêm o contrato do frontend e
+negam cross-user. O contrato Docker e o smoke com provider continuam pendentes.
 
 ## M3 — Fundação PostgreSQL
 
