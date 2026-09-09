@@ -226,6 +226,105 @@ test("parseHermesEventBlock preserves original download URL for staged image art
   }]);
 });
 
+test("parseHermesEventBlock normalizes approval.request", () => {
+  const parsed = parseHermesEventBlock(
+    'event: approval.request\ndata: {"run_id":"run_1","request_id":"approval_1","choices":["once","deny"],"command":"rm example"}',
+    context,
+  );
+
+  assert.deepEqual(parsed.events, [{
+    event: "approval",
+    data: {
+      run_id: "run_1",
+      request_id: "approval_1",
+      choices: ["once", "deny"],
+      summary: "rm example",
+    },
+  }]);
+  assert.equal(parsed.completed, false);
+});
+
+test("parseHermesEventBlock fails closed for incomplete approval requests", () => {
+  const missingRequestId = parseHermesEventBlock(
+    'event: approval.request\ndata: {"run_id":"run_1","choices":["once","deny"],"command":"unsafe command"}',
+    context,
+  );
+  const unsupportedChoices = parseHermesEventBlock(
+    'event: approval.request\ndata: {"run_id":"run_1","request_id":"approval_1","choices":["approve-everything"]}',
+    context,
+  );
+
+  assert.deepEqual(missingRequestId.events, []);
+  assert.deepEqual(unsupportedChoices.events, []);
+});
+
+test("parseHermesEventBlock records approval.resolved without reopening approval UI", () => {
+  const parsed = parseHermesEventBlock(
+    'event: approval.resolved\ndata: {"run_id":"run_1","request_id":"approval_1","choice":"once"}',
+    context,
+  );
+
+  assert.deepEqual(parsed.events, [{
+    event: "meta",
+    data: {
+      provider: "hermes",
+      event: "approval.resolved",
+      run_id: "run_1",
+      session_id: "nexus:session-1",
+      request_id: "approval_1",
+      choice: "once",
+    },
+  }]);
+});
+
+test("parseHermesEventBlock keeps run.stopping non-terminal", () => {
+  const parsed = parseHermesEventBlock(
+    'event: run.stopping\ndata: {"run_id":"run_1"}',
+    context,
+  );
+
+  assert.deepEqual(parsed.events, [
+    {
+      event: "meta",
+      data: {
+        provider: "hermes",
+        event: "run.stopping",
+        run_id: "run_1",
+        session_id: "nexus:session-1",
+      },
+    },
+    {
+      event: "status",
+      data: { text: "Hermes está interrompendo a execução do agente.", tone: "info" },
+    },
+  ]);
+  assert.equal(parsed.completed, false);
+  assert.equal(parsed.failed, false);
+});
+
+test("parseHermesEventBlock preserves run.cancelled as cancellation", () => {
+  const parsed = parseHermesEventBlock(
+    'event: run.cancelled\ndata: {"run_id":"run_1"}',
+    context,
+  );
+
+  assert.deepEqual(parsed.events, [
+    {
+      event: "meta",
+      data: {
+        provider: "hermes",
+        event: "run.cancelled",
+        run_id: "run_1",
+        session_id: "nexus:session-1",
+      },
+    },
+    { event: "done", data: { request_id: "req_123" } },
+  ]);
+  assert.equal(parsed.completed, false);
+  assert.equal(parsed.failed, false);
+  assert.equal(parsed.cancelled, true);
+});
+
 test("parseHermesStatusPayload keeps running runs open and completes terminal runs", () => {
   assert.deepEqual(parseHermesStatusPayload({ status: "running" }, context), {
     terminal: false,
@@ -240,4 +339,17 @@ test("parseHermesStatusPayload keeps running runs open and completes terminal ru
   assert.equal(completed.terminal, true);
   assert.equal(completed.parsed.completed, true);
   assert.equal(completed.parsed.events[0].data.delta, "Terminei pelo status.");
+});
+
+test("parseHermesStatusPayload preserves cancelled as cancellation", () => {
+  const cancelled = parseHermesStatusPayload({
+    run_id: "run_1",
+    status: "cancelled",
+  }, context);
+
+  assert.equal(cancelled.terminal, true);
+  assert.equal(cancelled.parsed.cancelled, true);
+  assert.equal(cancelled.parsed.failed, false);
+  assert.equal(cancelled.parsed.events[0].data.event, "run.cancelled");
+  assert.equal(cancelled.parsed.events.at(-1).event, "done");
 });

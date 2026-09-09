@@ -1,5 +1,6 @@
 const MAX_RUN_SESSION_ID_LENGTH = 64;
 const RUN_SESSION_PREFIX = "nexus:";
+const APPROVAL_CHOICES = new Set(["once", "session", "always", "deny"]);
 
 const knownFileExtensions = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif",
@@ -373,6 +374,123 @@ export const parseHermesEventBlock = (eventBlock, context) => {
   let nextStreamedText = context.streamedText;
   const extractedFiles = dedupeFiles(extractFilesFromUnknown(parsedPayload));
 
+  if (eventName === "approval.request") {
+    const requestId = typeof parsedPayload.request_id === "string" ? parsedPayload.request_id.trim() : "";
+    const choices = Array.isArray(parsedPayload.choices)
+      ? parsedPayload.choices.filter((choice) => APPROVAL_CHOICES.has(choice))
+      : [];
+    if (!requestId || choices.length === 0) {
+      return {
+        events: [],
+        streamedText: nextStreamedText,
+        responseId: null,
+        completed: false,
+        failed: false,
+        errorCode: null,
+        recoveredFromFailure: false,
+      };
+    }
+
+    const rawSummary = [parsedPayload.summary, parsedPayload.command, parsedPayload.description]
+      .find((value) => typeof value === "string" && value.trim());
+    events.push({
+      event: "approval",
+      data: {
+        run_id: typeof parsedPayload.run_id === "string" ? parsedPayload.run_id : context.runId,
+        request_id: requestId,
+        choices,
+        summary: (rawSummary?.trim() || "Hermes solicita aprovação.").slice(0, 500),
+      },
+    });
+
+    return {
+      events,
+      streamedText: nextStreamedText,
+      responseId: null,
+      completed: false,
+      failed: false,
+      errorCode: null,
+      recoveredFromFailure: false,
+    };
+  }
+
+  if (eventName === "approval.resolved") {
+    const requestId = typeof parsedPayload.request_id === "string" ? parsedPayload.request_id.trim() : "";
+    if (requestId) {
+      events.push({
+        event: "meta",
+        data: {
+          provider: "hermes",
+          event: "approval.resolved",
+          run_id: typeof parsedPayload.run_id === "string" ? parsedPayload.run_id : context.runId,
+          session_id: typeof parsedPayload.session_id === "string" ? parsedPayload.session_id : context.sessionId,
+          request_id: requestId,
+          choice: APPROVAL_CHOICES.has(parsedPayload.choice) ? parsedPayload.choice : null,
+        },
+      });
+    }
+
+    return {
+      events,
+      streamedText: nextStreamedText,
+      responseId: null,
+      completed: false,
+      failed: false,
+      errorCode: null,
+      recoveredFromFailure: false,
+    };
+  }
+
+  if (eventName === "run.stopping") {
+    events.push({
+      event: "meta",
+      data: {
+        provider: "hermes",
+        event: "run.stopping",
+        run_id: typeof parsedPayload.run_id === "string" ? parsedPayload.run_id : context.runId,
+        session_id: typeof parsedPayload.session_id === "string" ? parsedPayload.session_id : context.sessionId,
+      },
+    });
+    events.push({
+      event: "status",
+      data: { text: "Hermes está interrompendo a execução do agente.", tone: "info" },
+    });
+
+    return {
+      events,
+      streamedText: nextStreamedText,
+      responseId: null,
+      completed: false,
+      failed: false,
+      errorCode: null,
+      recoveredFromFailure: false,
+    };
+  }
+
+  if (eventName === "run.cancelled" || eventName === "run.canceled") {
+    events.push({
+      event: "meta",
+      data: {
+        provider: "hermes",
+        event: "run.cancelled",
+        run_id: typeof parsedPayload.run_id === "string" ? parsedPayload.run_id : context.runId,
+        session_id: typeof parsedPayload.session_id === "string" ? parsedPayload.session_id : context.sessionId,
+      },
+    });
+    events.push({ event: "done", data: { request_id: context.requestId } });
+
+    return {
+      events,
+      streamedText: nextStreamedText,
+      responseId: null,
+      completed: false,
+      failed: false,
+      cancelled: true,
+      errorCode: null,
+      recoveredFromFailure: false,
+    };
+  }
+
   if (eventName === "message.delta" || eventName === "assistant.delta" || eventName === "response.output_text.delta") {
     const delta = typeof parsedPayload.delta === "string" ? parsedPayload.delta : "";
     if (delta) {
@@ -523,7 +641,14 @@ export const parseHermesStatusPayload = (payload, context) => {
     };
   }
 
-  if (status === "failed" || status === "cancelled" || status === "canceled") {
+  if (status === "cancelled" || status === "canceled") {
+    return {
+      terminal: true,
+      parsed: parseHermesEventBlock(buildStatusEventBlock(payload, "run.cancelled"), context),
+    };
+  }
+
+  if (status === "failed") {
     return {
       terminal: true,
       parsed: parseHermesEventBlock(buildStatusEventBlock({
