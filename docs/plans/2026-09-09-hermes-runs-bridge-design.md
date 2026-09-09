@@ -1,8 +1,10 @@
 # Desenho M2 — Chat Bridge sobre a Runs API oficial do Hermes
 
-**Estado:** Aceito  
-**Data da decisão:** 2026-09-09  
-**Marco:** M2 — protocolo oficial do agente  
+**Estado:** Aceito
+
+**Data da decisão:** 2026-09-09
+
+**Marco:** M2 — protocolo oficial do agente
 **Requisitos relacionados:** RF-004, RF-005, RNF-002, RNF-004, RNF-006,
 RNF-007 e RNF-008
 

@@ -484,12 +484,51 @@ automático foi aplicado neste lote.
 
 Commits funcionais do checkpoint: `79b3c0b`, `0b5f747`, `3afc20f` e `d8cff6b`.
 
+### 2026-09-09 — Checkpoint C local aprovado
+
+| Tarefa | Evidência | Resultado |
+| --- | --- | --- |
+| 7 — contrato Docker | projeto `ens-hermes-m2-fresh`, volume vazio e pin oficial por digest | init concluído, runtime `healthy`, API somente em `127.0.0.1:18644` |
+| contrato Runs ao vivo | `python -m unittest discover -s infra/hermes/tests -p test_runs_contract.py -v` | 1/1; capabilities completas e ausência de Bearer token rejeitada em capabilities/criação de Run |
+| smoke sem provider | `npm run smoke:hermes -- --allow-provider-unconfigured` | liveness/capabilities aprovadas; única degradação em `model` |
+| regressão do Bridge | `npm test --prefix services/chat-bridge` | 124/124 |
+| regressão do frontend | `npm test --prefix apps/chat-web -- --run` | 39 arquivos, 147/147 |
+| tipos do frontend | `npm run typecheck --prefix apps/chat-web` | aprovado |
+| Artifact Server | `npm test --prefix services/artifact-server` | 13/13 |
+| contratos Hermes/Compose | `npm run test:hermes` e render de produção | 16 aprovados, 6 POSIX skipped no Windows; render aprovado |
+
+A primeira subida isolada revelou que, num volume realmente vazio, `hermes
+profile install` cria o config do profile ENS, mas não o `config.yaml` raiz. O
+inicializador abortava antes do migrador por presumir esse arquivo. Um teste de
+regressão foi escrito antes da correção; o init agora cria a configuração raiz
+via CLI oficial e preserva a recusa de schemas explicitamente antigos. A nova
+subida em volume vazio comprovou a correção. Commit funcional: `3b92c75`.
+
+Containers e rede exclusivos foram removidos depois de conferir os nomes. O
+volume `ens-hermes-m2-fresh-data` foi preservado como evidência. O volume
+`ens-hermes-m2-data`, usado na reprodução inicial, também permaneceu preservado;
+nenhum container do M2 ficou ativo.
+
+O checkpoint C local não promove mocks a aceite externo. Continuam pendentes:
+run completo, approval, rejeição e cancelamento com provider configurado
+manualmente, além do exercício na VPS pelo operador humano. O OAuth do Hostinger
+Connector foi validado somente para leitura em 2026-09-09; não houve deploy nem
+alteração de produção.
+
+O agregador `npm test` também foi repetido. O frontend passou 147/147 e o fluxo
+parou no Marketing Ops pelas limitações já registradas na baseline: migrations
+Supabase não copiadas, PostgreSQL legado ausente em `127.0.0.1:55322`, Compose
+legado ausente e premissas temporais antigas de delegação. Como M2 não pode
+reintroduzir Supabase nem antecipar M3, a verificação de regressão usa as suítes
+focadas verdes acima e mantém o gate agregado explicitamente vermelho.
+
 ## Checkpoints
 
 - **Checkpoint A — após Tasks 1–3:** cliente, eventos e seletor puros aprovados.
 - **Checkpoint B — após Tasks 4–6:** servidor integrado, approvals e stop
   aprovados.
-- **Checkpoint C — após Tasks 7–8:** contrato Docker, evidências e publicação.
+- **Checkpoint C — após Tasks 7–8:** contrato Docker e evidências locais
+  aprovados; publicação na `main` é o passo final deste lote.
 
 ## Gate externo conhecido
 

@@ -14,6 +14,7 @@ data, o resultado e as premissas usadas.
 | Configuração manual de provider e OAuth | M1 | Incluído no primeiro deploy; exercício pendente |
 | [Atualização e rollback do Hermes/profile](hermes-update-rollback.md) | M1 | Profile exercitado localmente em 2026-09-09; core/VPS pendentes |
 | [Backup e restore do volume Hermes](hermes-backup-restore.md) | M1 | Exercitado localmente em 2026-09-09; VPS pendente |
+| [Hermes Runs Bridge](hermes-runs-bridge.md) | M2 | Contrato sem provider exercitado localmente em 2026-09-09; provider/VPS pendentes |
 | Backup e restore do PostgreSQL | M3 | Pendente |
 | Incidente de Auth/sessão | M4 | Pendente |
 | Backup e restore de artefatos | M5 | Pendente |

@@ -125,7 +125,7 @@ Na VPS, o responsável humano executa todos os comandos. O agente atua somente
 como copiloto, preparando passos e validando saídas/logs redigidos; não abre SSH
 nem opera a infraestrutura diretamente.
 
-## Hermes Runs Bridge — M2 em execução
+## Hermes Runs Bridge — M2 em execução; checkpoint C local aprovado
 
 Em 2026-09-09, os checkpoints A e B foram aprovados localmente. Texto e arquivos
 com conteúdo extraído seguem pelo Runs API oficial; Picture, imagens e binários
@@ -138,9 +138,42 @@ sem extração permanecem no Session API. O Bridge agora:
 - responde approvals e stop pelos endpoints oficiais com autorização cross-user;
 - preserva o contrato do frontend sem expor Hermes ao navegador.
 
-Evidência fresca: Chat Bridge 124/124, frontend 147/147 e typecheck aprovado.
-O contrato Docker fixado, smoke sem provider e aceite real com provider pertencem
-ao checkpoint C. Nenhuma operação de produção foi realizada neste lote.
+O checkpoint C comprovou o contrato do pin oficial num projeto Docker Desktop
+isolado. A primeira tentativa em volume vazio encontrou uma premissa incorreta:
+`profile install` criava o config do profile ENS, mas não o `config.yaml` raiz.
+O inicializador passou a criar essa configuração pelo CLI oficial antes do
+migrador e um segundo ensaio, novamente em volume totalmente vazio, passou.
+
+Evidência fresca do lote:
+
+- Chat Bridge: 124/124;
+- frontend: 147/147 e typecheck aprovado;
+- contratos Hermes: 16 aprovados, 6 cenários POSIX skipped no runner Windows;
+- Artifact Server: 13/13;
+- contrato Python ao vivo: 1/1 no pin `v2026.8.27` pelo digest aprovado;
+- smoke Node: liveness e capabilities aprovadas, readiness degradada somente por
+  `provider_unconfigured`;
+- chamadas sem Bearer token para capabilities e criação de Run rejeitadas;
+- containers e rede `ens-hermes-m2-fresh` removidos; volume
+  `ens-hermes-m2-fresh-data` preservado como evidência.
+
+M2 ainda não possui aceite externo completo. Run com resposta de modelo,
+approval, rejeição e cancelamento reais aguardam provider configurado manualmente
+pelo operador. O exercício na VPS também permanece pendente. Nenhuma operação de
+produção foi realizada neste lote.
+
+O OAuth do Hostinger Connector foi validado em modo somente leitura em
+2026-09-09. Essa validação não constituiu deploy, não alterou a VPS e não muda a
+regra de que produção é operada pelo responsável humano.
+
+Na verificação final deste checkpoint, `npm test` passou o frontend 147/147 e
+então manteve o gate agregado vermelho no Marketing Ops pelas mesmas premissas
+herdadas: migrations Supabase deliberadamente ausentes, PostgreSQL indisponível
+em `127.0.0.1:55322`, `docker-compose.yml` legado não copiado e testes de
+delegação presos a premissas temporais antigas. O agregador interrompe antes do
+Bridge e Artifact Server; ambos foram executados separadamente e passaram
+124/124 e 13/13. Nenhuma dessas falhas foi mascarada ou corrigida com a
+reintrodução de infraestrutura proibida.
 
 Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
 frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não

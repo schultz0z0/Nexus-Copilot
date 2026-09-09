@@ -13,7 +13,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
 | M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
-| M2 — protocolo do agente | Em execução; checkpoint B aprovado | executor, approvals e stop oficiais comprovados localmente |
+| M2 — protocolo do agente | Em execução; checkpoint C local aprovado | contrato Bridge/Runtime comprovado sem provider; aceite real com provider e VPS pendentes |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
 | M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
@@ -94,7 +94,7 @@ capabilities; contrato externo estável para o frontend; erros e observabilidade
 - ausência de provider é distinguida de indisponibilidade do processo;
 - smoke test real passa com o profile ENS.
 
-**Situação em 2026-09-09:** os checkpoints A e B do
+**Situação em 2026-09-09:** os checkpoints A, B e C local do
 [plano de implementação](../plans/2026-09-09-hermes-runs-bridge-implementation.md)
 foram aprovados localmente. O Bridge possui cliente tipado para os endpoints
 oficiais de Runs, valida capabilities de forma fail-closed, normaliza approval,
@@ -102,7 +102,18 @@ stopping e cancellation e seleciona Runs somente para texto/arquivos extraídos.
 Picture, imagens e binários sem extração permanecem em Session. A integração
 do executor persiste o ID upstream antes do SSE e limita cada Run a um consumidor.
 Approval e stop agora usam endpoints oficiais, mantêm o contrato do frontend e
-negam cross-user. O contrato Docker e o smoke com provider continuam pendentes.
+negam cross-user. No Docker Desktop, um volume realmente vazio revelou e levou
+à correção da inicialização ausente do `config.yaml` raiz. O pin oficial iniciou
+saudável, rejeitou chamadas Runs sem Bearer token e anunciou todas as
+capabilities requeridas; readiness ficou degradada somente por provider ausente,
+como esperado. Containers e rede exclusivos foram removidos e o volume de
+evidência `ens-hermes-m2-fresh-data` foi preservado.
+
+O M2 permanece em execução: run completo, approval, rejeição e cancelamento com
+provider real dependem da configuração manual do operador; a validação de VPS
+também continua pendente e não autoriza operação direta pelo agente. O RunStore
+em PostgreSQL e a fronteira pública na App API/BFF continuam deliberadamente em
+M3 e M4.
 
 ## M3 — Fundação PostgreSQL
 
