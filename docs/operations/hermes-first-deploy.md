@@ -4,27 +4,26 @@ Status: implementado, ainda não exercitado em VPS.
 
 ## Evidência do ensaio Docker Desktop
 
-**Estado em 2026-09-08: Bloqueado para ensaio.** O responsável autorizou a
-implementação e validações estruturais, mas não autorizou especificamente pull
-da imagem nem criação de containers/volume neste computador corporativo.
+**Estado em 2026-09-09: paridade Docker Desktop comprovada.** Depois de
+autorização específica, o ensaio isolado executou pull do digest fixado, init
+real, runtime, health/capabilities, restart, segundo init e recriação completa.
 
-Evidência disponível sem executar o runtime:
+Evidência resumida:
 
-- Docker Compose v5.4.0 encontrado;
-- Compose base e produção renderizados com placeholders não sensíveis;
-- tag/digest, mounts, dependência do init, healthcheck e labels validados por
-  testes de contrato;
-- nenhuma imagem foi puxada e nenhum container/volume foi criado.
+- Docker Desktop `4.88.1`, Engine `29.7.2`, Compose `v5.4.0`, `linux/amd64`;
+- imagem observada com o digest aprovado e revisão upstream
+  `5fc308a70719a83cccdbba4c0e39c23f5a8239d5`;
+- Profile Distribution `ens@0.1.1`, configs raiz/profile no schema `39`;
+- somente o gateway `ens` em execução; gateway `default` parado;
+- container `healthy`, modelo virtual `ens`, liveness/capabilities aprovadas e
+  única degradação em `model` por provider deliberadamente ausente;
+- bind local somente em `127.0.0.1:18642`, dashboard desabilitado;
+- volume `ens-hermes-m1-data` preservado depois de restart e `down`/`up`;
+- nenhum container do projeto permaneceu ao final.
 
-Pendente após autorização específica: digest observado no daemon, quatro testes
-POSIX do inicializador, init real, runtime/health, persistência, segundo init,
-backup/restore e rollback em volume descartável. Esta seção não comprova
-paridade nem deploy VPS.
-
-O ensaio foi preparado e recebeu autorização limitada para execução em outro
-computador. Siga o runbook de
-[paridade no Docker Desktop](hermes-docker-desktop-parity.md); este computador
-corporativo permanece intocado.
+O registro completo, inclusive falhas encontradas e correções, está no runbook
+de [paridade no Docker Desktop](hermes-docker-desktop-parity.md). Esta evidência
+não comprova deploy VPS, HTTPS/OAuth, backup/restore nem rollback.
 
 ## Objetivo e impacto
 

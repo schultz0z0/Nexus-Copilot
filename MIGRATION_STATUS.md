@@ -36,10 +36,10 @@ Em 2026-09-08, o primeiro lote do runtime oficial foi implementado na branch
 - API `8642` mantida sem publicação de porta e nenhum Docker socket montado;
 - provider e credenciais continuam ausentes do repositório.
 
-O teste comportamental POSIX do inicializador está escrito, mas seus quatro
-cenários ficaram skipped neste computador: não há shell POSIX instalado. Por
-segurança, nada foi instalado e nenhum container/imagem foi iniciado. Esse gate
-deve rodar no container Linux ou na VPS antes da aceitação do M1.
+O teste comportamental POSIX do inicializador está escrito. Seus cenários
+continuam skipped pelo runner Node do Windows por falta de shell POSIX no host,
+mas o próprio inicializador foi executado repetidamente com sucesso dentro da
+imagem Linux oficial no ensaio de 2026-09-09.
 
 Compatibilidade conhecida do pin: o Hermes `0.20.6` distribui `mcp.json`, mas seu
 runtime ainda carrega MCPs de `config.yaml#mcp_servers`. O ENS mantém somente a
@@ -54,9 +54,12 @@ O segundo lote M1, também em 2026-09-08, acrescentou:
   deploy;
 - runbooks de desenvolvimento Windows e primeiro deploy na VPS.
 
-Resultado focado atual: 15 testes Hermes aprovados, 4 cenários POSIX skipped e
-zero falhas. Os runbooks ainda não foram exercitados; portanto, M1 continua em
-execução e nenhum deploy é declarado aceito.
+Resultado focado em 2026-09-09: 16 testes Hermes aprovados, 5 cenários POSIX
+skipped pelo runner Windows e zero falhas. O init real dentro do container Linux
+cobriu o caminho operacional. Também passaram: corte `3/3`, verificação do corte
+`397/397`, Chat Bridge `90/90`, Artifact Server `13/13` e renderizações base,
+paridade e produção. M1 continua em execução porque VPS, HTTPS/OAuth,
+backup/restore e rollback ainda não foram exercitados.
 
 O terceiro lote documentou atualização/rollback e backup/restore, registrou o
 bloqueio do ensaio Docker Desktop e executou a auditoria final permitida. A
@@ -78,24 +81,30 @@ binários; diferenças substantivas continuam reprovadas.
 
 ### Gate Docker Desktop
 
-**Bloqueado para ensaio em 2026-09-08.** Por se tratar de computador
-corporativo, não houve autorização específica para pull da imagem, criação de
-container ou volume de teste. A implementação não simulou esse resultado.
+**Comprovado em 2026-09-09 dentro do escopo autorizado.** O projeto isolado
+`ens-hermes-m1` baixou a imagem oficial fixada, criou apenas o volume
+`ens-hermes-m1-data` e executou init, runtime, smoke, restart, segundo init e
+recriação completa. A API ficou restrita a `127.0.0.1:18642` e o dashboard
+permaneceu desabilitado.
 
-Já comprovado sem runtime: Compose v5.4.0 renderiza, pin/digest e isolamento
-estrutural passam nos testes. Pendente: execução POSIX do init, runtime real,
-health/capabilities, persistência, backup/restore e rollback.
+O ensaio encontrou e corrigiu quatro incompatibilidades reais: comando inicial
+abria a TUI, gateway `default` disputava a porta com `ens`, a capability oficial
+usa `run_approval_response`, e o migrador Docker exige um piso de schema para
+configs não versionados. O resultado final possui:
 
-Situação de aceite: **implementação pronta para ensaio, não pronta para deploy**.
-Runs API no Bridge e retirada do contrato Hermes legado do navegador continuam
-fora do M1, respectivamente em M2 e M4.
+- um único processo de gateway `hermes -p ens`;
+- `default` parado e `/v1/models` anunciando `ens`;
+- Profile Distribution `ens@0.1.1`;
+- configs raiz/profile migrados ao schema `39` pelo migrador oficial;
+- liveness e capabilities aprovadas;
+- única degradação de readiness em `model`, esperada sem provider;
+- persistência comprovada em restart e `down`/`up`;
+- nenhum container ao final e volume de evidência preservado.
 
-O próximo lote foi preparado para continuidade em outro computador com Docker
-Desktop. O handoff usa projeto `ens-hermes-m1`, volume isolado
-`ens-hermes-m1-data` e override que publica somente a API em
-`127.0.0.1:18642`, com dashboard desabilitado. A autorização não inclui apagar o
-volume, tocar o Hermes local, configurar provider ou acessar a VPS. Nenhuma
-dessas ações foi executada neste computador.
+Situação de aceite: **paridade Docker aprovada; M1 ainda não pronto para
+produção**. Permanecem abertos o deploy VPS com HTTPS/OAuth, provider manual,
+backup/restore e rollback. Runs API no Bridge e retirada do contrato Hermes
+legado do navegador continuam nos marcos M2 e M4.
 
 Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
 frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não

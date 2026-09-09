@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-08
+**Atualizado em:** 2026-09-09
 
 ## Regra de progressão
 
@@ -12,7 +12,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | Marco | Estado | Resultado principal |
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
-| M1 — Hermes oficial | Em execução; ensaio bloqueado | runtime/contratos prontos, exercício Docker e VPS pendentes |
+| M1 — Hermes oficial | Em execução; paridade Docker aprovada | runtime/profile comprovados; VPS, backup/restore e rollback pendentes |
 | M2 — protocolo do agente | Pendente | Bridge compatível com Runs/SSE/aprovações oficiais |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
@@ -60,19 +60,16 @@ corporativo além do escopo aprovado.
 **Plano ativo:**
 [2026-08-28-hermes-official-runtime-implementation.md](../plans/2026-08-28-hermes-official-runtime-implementation.md).
 
-**Situação em 2026-09-08:** código, Compose, smoke e runbooks foram
-implementados. O ensaio Docker Desktop está **Bloqueado para ensaio** até haver
-autorização específica para pull, containers e volume descartável no computador
-corporativo. A verificação estática e focada está verde, mas M1 não está
-concluído: a implementação está pronta para ensaio e ainda não está pronta para
-deploy enquanto os gates de POSIX, runtime, persistência, backup/restore,
-rollback e HTTPS/OAuth real permanecerem sem exercício. A matriz detalhada está
-no [plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-08).
+**Situação em 2026-09-09:** a
+[paridade Docker Desktop](../operations/hermes-docker-desktop-parity.md) foi
+exercitada no projeto isolado `ens-hermes-m1`. Init/update real, um único
+gateway `ens`, health/capabilities, restart, recriação e persistência passaram;
+o volume de evidência foi preservado e nenhum container ficou ativo.
 
-Próximo passo autorizado: executar o
-[ensaio Docker Desktop](../operations/hermes-docker-desktop-parity.md) em outro
-computador, com projeto e volume isolados. O bloqueio permanece até as
-evidências desse host serem registradas.
+M1 não está concluído: backup/restore, rollback e o deploy VPS com HTTPS/OAuth
+real continuam sem exercício. O próximo passo seguro é preparar e executar esses
+gates antes da liberação de produção. A matriz detalhada está no
+[plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-09).
 
 ## M2 — Protocolo oficial do agente
 

@@ -138,6 +138,9 @@ O instalador correto para Windows nativo é o `install.ps1` oficial. O `install.
 - manter o profile `default` inativo;
 - persistir `/opt/data` em volume ou bind mount dedicado;
 - não montar o Docker socket no Hermes;
+- manter o backend de terminal `local` dentro do próprio container: nesse
+  contexto, "local" é o filesystem do container e o volume `/opt/data`, não o
+  host; não trocar por backend Docker aninhado mediante socket do host;
 - conectar o Hermes somente às redes e volumes necessários.
 
 ## Inicialização da Profile Distribution ENS
@@ -151,10 +154,15 @@ Sequência:
 3. se o profile `ens` não existir, executa `hermes profile install /distribution --name ens --yes`;
 4. se o profile já existir, executa `hermes profile update ens --yes`;
 5. nunca usa `--force-config` durante uma atualização normal;
-6. torna `ens` o profile ativo com `hermes profile use ens`;
-7. valida a versão da distribuição e a compatibilidade `hermes_requires`;
-8. termina com sucesso;
-9. somente depois o container persistente do Hermes inicia.
+6. carimba somente configs ainda sem `_config_version`, recusa versões
+   explícitas abaixo do piso suportado e executa o migrador oficial para a raiz
+   e o profile;
+7. persiste o gateway `default` como parado;
+8. torna `ens` o profile ativo com `hermes profile use ens`;
+9. valida a versão da distribuição e a compatibilidade `hermes_requires`;
+10. termina com sucesso;
+11. somente depois o container persistente inicia explicitamente
+    `hermes -p ens gateway run --no-supervise` sob o supervisor do container.
 
 O inicializador e o runtime nunca escreverão simultaneamente no mesmo `/opt/data`. O Compose deverá exigir `service_completed_successfully` antes de iniciar o runtime.
 
@@ -242,7 +250,7 @@ Capabilities mínimas:
 - `run_status`;
 - `run_events_sse`;
 - `run_stop`;
-- `run_approval`;
+- `run_approval_response` (feature; o endpoint continua nomeado `run_approval`);
 - criação e leitura de sessões;
 - streaming de sessão ou Runs;
 - autenticação bearer obrigatória.

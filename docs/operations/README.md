@@ -9,7 +9,7 @@ data, o resultado e as premissas usadas.
 | Runbook | Marco | Estado |
 | --- | --- | --- |
 | [Hermes local no Windows](hermes-local-development.md) | M1 | Implementado; exercício pendente |
-| [Paridade Hermes no Docker Desktop](hermes-docker-desktop-parity.md) | M1 | Preparado; execução autorizada no próximo computador |
+| [Paridade Hermes no Docker Desktop](hermes-docker-desktop-parity.md) | M1 | Exercitado com sucesso em 2026-09-09 |
 | [Primeiro deploy Hermes na VPS](hermes-first-deploy.md) | M1 | Implementado; exercício pendente |
 | Configuração manual de provider e OAuth | M1 | Incluído no primeiro deploy; exercício pendente |
 | [Atualização e rollback do Hermes/profile](hermes-update-rollback.md) | M1 | Implementado; ensaio pendente |
@@ -22,13 +22,13 @@ data, o resultado e as premissas usadas.
 
 ## Situação do gate M1
 
-Em 2026-09-08, os runbooks M1 foram implementados, mas nenhum foi marcado como
-exercitado. O computador corporativo não recebeu pull de imagem, container ou
-volume de teste sem autorização específica. O próximo ensaio foi preparado para
-um segundo computador e recebeu autorização limitada aos recursos descritos no
-runbook de paridade. Persistência, backup/restore, rollback e HTTPS/OAuth real
-continuam pendentes até evidência de execução. A classificação por critério está na
-[matriz de aceite M1](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-08).
+Em 2026-09-09, o runbook de paridade Docker Desktop foi exercitado com sucesso
+no escopo isolado autorizado. Init/update, runtime único do profile `ens`,
+health/capabilities, restart, recriação e persistência foram comprovados. O
+volume de evidência foi preservado e os containers foram removidos ao final.
+Backup/restore, rollback e HTTPS/OAuth real na VPS continuam pendentes. A
+classificação por critério está na
+[matriz de aceite M1](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-09).
 
 ## Estrutura mínima de um runbook
 

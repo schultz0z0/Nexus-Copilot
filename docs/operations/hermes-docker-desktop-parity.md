@@ -1,6 +1,58 @@
 # Ensaio de paridade Hermes no Docker Desktop
 
-Status: preparado; execução autorizada somente no próximo computador de teste.
+Status: exercitado com sucesso em 2026-09-09; volume de evidência preservado.
+
+## Evidência do ensaio de 2026-09-09
+
+O ensaio foi executado neste Windows corporativo depois da autorização
+específica do responsável, exclusivamente com o projeto `ens-hermes-m1` e o
+volume `ens-hermes-m1-data`.
+
+Ambiente observado:
+
+- Docker Desktop `4.88.1` (`237512`), Engine `29.7.2` e Compose `v5.4.0`;
+- contexto `desktop-linux`, daemon `linux/amd64`;
+- Node.js `v24.11.1` e npm `11.6.2`;
+- baseline Git `114cfd976d858a66be481df37f6e4a26d901009b`;
+- imagem `nousresearch/hermes-agent:v2026.8.27` com digest
+  `sha256:e0df6adebddf29b91112aefc999d4aaf6846c9eb544faca5672a16a13590ff79`;
+- label de revisão upstream `5fc308a70719a83cccdbba4c0e39c23f5a8239d5`.
+
+Resultados comprovados:
+
+- primeiro init instalou `ens@0.1.0`; o update do lote instalou `ens@0.1.1`;
+- o inicializador real terminou com exit `0` em instalação e atualizações
+  repetidas, sem `--force-config`;
+- os configs raiz e do profile foram migrados pelo migrador oficial até
+  `_config_version: 39`;
+- o runtime final iniciou explicitamente `hermes -p ens gateway run
+  --no-supervise`; o gateway `default` permaneceu parado;
+- o contêiner ficou `healthy`, `/v1/models` anunciou somente `ens` e o smoke
+  autenticado aprovou liveness e capabilities;
+- readiness degradou somente no check `model`, condição aceita explicitamente
+  porque este ensaio não configura provider;
+- API publicada apenas em `127.0.0.1:18642`; dashboard desabilitado;
+- restart e um ciclo completo `down`/`up` preservaram profile, config e volume;
+- ao final, nenhum container do projeto permaneceu e o volume
+  `ens-hermes-m1-data` continuou `local/local`.
+
+Falhas reais encontradas e corrigidas durante o ensaio:
+
+1. a imagem sem comando de gateway abriu a TUI e entrou em restart; o Compose
+   passou a usar o modo gateway oficial;
+2. iniciar `gateway run` sem profile fez o gateway `default` disputar a porta
+   com `ens`; o runtime agora seleciona `ens` explicitamente e o init persiste
+   `default` como parado;
+3. a capability oficial da aprovação chama-se `run_approval_response`, embora
+   o endpoint seja `run_approval`; smoke e desenho foram alinhados ao payload
+   observado;
+4. o migrador Docker do pin recusa configs sem versão como anteriores ao piso
+   `12`; o init agora carimba somente configs sem versão, recusa versão
+   explícita abaixo do piso e delega a migração ao script oficial.
+
+Limites: o MCP Marketing Ops não estava iniciado neste stack isolado; provider,
+dashboard, HTTPS/OAuth, VPS, backup/restore e rollback não foram exercitados.
+Esses gates continuam abertos e não são inferidos deste resultado.
 
 ## Objetivo
 
@@ -14,7 +66,7 @@ VPS e não conclui o M1 sozinho.
 
 ## Autorização e limites
 
-O usuário autorizou, no outro computador com Docker Desktop:
+O usuário autorizou, neste computador com Docker Desktop:
 
 - baixar a imagem oficial fixada no Compose;
 - criar e iniciar somente o projeto Compose `ens-hermes-m1`;
@@ -80,15 +132,18 @@ docker info --format '{{.OSType}}/{{.Architecture}}'
 Esperado: Node.js 22+, daemon acessível e `linux/<arquitetura>` no Docker
 Desktop. Se faltar algo, pare; este lote não autoriza instalações.
 
-## 3. Instalar dependências e rodar gates estáticos
+## 3. Rodar gates estáticos
 
 ```powershell
-npm ci
 npm run validate:hermes-profile
 npm run test:hermes
 npm run test:cut
 npm run verify:cut
 ```
+
+O pacote raiz não possui dependências e, portanto, não possui
+`package-lock.json`; não execute `npm ci` na raiz. Os pacotes copiados mantêm
+seus próprios lockfiles para os marcos que precisarem deles.
 
 Antes do runtime, todos os comandos devem terminar com exit `0`. No host com
 containers Linux, os quatro cenários POSIX ainda podem aparecer skipped no
@@ -212,10 +267,10 @@ Atualize a documentação com:
 Não marque backup/restore, rollback ou dashboard HTTPS/OAuth como exercitados
 sem executar os respectivos runbooks em escopo autorizado.
 
-## Prompt de retomada para o outro computador
+## Prompt para repetir o ensaio em outro computador
 
 ```text
-Estou no outro computador de teste, com Docker Desktop configurado para containers Linux, e já clonei ou atualizei a branch main do repositório https://github.com/schultz0z0/Nexus-Copilot.git.
+Estou em outro computador de teste, com Docker Desktop configurado para containers Linux, e já clonei ou atualizei a branch main do repositório https://github.com/schultz0z0/Nexus-Copilot.git.
 
 Continue o marco M1 exatamente pelo ensaio documentado em docs/operations/hermes-docker-desktop-parity.md. Antes de agir, leia AGENTS.md, docs/README.md, MIGRATION_STATUS.md, docs/migration/roadmap.md e docs/plans/2026-08-28-hermes-official-runtime-implementation.md.
 

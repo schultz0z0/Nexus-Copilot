@@ -8,7 +8,7 @@
 
 **Tech Stack:** Docker Compose v2, imagem oficial Nous Research, shell POSIX apenas dentro do container Linux, Node.js 22 para validadores e testes de contrato, Markdown para runbooks.
 
-**Status:** Em execução — implementação pronta para ensaio; gates de runtime bloqueados
+**Status:** Em execução — paridade Docker aprovada; gates VPS/recuperação pendentes
 
 **Marco:** M1  
 **Requisitos:** RF-005, RF-006, RF-010 a RF-014; RNF-001 a RNF-003, RNF-007 a RNF-010  
@@ -54,17 +54,18 @@ adivinhe compatibilidade.
 | Data | Tarefa | Estado | Evidência |
 | --- | --- | --- | --- |
 | 2026-09-08 | 1. Contrato da distribuição | Concluída | Validador e 2 testes aprovados; `hermes_requires >=0.20.6`; nenhum segredo/provider distribuído |
-| 2026-09-08 | 2. Inicializador idempotente | Implementada, gate Linux pendente | Contrato estrutural aprovado; 4 cenários POSIX automatizados ficaram skipped porque este Windows não possui shell POSIX e nada foi instalado |
+| 2026-09-09 | 2. Inicializador idempotente | Concluída no container Linux | Instalação/update repetidos com exit 0; migração de schema raiz/profile; `default` persistido como parado; sem `--force-config` |
 | 2026-09-08 | 3. Compose base | Concluída estruturalmente | Compose v5.4.0 renderizou; 3 testes aprovados; imagem fixada por digest; API sem `ports`; sem Docker socket |
 | 2026-09-08 | 4. Dashboard/Traefik | Concluída estruturalmente | Override de produção renderizou; router único para `9119`; OAuth Nous obrigatório; nenhuma rota API ou rede Traefik externa |
-| 2026-09-08 | 5. Smoke do runtime | Concluída | 6 testes HTTP aprovados para liveness, readiness, capabilities, timeout, autenticação, JSON inválido e redaction da chave |
+| 2026-09-09 | 5. Smoke do runtime | Concluída e exercitada | Payload oficial validado; feature `run_approval_response`; degradação permitida somente quando `model` é o único check degradado |
 | 2026-09-08 | 6. Runbooks iniciais | Implementada, exercício pendente | Desenvolvimento Windows e primeiro deploy VPS documentados com impacto, resultados esperados, parada segura e rollback recuperável |
 | 2026-09-08 | 7. Update, backup e rollback | Implementada, exercício pendente | Runbooks separam core/profile, preservam `/opt/data`, usam backup identificado e restore inicial em volume de teste |
-| 2026-09-08 | 8. Paridade Docker Desktop | Preparada; execução transferida | Computador corporativo permaneceu intocado; override isolado e handoff receberam autorização limitada para o próximo computador de teste |
-| 2026-09-08 | 9. Verificação final | Executada até os gates autorizados | Profile, 15 contratos aprovados, Compose renderizado, cut, Bridge e Artifact Server aprovados; 4 cenários POSIX skipped e gates de runtime permanecem abertos |
+| 2026-09-09 | 8. Paridade Docker Desktop | Concluída | Imagem/digest reais, `ens@0.1.1`, runtime único ENS, smoke, restart, segundo init e `down`/`up`; volume preservado |
+| 2026-09-09 | 9. Verificação final | Concluída para o escopo local | Hermes 16 pass/5 skip/0 fail; cut 3/3 e 397/397; Bridge 90/90; Artifact 13/13; três renders Compose; VPS/backup/rollback seguem abertos |
 
-Commits do lote: `e819c04`, `cdf2fbd`, `e8f244d` na branch
-`codex/hermes-m1`. Nenhuma imagem foi baixada e nenhum container foi iniciado.
+Commits do primeiro lote: `e819c04`, `cdf2fbd`, `e8f244d` na branch
+`codex/hermes-m1`. Naquele momento nenhuma imagem havia sido baixada; a paridade
+real foi autorizada e executada no lote de 2026-09-09.
 
 Durante a Tarefa 1, a auditoria do tag fixado confirmou que o runtime `0.20.6`
 ainda lê `mcp_servers` de `config.yaml`, não o `mcp.json` da distribuição. O
@@ -80,14 +81,14 @@ verificador do corte inicial para tolerar somente conversões de fim de linha
 feitas pelo checkout do Git; diferenças textuais reais e binários diferentes
 continuam falhando. O gate M1 não foi fechado.
 
-## Matriz de aceite em 2026-09-08
+## Matriz de aceite em 2026-09-09
 
 | # | Situação | Evidência ou condição pendente |
 | --- | --- | --- |
 | 1 | **Comprovado** | `git ls-files` não encontra core, fork, submodule ou vendor Hermes. |
 | 2 | **Comprovado** | Testes de Compose confirmam tag `v2026.8.27` e digest aprovados nos dois serviços. |
 | 3 | **Comprovado** | Personalização versionada está em `agents/ens`; não há outra árvore Hermes. |
-| 4 | **Bloqueado** | Contrato do init está aprovado, mas instalação/update/use reais exigem shell POSIX/container autorizado. |
+| 4 | **Comprovado** | Install/update/use e migração de schema foram executados repetidamente dentro do container Linux oficial. |
 | 5 | **Comprovado** | Compose exige `service_completed_successfully`; somente init e runtime montam o volume e não executam em paralelo. |
 | 6 | **Comprovado** | Compose não define provider e init não usa `--force-config`; credenciais permanecem externas. |
 | 7 | **Não iniciado** | Migração do Chat Bridge para Runs/capabilities pertence ao M2. |
@@ -95,15 +96,15 @@ continuam falhando. O gate M1 não foi fechado.
 | 9 | **Comprovado** | Override possui somente router do dashboard `9119`; API `8642` não possui `ports` nem router. |
 | 10 | **Bloqueado** | TLS/OAuth estão configurados e testados estruturalmente; HTTPS e callback reais dependem da VPS. |
 | 11 | **Comprovado** | Testes e auditoria não encontram Docker socket, `privileged`, capabilities ou mounts amplos. |
-| 12 | **Bloqueado** | Persistência após restart/recriação depende do ensaio Docker. |
-| 13 | **Comprovado** | Pin versionado e runbook tornam update manual e rollback explícitos; o ensaio continua pendente. |
-| 14 | **Bloqueado** | Ausência de `--force-config` está comprovada; preservação real de estado/configuração precisa do ensaio. |
-| 15 | **Comprovado** | Smoke distingue `/health` de `/health/detailed` e falha fechado salvo tolerância explícita ao provider ausente. |
-| 16 | **Bloqueado** | Docker Desktop não foi executado sem autorização específica. |
+| 12 | **Comprovado** | Restart e ciclo `down`/`up` preservaram o profile, schema e volume isolado. |
+| 13 | **Bloqueado** | Pin e procedimentos estão documentados, mas rollback e restore ainda não foram exercitados. |
+| 14 | **Comprovado** | Segundo init preservou o profile/config e atualizou a distribuição sem `--force-config`; provider continuou externo. |
+| 15 | **Comprovado** | Smoke real aprovou liveness/capabilities e aceitou somente o check `model` degradado sem provider; demais falhas fecham o gate. |
+| 16 | **Comprovado** | Docker Desktop foi executado no escopo específico autorizado e encerrado sem remover o volume. |
 
-Conclusão: **M1 em execução; implementação pronta para ensaio, não pronta para
-deploy**. Os itens 7 e 8 permanecem deliberadamente nos marcos seguintes e os
-demais gates abertos exigem runtime autorizado e/ou a VPS.
+Conclusão: **M1 em execução; paridade Docker aprovada, produção ainda não
+aceita**. Os itens 7 e 8 permanecem deliberadamente nos marcos seguintes. Os
+gates abertos exigem rollback/restore e a VPS com HTTPS/OAuth reais.
 
 ## Estrutura final esperada do marco
 
@@ -701,12 +702,11 @@ Critério atendido: RF-014, RNF-003, RNF-010.
 computador corporativo. Sem autorização, registrar **Bloqueado para ensaio**, não
 simular sucesso e não executar Docker.
 
-**Handoff em 2026-09-08:** o computador corporativo continua fora do escopo de
-execução. O usuário autorizou o ensaio somente no próximo computador de teste,
+**Execução em 2026-09-09:** o usuário autorizou o ensaio neste computador,
 limitado ao projeto `ens-hermes-m1`, volume `ens-hermes-m1-data` e operações
 descritas em `docs/operations/hermes-docker-desktop-parity.md`. O override de
-paridade publica somente a API em loopback e desabilita o dashboard; produção
-continua sem porta publicada.
+paridade publicou somente a API em loopback e manteve o dashboard desabilitado;
+produção continua sem porta API publicada.
 
 **Step 1: Verificar sem mudar estado**
 
