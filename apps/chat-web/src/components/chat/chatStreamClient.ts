@@ -105,6 +105,41 @@ const parseRunId = async (response: Response) => {
   return runId;
 };
 
+type StopChatbotRunParams = {
+  runId: string;
+  getAccessToken: () => Promise<string>;
+  resolveChatbotProxyBaseUrl: () => string;
+};
+
+export const stopChatbotRun = async ({
+  runId,
+  getAccessToken,
+  resolveChatbotProxyBaseUrl,
+}: StopChatbotRunParams) => {
+  const normalizedRunId = runId.trim();
+  if (!normalizedRunId) throw new Error("run_not_found");
+
+  const token = await getAccessToken();
+  let response: Response;
+  try {
+    response = await fetch(
+      `${resolveChatbotProxyBaseUrl()}/api/chat/runs/${encodeURIComponent(normalizedRunId)}/stop`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      },
+    );
+  } catch {
+    throw new Error("Falha de rede ao interromper a execução.");
+  }
+
+  const payload = await response.json().catch(() => null) as { error?: unknown } | null;
+  if (!response.ok) {
+    throw new Error(typeof payload?.error === "string" ? payload.error : `stop_failed:${response.status}`);
+  }
+  return payload;
+};
+
 type RunSnapshotEvent = {
   event?: unknown;
   data?: unknown;

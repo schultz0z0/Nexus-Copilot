@@ -10,6 +10,7 @@ import {
   toApprovalStreamPayload,
   toOfficialApprovalChoice,
 } from "./hermes-approvals.js";
+import { assertStoppableHermesRun } from "./hermes-run-control.js";
 
 import {
   buildHermesRunSessionId,
@@ -1973,6 +1974,46 @@ const handleRequest = async (req, res) => {
     const run = await bridge.createRun({ user, payload });
     writeSseHeaders(req, res);
     store.subscribe(run.id, res, { closeOnTerminal: true });
+    return;
+  }
+
+  const stopRunMatch = url.pathname.match(/^\/api\/chat\/runs\/([^/]+)\/stop$/);
+  if (stopRunMatch && req.method === "POST") {
+    const user = await verifyUser(req);
+    const runId = decodeURIComponent(stopRunMatch[1]);
+    const run = store.get(runId);
+    assertStoppableHermesRun(run, user.id);
+
+    const hermesBaseUrl = normalizeBaseUrl(config.hermesBaseUrl);
+    if (!hermesBaseUrl) {
+      const error = new Error("hermes_unreachable");
+      error.code = "hermes_unreachable";
+      error.status = 503;
+      throw error;
+    }
+
+    const client = bridge.createRunsClient(run, hermesBaseUrl);
+    const stopPayload = await client.stopRun(run.hermes_run_id);
+    const becameTerminal = await bridge.applyHermesStatus(run, stopPayload);
+    if (!becameTerminal && !terminalStatuses.has(run.status)) {
+      run.status = "stopping";
+      bridge.appendEvent(run, {
+        event: "meta",
+        data: {
+          provider: "hermes",
+          event: "run.stopping",
+          run_id: run.hermes_run_id,
+          session_id: run.hermes_session_id,
+        },
+      });
+      bridge.appendEvent(run, {
+        event: "status",
+        data: { text: "Hermes está interrompendo a execução do agente.", tone: "info" },
+      });
+      await store.save(run);
+    }
+
+    jsonResponse(res, becameTerminal ? 200 : 202, { run }, corsHeaders);
     return;
   }
 

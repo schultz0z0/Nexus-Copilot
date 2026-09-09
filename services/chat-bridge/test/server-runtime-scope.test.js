@@ -97,6 +97,21 @@ test("approval routes use the run-scoped registry and official Runs client", () 
   assert.doesNotMatch(source, /hermesBaseUrl.*\/api\/approvals\/respond/);
 });
 
+test("stop route authorizes ownership and keeps stopping non-terminal", () => {
+  const stopRouteBlock = extractBlock(
+    source,
+    "const stopRunMatch = url.pathname.match",
+    "const runMatch = url.pathname.match",
+  );
+
+  assert.match(stopRouteBlock, /const user = await verifyUser\(req\)/);
+  assert.match(stopRouteBlock, /assertStoppableHermesRun\(run, user\.id\)/);
+  assert.match(stopRouteBlock, /client\.stopRun\(run\.hermes_run_id\)/);
+  assert.match(stopRouteBlock, /run\.status = "stopping"/);
+  assert.match(stopRouteBlock, /event: "run\.stopping"/);
+  assert.match(stopRouteBlock, /await store\.save\(run\)/);
+});
+
 test("Hermes headers forward tenant and user context for memory MCP routing", () => {
   const headersBlock = extractBlock(
     source,

@@ -7,7 +7,7 @@ vi.mock("@/lib/tenant-id", () => ({
   })),
 }));
 
-import { sendMessageToChatbotStream } from "./chatStreamClient";
+import { sendMessageToChatbotStream, stopChatbotRun } from "./chatStreamClient";
 
 const jsonResponse = (payload: unknown, init?: ResponseInit) =>
   new Response(JSON.stringify(payload), {
@@ -107,5 +107,41 @@ describe("sendMessageToChatbotStream", () => {
       "X-Tenant-Id": "ens",
       "X-User-Id": "user-1",
     });
+  });
+});
+
+describe("stopChatbotRun", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("posts the encoded product run id with the authenticated user", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ run: { status: "stopping" } }, { status: 202 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await stopChatbotRun({
+      runId: "run/with space",
+      getAccessToken: async () => "token-1",
+      resolveChatbotProxyBaseUrl: () => "https://bridge.solucoes-nexus.tech",
+    });
+
+    expect(result).toEqual({ run: { status: "stopping" } });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://bridge.solucoes-nexus.tech/api/chat/runs/run%2Fwith%20space/stop",
+      {
+        method: "POST",
+        headers: { Authorization: "Bearer token-1", Accept: "application/json" },
+      },
+    );
+  });
+
+  it("rejects a failed stop with the safe product error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: "run_not_active" }, { status: 409 })));
+
+    await expect(stopChatbotRun({
+      runId: "run-1",
+      getAccessToken: async () => "token-1",
+      resolveChatbotProxyBaseUrl: () => "https://bridge.solucoes-nexus.tech",
+    })).rejects.toThrow("run_not_active");
   });
 });
