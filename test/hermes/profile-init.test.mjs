@@ -19,7 +19,12 @@ function findPosixShell() {
   return candidates.find((candidate) => existsSync(candidate));
 }
 
-function createHarness({ profileExists = false, failAction, configVersion } = {}) {
+function createHarness({
+  profileExists = false,
+  failAction,
+  configVersion,
+  rootConfigExists = true,
+} = {}) {
   const root = mkdtempSync(join(tmpdir(), 'ens-hermes-profile-init-'));
   const distribution = join(root, 'distribution');
   const hermesHome = join(root, 'hermes-home');
@@ -33,7 +38,9 @@ function createHarness({ profileExists = false, failAction, configVersion } = {}
   mkdirSync(profileHome, { recursive: true });
   writeFileSync(join(distribution, 'distribution.yaml'), 'name: ens\n', 'utf8');
   const versionLine = configVersion === undefined ? '' : `_config_version: ${configVersion}\n`;
-  writeFileSync(join(hermesHome, 'config.yaml'), `${versionLine}terminal: {}\n`, 'utf8');
+  if (rootConfigExists) {
+    writeFileSync(join(hermesHome, 'config.yaml'), `${versionLine}terminal: {}\n`, 'utf8');
+  }
   writeFileSync(join(profileHome, 'config.yaml'), `${versionLine}terminal: {}\n`, 'utf8');
   if (profileExists) writeFileSync(state, '', 'utf8');
   writeFileSync(
@@ -104,6 +111,7 @@ test('initializer has the safe idempotent command contract', () => {
   assert.match(source, /profile use/);
   assert.match(source, /gateway stop/);
   assert.match(source, /docker_config_migrate/);
+  assert.match(source, /if \[ ! -f "\$\{config_path\}" \]/);
   assert.doesNotMatch(source, /--force-config/);
 });
 
@@ -138,6 +146,27 @@ test(
     assert.deepEqual(recordedCalls(harness), [
       'profile info ens',
       'profile update ens --yes',
+      '-p default config set _config_version 12',
+      `migrate ${harness.env.HERMES_HOME} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p ens config set _config_version 12',
+      `migrate ${join(harness.env.HERMES_HOME, 'profiles', 'ens')} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
+      '-p default gateway stop',
+      'profile use ens',
+      'profile info ens',
+    ]);
+  },
+);
+
+test(
+  'bootstraps an absent root config on a fresh Hermes volume',
+  { skip: shell ? false : 'POSIX shell is not available on this Windows host' },
+  () => {
+    const harness = createHarness({ rootConfigExists: false });
+    const result = execute(harness);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(recordedCalls(harness), [
+      'profile info ens',
+      `profile install ${harness.env.HERMES_DISTRIBUTION_DIR} --name ens --yes`,
       '-p default config set _config_version 12',
       `migrate ${harness.env.HERMES_HOME} ${harness.env.HERMES_CONFIG_MIGRATOR}`,
       '-p ens config set _config_version 12',

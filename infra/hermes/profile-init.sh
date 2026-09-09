@@ -14,22 +14,25 @@ migrate_config() {
   target_home="$2"
   config_path="${target_home}/config.yaml"
 
-  test -f "${config_path}"
-  version_line="$(grep '^_config_version:' "${config_path}" | sed -n '1p' || true)"
-  raw_version="$(printf '%s' "${version_line#*:}" | tr -d '[:space:]"' | tr -d "'")"
-
-  if [ -z "${version_line}" ]; then
+  if [ ! -f "${config_path}" ]; then
     "${hermes_cli}" -p "${target_profile}" config set _config_version "${config_schema_floor}"
   else
-    case "${raw_version}" in
-      ''|*[!0-9]*)
-        echo "Invalid _config_version in ${config_path}" >&2
+    version_line="$(grep '^_config_version:' "${config_path}" | sed -n '1p' || true)"
+    raw_version="$(printf '%s' "${version_line#*:}" | tr -d '[:space:]"' | tr -d "'")"
+
+    if [ -z "${version_line}" ]; then
+      "${hermes_cli}" -p "${target_profile}" config set _config_version "${config_schema_floor}"
+    else
+      case "${raw_version}" in
+        ''|*[!0-9]*)
+          echo "Invalid _config_version in ${config_path}" >&2
+          exit 1
+          ;;
+      esac
+      if [ "${raw_version}" -lt "${config_schema_floor}" ]; then
+        echo "Config schema ${raw_version} in ${config_path} is below the supported floor ${config_schema_floor}; migrate it manually before deployment" >&2
         exit 1
-        ;;
-    esac
-    if [ "${raw_version}" -lt "${config_schema_floor}" ]; then
-      echo "Config schema ${raw_version} in ${config_path} is below the supported floor ${config_schema_floor}; migrate it manually before deployment" >&2
-      exit 1
+      fi
     fi
   fi
 

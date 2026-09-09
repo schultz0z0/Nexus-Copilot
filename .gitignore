@@ -24,6 +24,8 @@ data/
 # Tool and editor state
 .worktrees/
 .venv/
+__pycache__/
+*.py[cod]
 .pytest_cache/
 .tools/
 .cache/
