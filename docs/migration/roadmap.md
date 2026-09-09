@@ -13,7 +13,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
 | M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
-| M2 — protocolo do agente | Pendente | Bridge compatível com Runs/SSE/aprovações oficiais |
+| M2 — protocolo do agente | Em execução; checkpoint A aprovado | cliente Runs, eventos oficiais e roteamento híbrido comprovados |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
 | M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
@@ -93,6 +93,14 @@ capabilities; contrato externo estável para o frontend; erros e observabilidade
 - API Hermes continua interna e autenticada;
 - ausência de provider é distinguida de indisponibilidade do processo;
 - smoke test real passa com o profile ENS.
+
+**Situação em 2026-09-09:** o checkpoint A do
+[plano de implementação](../plans/2026-09-09-hermes-runs-bridge-implementation.md)
+foi aprovado localmente. O Bridge possui cliente tipado para os endpoints
+oficiais de Runs, valida capabilities de forma fail-closed, normaliza approval,
+stopping e cancellation e seleciona Runs somente para texto/arquivos extraídos.
+Picture, imagens e binários sem extração permanecem em Session. A integração
+do executor, rotas de approval/stop e o smoke com provider continuam pendentes.
 
 ## M3 — Fundação PostgreSQL
 

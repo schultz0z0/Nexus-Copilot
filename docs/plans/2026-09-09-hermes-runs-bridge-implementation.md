@@ -438,6 +438,25 @@ Atualizar a branch `main` sem sobrescrever mudanças do usuário, repetir os
 checks essenciais e executar `git push origin main`. Não publicar se houver
 divergência ou artefato sensível.
 
+## Registro de execução
+
+### 2026-09-09 — Checkpoint A aprovado localmente
+
+| Tarefa | Evidência | Resultado |
+| --- | --- | --- |
+| 1 — cliente Runs | `node --test services/chat-bridge/test/hermes-runs-client.test.js` | 10/10; capabilities, idempotência, endpoints oficiais e erros seguros |
+| 2 — eventos | `node --test services/chat-bridge/test/hermes-events.test.js` | 17/17; approval request/resolved, stopping e cancellation distintos de falha |
+| 3 — roteamento | `node --test services/chat-bridge/test/hermes-payloads.test.js` | 23/23; texto em Runs e fallback explícito/seguro para Session |
+| regressão do Bridge | `npm test --prefix services/chat-bridge` | 108/108 |
+
+A primeira execução integral encontrou somente as dependências da worktree
+ainda não instaladas (`fflate` e `jose`). `npm ci --prefix
+services/chat-bridge`, usando o lockfile versionado, instalou três pacotes sem
+vulnerabilidades reportadas; a repetição passou integralmente. Nenhum serviço
+externo ou ambiente de produção foi alterado.
+
+Commits funcionais do checkpoint: `3a71e71`, `fc5ea44` e `99e4631`.
+
 ## Checkpoints
 
 - **Checkpoint A — após Tasks 1–3:** cliente, eventos e seletor puros aprovados.
