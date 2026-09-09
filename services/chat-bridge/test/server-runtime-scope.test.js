@@ -110,6 +110,12 @@ test("stop route authorizes ownership and keeps stopping non-terminal", () => {
   assert.match(stopRouteBlock, /run\.status = "stopping"/);
   assert.match(stopRouteBlock, /event: "run\.stopping"/);
   assert.match(stopRouteBlock, /await store\.save\(run\)/);
+  assert.ok(
+    stopRouteBlock.indexOf('run.status = "stopping"') < stopRouteBlock.indexOf("client.stopRun(run.hermes_run_id)"),
+    "the local stopping claim must happen before the upstream request",
+  );
+  assert.match(stopRouteBlock, /catch \(error\)/);
+  assert.match(stopRouteBlock, /run\.status = previousStatus/);
 });
 
 test("Hermes headers forward tenant and user context for memory MCP routing", () => {

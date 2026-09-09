@@ -1993,25 +1993,46 @@ const handleRequest = async (req, res) => {
     }
 
     const client = bridge.createRunsClient(run, hermesBaseUrl);
-    const stopPayload = await client.stopRun(run.hermes_run_id);
-    const becameTerminal = await bridge.applyHermesStatus(run, stopPayload);
-    if (!becameTerminal && !terminalStatuses.has(run.status)) {
-      run.status = "stopping";
+    const previousStatus = run.status;
+    run.status = "stopping";
+    bridge.appendEvent(run, {
+      event: "meta",
+      data: {
+        provider: "hermes",
+        event: "run.stopping",
+        run_id: run.hermes_run_id,
+        session_id: run.hermes_session_id,
+      },
+    });
+    bridge.appendEvent(run, {
+      event: "status",
+      data: { text: "Hermes está interrompendo a execução do agente.", tone: "info" },
+    });
+    await store.save(run);
+
+    let stopPayload;
+    try {
+      stopPayload = await client.stopRun(run.hermes_run_id);
+    } catch (error) {
+      run.status = previousStatus;
       bridge.appendEvent(run, {
         event: "meta",
         data: {
           provider: "hermes",
-          event: "run.stopping",
+          event: "run.stop_failed",
           run_id: run.hermes_run_id,
           session_id: run.hermes_session_id,
         },
       });
       bridge.appendEvent(run, {
         event: "status",
-        data: { text: "Hermes está interrompendo a execução do agente.", tone: "info" },
+        data: { text: "Não foi possível interromper a execução.", tone: "warning" },
       });
       await store.save(run);
+      throw error;
     }
+
+    const becameTerminal = await bridge.applyHermesStatus(run, stopPayload);
 
     jsonResponse(res, becameTerminal ? 200 : 202, { run }, corsHeaders);
     return;
