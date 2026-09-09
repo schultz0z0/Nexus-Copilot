@@ -372,9 +372,18 @@ export const buildHermesRunInput = ({
 export const shouldUseResponsesApi = (attachments) =>
   attachments.some((attachment) => isImageAttachment(attachment) || !attachment.extracted_text?.trim());
 
-export const selectHermesBridgeMode = (attachments) =>
-
-  "session";
+export const selectHermesBridgeMode = (
+  attachments = [],
+  { experience = "chat", textTransport = "runs" } = {},
+) => {
+  if (textTransport !== "runs") return "session";
+  if (experience !== "chat" && experience !== "normal") return "session";
+  if (!Array.isArray(attachments)) return "session";
+  if (attachments.some((attachment) => (
+    isImageAttachment(attachment) || !attachment?.extracted_text?.trim()
+  ))) return "session";
+  return "runs";
+};
 
 
 

@@ -145,14 +145,34 @@ test("buildHermesRunInput includes replayed chat history before current text", (
 
 
 
-test("selectHermesBridgeMode routes every chatbot turn through persisted Hermes sessions", () => {
+test("selectHermesBridgeMode routes textual chat through Runs", () => {
+  assert.equal(selectHermesBridgeMode([], { experience: "chat" }), "runs");
+  assert.equal(selectHermesBridgeMode([
+    { kind: "file", mime_type: "text/plain", extracted_text: "conteudo" },
+  ], { experience: "chat" }), "runs");
+  assert.equal(selectHermesBridgeMode([], { experience: "normal" }), "runs");
+});
 
-  assert.equal(selectHermesBridgeMode([]), "session");
+test("selectHermesBridgeMode keeps multimodal and unextracted inputs on Session", () => {
+  assert.equal(selectHermesBridgeMode([
+    { kind: "image", mime_type: "image/png" },
+  ], { experience: "chat" }), "session");
+  assert.equal(selectHermesBridgeMode([], { experience: "picture" }), "session");
+  assert.equal(selectHermesBridgeMode([
+    { kind: "file", mime_type: "application/pdf" },
+  ], { experience: "chat" }), "session");
+});
 
-  assert.equal(selectHermesBridgeMode([{ kind: "file", mime_type: "text/plain", extracted_text: "ok" }]), "session");
-
-  assert.equal(selectHermesBridgeMode([{ kind: "image", mime_type: "image/png" }]), "session");
-
+test("selectHermesBridgeMode supports explicit rollback and fails closed on unknown config", () => {
+  assert.equal(selectHermesBridgeMode([], {
+    experience: "chat",
+    textTransport: "session",
+  }), "session");
+  assert.equal(selectHermesBridgeMode([], {
+    experience: "chat",
+    textTransport: "experimental",
+  }), "session");
+  assert.equal(selectHermesBridgeMode([], { experience: "unknown" }), "session");
 });
 
 
