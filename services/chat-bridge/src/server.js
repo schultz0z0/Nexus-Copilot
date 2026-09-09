@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import { decodeJwt } from "jose";
 import WebSocket from "ws";
 
+import { HermesRunsClient } from "./hermes-runs-client.js";
+
 import {
   buildHermesRunSessionId,
   parseHermesEventBlock,
@@ -94,6 +96,7 @@ const config = {
   hermesApiKey: process.env.HERMES_API_KEY || "",
   hermesModelName: process.env.HERMES_MODEL_NAME || "hermes-agent",
   hermesPollMs: Number(process.env.HERMES_RUN_POLL_MS || 2000),
+  hermesTextTransport: process.env.HERMES_TEXT_TRANSPORT || "runs",
   hermesSessionsApiEnabled: process.env.HERMES_SESSIONS_API_ENABLED !== "false",
   defaultTenantId: process.env.NEXUS_TENANT_ID || "ens",
   graphMcpUrl: process.env.NEXUS_GRAPH_MCP_URL || "http://graph-mcp:8010/mcp",
@@ -828,6 +831,7 @@ class HermesBridge {
   constructor({ store, hermesStateRepository }) {
     this.store = store;
     this.hermesStateRepository = hermesStateRepository;
+    this.activeRunConsumers = new Set();
   }
 
   async createRun({ user, payload }) {
@@ -880,7 +884,10 @@ class HermesBridge {
       ? buildPictureWorkspaceSummary({ workspace: pictureWorkspace, files: pictureFiles })
       : null;
 
-    const mode = selectHermesBridgeMode(preparedAttachments);
+    const mode = selectHermesBridgeMode(preparedAttachments, {
+      experience: pictureExperience.experience,
+      textTransport: config.hermesTextTransport,
+    });
     const replayContextMessages = mode === "session"
       ? []
       : await fetchReplayContextMessages({
@@ -1147,57 +1154,15 @@ class HermesBridge {
     }
   }
 
-  async createHermesRun(run, hermesBaseUrl) {
-    const marketingOpsDelegation = await issueRunMarketingOpsDelegation(run);
-    const requestPayload = buildHermesRunRequest({
-      sessionId: run.hermes_session_id,
-      messageText: run.message_text,
-      attachments: run.attachments,
-      replayContextMessages: run.replay_context_messages,
-      nexusContext: buildRunNexusContext(run),
-      marketingOpsDelegation,
-      marketingOpsDecision: run.marketing_ops_decision,
-    });
-    run.input = redactMarketingOpsDelegation(requestPayload.input);
-
-    const response = await fetch(new URL("/v1/runs", hermesBaseUrl.origin), {
-      method: "POST",
-      headers: this.buildHermesHeaders("application/json", run),
-      body: JSON.stringify(requestPayload),
-    });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload?.message || payload?.error || `hermes_run_create_failed:${response.status}`);
-    }
-
-    const hermesRunId =
-      typeof payload.run_id === "string"
-        ? payload.run_id
-        : typeof payload.id === "string"
-          ? payload.id
-          : "";
-
-    if (!hermesRunId) {
-      throw new Error("hermes_run_create_missing_run_id");
-    }
-
-    return hermesRunId;
-  }
-
-  async fetchHermesEvents(run, hermesBaseUrl) {
-    return await fetch(new URL(`/v1/runs/${encodeURIComponent(run.hermes_run_id)}/events`, hermesBaseUrl.origin), {
-      headers: this.buildHermesHeaders("text/event-stream", run),
+  createRunsClient(run, hermesBaseUrl) {
+    return new HermesRunsClient({
+      baseUrl: hermesBaseUrl,
+      apiKey: config.hermesApiKey,
+      defaultHeaders: this.buildHermesHeaders("application/json", run),
     });
   }
 
-  async pollHermesStatus(run, hermesBaseUrl) {
-    const response = await fetch(new URL(`/v1/runs/${encodeURIComponent(run.hermes_run_id)}`, hermesBaseUrl.origin), {
-      headers: this.buildHermesHeaders("application/json", run),
-    });
-    if (!response.ok) return false;
-
-    const payload = await response.json().catch(() => ({}));
+  async applyHermesStatus(run, payload) {
     const parsed = parseHermesStatusPayload(payload, {
       requestId: run.id,
       runId: run.hermes_run_id,
@@ -1267,7 +1232,7 @@ class HermesBridge {
     }
 
     await this.applyParsedResult(run, parsed, options);
-    return parsed.completed || parsed.failed ? "terminal" : "open";
+    return parsed.completed || parsed.failed || parsed.cancelled ? "terminal" : "open";
   }
 
   async applyParsedResult(run, parsed, options = {}) {
@@ -1288,37 +1253,63 @@ class HermesBridge {
       run.status = "failed";
       await this.store.save(run);
     }
+    if (parsed.cancelled) {
+      run.status = "cancelled";
+      await this.store.save(run);
+    }
   }
 
   async executeRunsApi(run, hermesBaseUrl) {
-    run.hermes_run_id = await this.createHermesRun(run, hermesBaseUrl);
-    this.appendEvent(run, {
-      event: "meta",
-      data: {
-        provider: "hermes",
-        event: "run.created",
-        run_id: run.hermes_run_id,
-        session_id: run.hermes_session_id,
-      },
-    });
-    await this.store.save(run);
+    if (this.activeRunConsumers.has(run.id)) return;
+    this.activeRunConsumers.add(run.id);
 
-    while (!terminalStatuses.has(run.status)) {
-      const eventsResponse = await this.fetchHermesEvents(run, hermesBaseUrl);
-      const stoppedByEvents = await this.consumeEventsResponse(run, eventsResponse);
-      if (stoppedByEvents === "terminal" || terminalStatuses.has(run.status)) break;
+    try {
+      const client = this.createRunsClient(run, hermesBaseUrl);
+      const marketingOpsDelegation = await issueRunMarketingOpsDelegation(run);
+      const requestPayload = buildHermesRunRequest({
+        sessionId: run.hermes_session_id,
+        messageText: run.message_text,
+        attachments: run.attachments,
+        replayContextMessages: run.replay_context_messages,
+        nexusContext: buildRunNexusContext(run),
+        marketingOpsDelegation,
+        marketingOpsDecision: run.marketing_ops_decision,
+      });
+      run.input = redactMarketingOpsDelegation(requestPayload.input);
 
-      const stoppedByStatus = await this.pollHermesStatus(run, hermesBaseUrl);
-      if (stoppedByStatus || terminalStatuses.has(run.status)) break;
-
-      this.appendEvent(run, { event: "status", data: { text: "Hermes segue executando a tarefa...", tone: "info" } });
+      const created = await client.createRun({ bridgeRunId: run.id, payload: requestPayload });
+      run.hermes_run_id = created.runId;
+      this.appendEvent(run, {
+        event: "meta",
+        data: {
+          provider: "hermes",
+          event: "run.created",
+          run_id: run.hermes_run_id,
+          session_id: run.hermes_session_id,
+        },
+      });
       await this.store.save(run);
-      await wait(config.hermesPollMs);
-    }
 
-    if (run.status === "completed" && !run.events.some((event) => event.event === "done")) {
-      this.appendEvent(run, { event: "done", data: { request_id: run.id } });
-      await this.store.save(run);
+      while (!terminalStatuses.has(run.status)) {
+        const eventsResponse = await client.getEvents(run.hermes_run_id);
+        const stoppedByEvents = await this.consumeEventsResponse(run, eventsResponse);
+        if (stoppedByEvents === "terminal" || terminalStatuses.has(run.status)) break;
+
+        const statusPayload = await client.getRun(run.hermes_run_id);
+        const stoppedByStatus = await this.applyHermesStatus(run, statusPayload);
+        if (stoppedByStatus || terminalStatuses.has(run.status)) break;
+
+        this.appendEvent(run, { event: "status", data: { text: "Hermes segue executando a tarefa...", tone: "info" } });
+        await this.store.save(run);
+        await wait(config.hermesPollMs);
+      }
+
+      if (run.status === "completed" && !run.events.some((event) => event.event === "done")) {
+        this.appendEvent(run, { event: "done", data: { request_id: run.id } });
+        await this.store.save(run);
+      }
+    } finally {
+      this.activeRunConsumers.delete(run.id);
     }
   }
 

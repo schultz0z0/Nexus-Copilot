@@ -278,6 +278,12 @@ const extractErrorMessage = (value, depth = 0) => {
   return extractErrorMessage(value.error, depth + 1) ?? extractErrorMessage(value.response, depth + 1);
 };
 
+const extractErrorCode = (value, depth = 0) => {
+  if (depth > 5 || value === null || value === undefined || typeof value !== "object") return null;
+  if (typeof value.code === "string" && value.code.trim()) return value.code.trim().toLowerCase();
+  return extractErrorCode(value.error, depth + 1) ?? extractErrorCode(value.response, depth + 1);
+};
+
 const extractToolName = (payload) => (
   typeof payload.tool_name === "string"
     ? payload.tool_name
@@ -567,7 +573,10 @@ export const parseHermesEventBlock = (eventBlock, context) => {
     }
 
     const upstreamError = extractErrorMessage(parsedPayload) ?? "Falha ao executar o Hermes.";
-    const errorCode = upstreamError.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 80) || "unknown_error";
+    const upstreamCode = extractErrorCode(parsedPayload);
+    const errorCode = upstreamCode === "provider_unconfigured"
+      ? "provider_unconfigured"
+      : upstreamError.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 80) || "unknown_error";
     events.push({
       event: "meta",
       data: {

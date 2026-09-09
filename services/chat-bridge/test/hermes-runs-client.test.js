@@ -18,6 +18,10 @@ test("HermesRunsClient accepts the pinned Runs capability contract", async () =>
   const client = new HermesRunsClient({
     baseUrl: "http://hermes:8642/",
     apiKey: "test-key",
+    defaultHeaders: {
+      "X-Tenant-Id": "ens",
+      "X-User-Id": "user-1",
+    },
     fetchImpl: async (url, init) => {
       calls.push({ url: String(url), init });
       return json({ features: [...REQUIRED_RUN_FEATURES, "run_steer"] });
@@ -30,6 +34,8 @@ test("HermesRunsClient accepts the pinned Runs capability contract", async () =>
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "http://hermes:8642/v1/capabilities");
   assert.equal(new Headers(calls[0].init.headers).get("authorization"), "Bearer test-key");
+  assert.equal(new Headers(calls[0].init.headers).get("x-tenant-id"), "ens");
+  assert.equal(new Headers(calls[0].init.headers).get("x-user-id"), "user-1");
 });
 
 test("HermesRunsClient fails closed when a required capability is missing", async () => {

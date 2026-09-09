@@ -353,3 +353,13 @@ test("parseHermesStatusPayload preserves cancelled as cancellation", () => {
   assert.equal(cancelled.parsed.events[0].data.event, "run.cancelled");
   assert.equal(cancelled.parsed.events.at(-1).event, "done");
 });
+
+test("parseHermesEventBlock preserves provider_unconfigured as a distinct failure", () => {
+  const parsed = parseHermesEventBlock(
+    'event: run.failed\ndata: {"run_id":"run_1","error":{"code":"provider_unconfigured","message":"No model provider configured"}}',
+    context,
+  );
+
+  assert.equal(parsed.failed, true);
+  assert.equal(parsed.errorCode, "provider_unconfigured");
+});

@@ -20,6 +20,56 @@ test("executeRun does not use chat-delete scoped session variables", () => {
   assert.equal(executeRunBlock.includes("user.id"), false);
 });
 
+test("text runs use the official client and persist the Hermes id before consuming events", () => {
+  const clientBlock = extractBlock(source, "createRunsClient(run, hermesBaseUrl)", "async applyHermesStatus");
+  const runsBlock = extractBlock(source, "async executeRunsApi(run, hermesBaseUrl)", "async executeSessionApi");
+
+  assert.match(source, /import \{ HermesRunsClient \} from "\.\/hermes-runs-client\.js"/);
+  assert.match(clientBlock, /new HermesRunsClient\(\{/);
+  assert.match(clientBlock, /defaultHeaders: this\.buildHermesHeaders/);
+  assert.match(runsBlock, /this\.createRunsClient\(run, hermesBaseUrl\)/);
+  assert.match(runsBlock, /bridgeRunId: run\.id/);
+  assert.match(runsBlock, /run\.hermes_run_id = created\.runId/);
+  assert.match(runsBlock, /await this\.store\.save\(run\)/);
+  assert.match(runsBlock, /client\.getEvents\(run\.hermes_run_id\)/);
+  assert.match(runsBlock, /client\.getRun\(run\.hermes_run_id\)/);
+  assert.ok(
+    runsBlock.indexOf("await this.store.save(run)") < runsBlock.indexOf("client.getEvents(run.hermes_run_id)"),
+    "Hermes run id must be durable before the upstream event consumer starts",
+  );
+  assert.equal(source.includes("async createHermesRun("), false);
+  assert.equal(source.includes("async fetchHermesEvents("), false);
+  assert.equal(source.includes("async pollHermesStatus("), false);
+});
+
+test("Runs execution permits only one upstream consumer per Bridge run", () => {
+  const constructorBlock = extractBlock(source, "constructor({ store, hermesStateRepository })", "async createRun({ user, payload })");
+  const runsBlock = extractBlock(source, "async executeRunsApi(run, hermesBaseUrl)", "async executeSessionApi");
+
+  assert.match(constructorBlock, /this\.activeRunConsumers = new Set\(\)/);
+  assert.match(runsBlock, /this\.activeRunConsumers\.has\(run\.id\)/);
+  assert.match(runsBlock, /this\.activeRunConsumers\.add\(run\.id\)/);
+  assert.match(runsBlock, /finally/);
+  assert.match(runsBlock, /this\.activeRunConsumers\.delete\(run\.id\)/);
+});
+
+test("hybrid routing passes experience and explicit text transport", () => {
+  const createRunBlock = extractBlock(source, "async createRun({ user, payload })", "applyArtifactUrlReplacements");
+
+  assert.match(source, /hermesTextTransport: process\.env\.HERMES_TEXT_TRANSPORT \|\| "runs"/);
+  assert.match(createRunBlock, /experience: pictureExperience\.experience/);
+  assert.match(createRunBlock, /textTransport: config\.hermesTextTransport/);
+});
+
+test("cancelled Runs become terminal without being classified as failures", () => {
+  const applyBlock = extractBlock(source, "async applyParsedResult(run, parsed", "async executeRunsApi");
+  const parseBlock = extractBlock(source, "async parseAndApplyEventBlock(run", "async applyParsedResult");
+
+  assert.match(applyBlock, /if \(parsed\.cancelled\)/);
+  assert.match(applyBlock, /run\.status = "cancelled"/);
+  assert.match(parseBlock, /parsed\.cancelled/);
+});
+
 test("chat delete route collects Hermes session ids before storage cleanup", () => {
   const deleteRouteBlock = extractBlock(
     source,
@@ -49,7 +99,7 @@ test("Hermes headers forward tenant and user context for memory MCP routing", ()
   const headersBlock = extractBlock(
     source,
     "buildHermesHeaders(accept, run)",
-    "async fetchHermesEvents",
+    "async resolveRunMarketingOpsDecision",
   );
 
   assert.match(headersBlock, /"X-Tenant-Id": run\.tenant_id/);

@@ -36,15 +36,17 @@ const requestErrorCode = (status) => {
 };
 
 export class HermesRunsClient {
-  constructor({ baseUrl, apiKey = "", fetchImpl = fetch }) {
+  constructor({ baseUrl, apiKey = "", defaultHeaders = {}, fetchImpl = fetch }) {
     this.baseUrl = new URL(String(baseUrl));
     this.apiKey = apiKey;
+    this.defaultHeaders = { ...defaultHeaders };
     this.fetchImpl = fetchImpl;
     this.capabilitiesVerified = false;
   }
 
   buildHeaders(accept = "application/json") {
     return {
+      ...this.defaultHeaders,
       Accept: accept,
       ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
     };
