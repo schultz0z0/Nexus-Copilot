@@ -22,8 +22,17 @@ Evidência resumida:
 - nenhum container do projeto permaneceu ao final.
 
 O registro completo, inclusive falhas encontradas e correções, está no runbook
-de [paridade no Docker Desktop](hermes-docker-desktop-parity.md). Esta evidência
-não comprova deploy VPS, HTTPS/OAuth, backup/restore nem rollback.
+de [paridade no Docker Desktop](hermes-docker-desktop-parity.md). Backup/restore
+e update/rollback do Profile ENS foram comprovados depois, em volume isolado.
+Esta evidência ainda não comprova deploy VPS, HTTPS/OAuth nem rollback do core.
+
+## Responsabilidade pela execução na VPS
+
+Este documento é um roteiro para o operador humano. O agente não executa SSH,
+deploy ou comandos administrativos na VPS: fornece um bloco por vez, declara o
+impacto e o resultado esperado, valida as saídas/logs redigidos devolvidos pelo
+operador e somente então orienta a próxima etapa. Testes do endereço público só
+ocorrem se o operador fornecer explicitamente a URL.
 
 ## Objetivo e impacto
 

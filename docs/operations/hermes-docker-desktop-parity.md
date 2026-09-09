@@ -50,9 +50,11 @@ Falhas reais encontradas e corrigidas durante o ensaio:
    `12`; o init agora carimba somente configs sem versão, recusa versão
    explícita abaixo do piso e delega a migração ao script oficial.
 
-Limites: o MCP Marketing Ops não estava iniciado neste stack isolado; provider,
-dashboard, HTTPS/OAuth, VPS, backup/restore e rollback não foram exercitados.
-Esses gates continuam abertos e não são inferidos deste resultado.
+Limites deste ensaio: o MCP Marketing Ops não estava iniciado neste stack
+isolado; provider, dashboard, HTTPS/OAuth, VPS, backup/restore e rollback não
+foram exercitados nesta execução. Backup/restore e rollback do profile foram
+comprovados depois no runbook específico; os demais gates não são inferidos
+deste resultado.
 
 ## Objetivo
 
@@ -264,8 +266,9 @@ Atualize a documentação com:
 - nome e estado final do volume;
 - limitações e falhas, com segredos e payloads removidos.
 
-Não marque backup/restore, rollback ou dashboard HTTPS/OAuth como exercitados
-sem executar os respectivos runbooks em escopo autorizado.
+Não marque backup/restore, rollback ou dashboard HTTPS/OAuth como exercitados a
+partir deste runbook de paridade. Use as evidências dos respectivos runbooks e
+somente em escopo autorizado.
 
 ## Prompt para repetir o ensaio em outro computador
 

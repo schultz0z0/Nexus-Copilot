@@ -59,7 +59,8 @@ skipped pelo runner Windows e zero falhas. O init real dentro do container Linux
 cobriu o caminho operacional. Também passaram: corte `3/3`, verificação do corte
 `397/397`, Chat Bridge `90/90`, Artifact Server `13/13` e renderizações base,
 paridade e produção. M1 continua em execução porque VPS, HTTPS/OAuth,
-backup/restore e rollback ainda não foram exercitados.
+provider manual e rollback do core ainda não foram exercitados; recuperação e
+rollback do profile foram comprovados localmente no lote seguinte.
 
 O terceiro lote documentou atualização/rollback e backup/restore, registrou o
 bloqueio do ensaio Docker Desktop e executou a auditoria final permitida. A
@@ -101,10 +102,28 @@ configs não versionados. O resultado final possui:
 - persistência comprovada em restart e `down`/`up`;
 - nenhum container ao final e volume de evidência preservado.
 
-Situação de aceite: **paridade Docker aprovada; M1 ainda não pronto para
-produção**. Permanecem abertos o deploy VPS com HTTPS/OAuth, provider manual,
-backup/restore e rollback. Runs API no Bridge e retirada do contrato Hermes
-legado do navegador continuam nos marcos M2 e M4.
+### Gate local de recuperação
+
+Em 2026-09-09, o volume isolado `ens-hermes-m1-data` foi arquivado em repouso,
+o checksum SHA-256 foi validado e o conteúdo foi restaurado primeiro no volume
+novo `ens-hermes-restore-20260909T170349Z`. O profile `ens@0.1.1` e o runtime
+restaurados passaram em liveness, capabilities e smoke autenticado, tolerando
+somente o provider deliberadamente ausente.
+
+No volume restaurado, um candidato descartável e validado `ens@0.1.2` comprovou
+o update manual da distribuição; a reaplicação da distribuição rastreada
+`ens@0.1.1` comprovou o rollback. O container temporário foi removido e os dois
+volumes e o arquivo de backup ficaram preservados. Nenhum estado do Hermes local
+do Windows ou da VPS foi acessado.
+
+Situação de aceite: **paridade e recuperação local aprovadas; M1 ainda não
+pronto para produção**. Permanecem abertos o deploy VPS com HTTPS/OAuth,
+provider manual e rollback do core entre dois pins auditados. Runs API no Bridge
+e retirada do contrato Hermes legado do navegador continuam nos marcos M2 e M4.
+
+Na VPS, o responsável humano executa todos os comandos. O agente atua somente
+como copiloto, preparando passos e validando saídas/logs redigidos; não abre SSH
+nem opera a infraestrutura diretamente.
 
 Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
 frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não

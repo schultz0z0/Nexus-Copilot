@@ -1,6 +1,41 @@
 # Backup e restore do volume Hermes
 
-Status: implementado, ensaio pendente em volume descartável.
+Status: exercitado no Docker Desktop em 2026-09-09; VPS pendente.
+
+## Evidência do ensaio local de 2026-09-09
+
+Com autorização explícita, o procedimento foi adaptado ao Windows e executado
+somente contra o volume isolado `ens-hermes-m1-data`. Nenhum container estava
+montando o volume durante o backup e o volume de produção `ens-hermes-data` não
+foi usado.
+
+Resultados:
+
+- arquivo criado em `tmp/hermes-recovery-20260909T170349Z/`, diretório ignorado
+  pelo Git, com `41.383.787` bytes;
+- SHA-256 `6dc1cc74cd6b50ac8e79d83cda7ac8c3cc62b2c1eccdc4b46ca42cf6a08754a1`
+  verificado antes do restore;
+- manifest sem segredos registrou o commit
+  `62e0fcce4e072d3a4b858427c80efb3cedca5152`, o digest aprovado e a revisão
+  upstream `5fc308a70719a83cccdbba4c0e39c23f5a8239d5`;
+- o volume novo `ens-hermes-restore-20260909T170349Z` foi confirmado vazio antes
+  da extração;
+- `profile info ens` confirmou `ens@0.1.1` imediatamente após o restore;
+- runtime temporário publicado somente em `127.0.0.1:18643` aprovou liveness,
+  capabilities e smoke autenticado; a única degradação foi
+  `provider_unconfigured`, deliberadamente permitida neste ensaio;
+- o container temporário foi removido; os volumes de origem e restore e o
+  arquivo de backup foram preservados para inspeção.
+
+Tempos observados neste host: criação do arquivo `5,6 s`, extração `3,2 s` e
+primeira prontidão do runtime aproximadamente `21 s`. Como os escritores ficaram
+parados durante todo o corte, o exercício teve perda observada zero. Esses
+números são evidência local, não objetivos aprovados de RPO/RTO para produção;
+os objetivos continuam a definir.
+
+Limites: não foram exercitados VPS, Traefik, HTTPS/OAuth, provider nem o MCP
+Marketing Ops. O bind `0.0.0.0` visto dentro do container ficou restrito ao
+loopback pelo publish do Docker Desktop.
 
 ## Objetivo e limites
 
@@ -155,8 +190,9 @@ Não esvazie o volume atual. A abordagem preferida é restaurar em um novo volum
 com nome explícito, revisar o Compose em PR e manter o volume anterior intacto
 até a aceitação.
 
-## Registro do exercício
+## Registro de exercícios futuros
 
 Registre timestamp do último dado incluído, tamanho, duração do backup, duração
 do restore, checksum, commit, tag/digest, volume de teste, resultados de profile,
-health/smoke e limitações. Até o primeiro ensaio, RPO e RTO permanecem `A definir`.
+health/smoke e limitações. RPO e RTO de produção permanecem `A definir` até um
+ensaio representativo aprovado na VPS.

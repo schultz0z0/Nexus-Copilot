@@ -1,6 +1,25 @@
 # Atualização e rollback do Hermes/Profile ENS
 
-Status: implementado, ensaio pendente em ambiente descartável.
+Status: update/rollback do Profile ENS exercitado no Docker Desktop em
+2026-09-09; rollback do core e VPS pendentes.
+
+## Evidência do ensaio local de 2026-09-09
+
+O exercício usou somente o volume restaurado
+`ens-hermes-restore-20260909T170349Z`, nunca o volume de origem. Um candidato
+descartável `ens@0.1.2` foi gerado em `tmp/` a partir do commit aprovado, com
+apenas o campo de versão alterado, e passou no validador da distribuição.
+
+Com o runtime parado, o inicializador oficial atualizou `ens@0.1.1` para o
+candidato `0.1.2`. `profile info`, liveness, capabilities e o smoke autenticado
+passaram. O runtime foi parado novamente e o mesmo inicializador reaplicou a
+distribuição rastreada `ens@0.1.1`; `profile info` e o segundo smoke também
+passaram. Provider permaneceu ausente e foi a única degradação aceita.
+
+Isso comprova update e rollback manual da distribuição, quiescência do runtime
+e preservação do core fixado. Não comprova rollback do core: só existe um pin
+oficial aprovado neste marco, portanto nenhuma segunda imagem foi introduzida
+artificialmente. Também não comprova a execução na VPS.
 
 ## Objetivo e regras
 

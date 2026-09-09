@@ -12,7 +12,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | Marco | Estado | Resultado principal |
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
-| M1 — Hermes oficial | Em execução; paridade Docker aprovada | runtime/profile comprovados; VPS, backup/restore e rollback pendentes |
+| M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
 | M2 — protocolo do agente | Pendente | Bridge compatível com Runs/SSE/aprovações oficiais |
 | M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
@@ -66,9 +66,14 @@ exercitada no projeto isolado `ens-hermes-m1`. Init/update real, um único
 gateway `ens`, health/capabilities, restart, recriação e persistência passaram;
 o volume de evidência foi preservado e nenhum container ficou ativo.
 
-M1 não está concluído: backup/restore, rollback e o deploy VPS com HTTPS/OAuth
-real continuam sem exercício. O próximo passo seguro é preparar e executar esses
-gates antes da liberação de produção. A matriz detalhada está no
+Em um segundo exercício local, backup/checksum, restore em volume novo e
+update/rollback do Profile ENS passaram com smoke autenticado. Os volumes de
+origem e restore foram preservados e nenhum container permaneceu ativo.
+
+M1 não está concluído: rollback do core entre dois pins auditados e o deploy VPS
+com HTTPS/OAuth real continuam sem exercício. Na produção, o responsável humano
+executará os comandos fornecidos e devolverá saídas/logs redigidos para validação;
+o agente não acessará a VPS diretamente. A matriz detalhada está no
 [plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-09).
 
 ## M2 — Protocolo oficial do agente
