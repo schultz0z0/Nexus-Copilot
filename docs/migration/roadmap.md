@@ -31,12 +31,12 @@ do legado sem aceite no alvo não conta como concluído.
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 9% | paridade e recuperação locais; produção e rollback do core pendentes |
 | M2 | 14% | 10% | protocolo local comprovado; provider real, VPS e RunStore pendentes |
-| M3 | 18% | 7% | fundação inicial e ledger em curso; backup/restore e domínios pendentes |
+| M3 | 18% | 8% | fundação e ledger local; aprovação, backup/restore e domínios pendentes |
 | M4 | 18% | 0% | ainda sem aceite de Auth e App API/BFF |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **34% concluído / 66% restante** | estimativa conservadora em 2026-09-10 |
+| **Total** | **100%** | **35% concluído / 65% restante** | estimativa conservadora em 2026-09-10 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -140,9 +140,11 @@ RLS e documentação operacional — foi aprovado localmente em 2026-09-10. O
 inventário inicial de capacidades e tabelas legadas está registrado. No ledger
 DDL, descoberta segura, parser fixado, identidades estáveis, classificação
 fail-closed de DDL/recursos e verificação do overlay de decisões já estão
-implementados. CLI determinística, varredura real, container e gates finais do
-ledger permanecem abertos. Backup/restore, observabilidade e migração dos
-domínios também permanecem pendentes; produção ainda não está autorizada.
+implementados. CLI determinística, varredura real das 87 fontes e paridade em
+container Linux sem rede foram comprovadas. As 2.672 propostas ainda exigem
+revisão humana, incluindo 1.070 ações pendentes. Backup/restore, observabilidade
+e migração dos domínios também permanecem pendentes; produção ainda não está
+autorizada.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
@@ -174,9 +176,9 @@ até o ledger automatizado reconciliar todos os objetos DDL.
 [desenho do ledger DDL](../plans/2026-09-10-supabase-ddl-ledger-design.md) foi
 aceito em 2026-09-10. Ele cobre também fontes históricas de serviços retirados,
 para impedir que RAG MCP, Graph MCP, Neo4j ou componentes internos do Supabase
-sejam reintroduzidos por migração automática. Os checkpoints A, B e C estão
-concluídos; o checkpoint D possui o verificador de decisões concluído e aguarda
-o CLI/artefatos determinísticos. A evidência detalhada está no
+sejam reintroduzidos por migração automática. Os checkpoints A a F estão
+concluídos localmente; o checkpoint G reúne os gates finais e a publicação. A
+evidência detalhada está no
 [plano de implementação do ledger](../plans/2026-09-10-supabase-ddl-ledger-implementation.md#execution-state).
 
 ## M4 — Auth e App API/BFF

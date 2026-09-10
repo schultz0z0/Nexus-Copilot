@@ -27,13 +27,14 @@ nova.
 | Hermes Runs Bridge | Em execução; checkpoint C local aprovado | [desenho](plans/2026-09-09-hermes-runs-bridge-design.md), [plano](plans/2026-09-09-hermes-runs-bridge-implementation.md) e [runbook](operations/hermes-runs-bridge.md) |
 | Fundação PostgreSQL | Em execução; primeiro lote aprovado localmente | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [plano e evidências](plans/2026-09-10-postgresql-foundation-implementation.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md) e [runbook](operations/postgresql-foundation.md) |
 | Migração de Supabase | Em execução; inventário inicial registrado | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) e [inventário de capacidades](migration/supabase-capability-inventory.md) |
-| Ledger DDL do Supabase | Desenho aceito; implementação pendente | [desenho do ledger](plans/2026-09-10-supabase-ddl-ledger-design.md) |
+| Ledger DDL do Supabase | Implementação e scan local concluídos; revisão humana das propostas pendente | [relatório](migration/supabase-ledger/supabase-object-ledger.md), [plano/evidências](plans/2026-09-10-supabase-ddl-ledger-implementation.md) e [desenho](plans/2026-09-10-supabase-ddl-ledger-design.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
 
 O próximo gate externo do Hermes é configurar manualmente um provider e provar
 run completo, approval, rejeição e cancelamento conforme o runbook M2. Em
-paralelo, o próximo marco de implementação local é **M3 — fundação
-PostgreSQL**.
+paralelo, o próximo trabalho local de M3 é revisar o ledger por domínio,
+exercitar backup/restore e iniciar o desenho de Auth/App API sem importar DDL do
+Supabase.
 
 ## Mapa da documentação
 

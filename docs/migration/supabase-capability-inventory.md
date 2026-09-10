@@ -41,6 +41,43 @@ de todos os objetos DDL — tabelas, colunas, constraints, índices, policies,
 funções, triggers, buckets e jobs — com decisão `migrar`, `transformar` ou
 `remover` e responsável definido.
 
+## Ledger automatizado em 2026-09-10
+
+O [ledger sanitizado](supabase-ledger/supabase-object-ledger.md) agora reconcilia
+as fontes allowlisted sem executar SQL e sem versionar corpos SQL, dados ou
+caminhos absolutos. Os JSONs verificáveis são o
+[manifesto de fontes](supabase-ledger/source-manifest.json) e o
+[overlay de decisões](supabase-ledger/object-decisions.json).
+
+| Medida | Resultado |
+| --- | ---: |
+| Fontes classificadas | 87 |
+| Migrations SQL ativas | 24 |
+| Edge Functions | 4 |
+| Fontes apenas históricas | 50 |
+| Fontes de componentes retirados | 9 |
+| Operações sanitizadas | 2.904 |
+| Objetos lógicos | 2.672 |
+| Operações não classificadas | 0 |
+| Propostas `transform` | 1.542 |
+| Propostas `remove` | 60 |
+| Propostas `pending` | 1.070 |
+| Decisões aprovadas automaticamente | 0 |
+
+O scanner usa Python 3.11, `pglast==8.4` com hashes e uma imagem de paridade
+Python 3.11.16 slim-bookworm fixada pelo digest
+`sha256:528257d48c1da0dcecc2e725d1ae34498d60c965f1241e39cd6a85a8859bdf84`.
+A verificação offline passou sem carregar `site-packages`; o scan real gerou os
+mesmos bytes no Windows e no container Linux sem rede, com a origem montada
+somente para leitura.
+
+Limites deliberados: corpos PL/pgSQL não são analisados como texto; `DO`, DML e
+chamadas de backfill não reconhecidas viram referências por hash com revisão
+obrigatória. Constraints sem nome explícito recebem identidade sintética estável
+para a versão da fonte. Todas as 2.672 linhas continuam `proposed`; as 1.070
+linhas `pending` precisam de resolução de domínio/ADR antes de o critério de
+destino aprovado em M3 ser considerado atendido.
+
 ## Matriz de capacidades
 
 | Capacidade usada | Evidência atual | Destino sob operação ENS | Marco | Gate para retirar Supabase |
@@ -167,8 +204,10 @@ automatizado antes de M6. Nenhum bucket público é recriado por conveniência.
 
 ## Gates ainda abertos
 
-- [ ] gerar ledger automatizado de todos os objetos DDL e atribuir decisão por
-  objeto;
+- [x] gerar ledger automatizado, sanitizado e determinístico com uma proposta
+  explícita para cada um dos 2.672 objetos;
+- [ ] revisar as 2.672 propostas, resolver as 1.070 ações `pending` e aprovar
+  destino/responsável sem reintroduzir componentes retirados;
 - [ ] aprovar ADR de autenticação/sessão self-hosted e implementar M4;
 - [ ] migrar cada domínio em migration nova e testes de RLS/integridade;
 - [ ] aprovar object storage, retenção e URLs temporárias;

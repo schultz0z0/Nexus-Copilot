@@ -467,10 +467,10 @@ old migrations to make it green.
 | A — sources | Complete | safe policy/discovery, 87 classified records; `4d34dfb` |
 | B — AST/identity | Complete | pinned parser and stable IDs; `e3c633e`, `bb72cdb` |
 | C — classification | Complete | fail-closed DDL/resources classifier; `4108d97`, `a683fb7` |
-| D — decisions/report | In progress | proposal/overlay verifier complete in `33e0a36`; deterministic CLI and generated artifacts remain in Task 7 |
-| E — real scan | Pending | — |
-| F — container | Pending | — |
-| G — final gates | Pending | — |
+| D — decisions/report | Complete | decision verifier `33e0a36`; portable CLI/report `471fc19` |
+| E — real scan | Complete | 87 sources, 2,904 operations, 2,672 objects, zero unclassified; `ebaf727` |
+| F — container | Complete | Python 3.11.16 digest pin, 38 Linux tests and offline scan/verify; `6ed0e5a` |
+| G — final gates | In progress | documentation and cross-project verification underway |
 
 ### Checkpoint after Tasks 4–6 — 2026-09-10
 
@@ -490,6 +490,27 @@ old migrations to make it green.
   will be atomically generated in Task 7 from the matching deterministic source
   manifest, preventing a stale or misleading checked-in overlay.
 
-**Next safe command:** start Task 7 with failing deterministic CLI, sanitization
+**Next safe command at that checkpoint:** start Task 7 with failing deterministic CLI, sanitization
 and renderer tests; materialize the manifest and decisions only as one matched
 digest pair.
+
+### Checkpoint after Tasks 7–9 — 2026-09-10
+
+- The Windows and Linux scans produced byte-identical manifest, decisions and
+  Markdown report. The Linux scan ran with no network and a read-only legacy
+  mount.
+- Offline verification passed under `python -S`, proving it does not require
+  `pglast` or the historical repository.
+- Proposal totals: 1,542 `transform`, 60 `remove`, 1,070 `pending`; all 2,672
+  rows remain `proposed` and therefore require human review.
+- No retired component received `migrate`; Graph/Neo4j technology remains
+  removed and RAG remains pending its ADR.
+- Container evidence: 38 tests passed on Linux, including the symlink escape
+  test unavailable on the Windows host. No ledger container remained running.
+- Existing dependency audit debt observed during lockfile installation, outside
+  this ledger change: chat frontend reported 9 advisories (1 low, 5 moderate,
+  3 high); Marketing Ops reported 8 (6 moderate, 2 high). No automatic upgrade
+  was applied because that would change unrelated dependency versions.
+
+**Next safe command:** finish Checkpoint G, review the full branch diff for
+secrets/raw SQL, then integrate only after every final gate passes.
