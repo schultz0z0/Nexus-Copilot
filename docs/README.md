@@ -25,7 +25,7 @@ nova.
 | Fundação documental | Concluída | este índice, PRD, arquitetura e roadmap |
 | Runtime Hermes oficial | Em execução; paridade Docker aprovada | [plano de implementação](plans/2026-08-28-hermes-official-runtime-implementation.md) e [evidência Docker Desktop](operations/hermes-docker-desktop-parity.md) |
 | Hermes Runs Bridge | Em execução; checkpoint C local aprovado | [desenho](plans/2026-09-09-hermes-runs-bridge-design.md), [plano](plans/2026-09-09-hermes-runs-bridge-implementation.md) e [runbook](operations/hermes-runs-bridge.md) |
-| Fundação PostgreSQL | Em execução; runtime, migrations e RLS aprovados localmente | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [plano](plans/2026-09-10-postgresql-foundation-implementation.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md) e [runbook](operations/postgresql-foundation.md) |
+| Fundação PostgreSQL | Em execução; primeiro lote aprovado localmente | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [plano e evidências](plans/2026-09-10-postgresql-foundation-implementation.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md) e [runbook](operations/postgresql-foundation.md) |
 | Migração de Supabase | Em execução; inventário inicial registrado | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) e [inventário de capacidades](migration/supabase-capability-inventory.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
 

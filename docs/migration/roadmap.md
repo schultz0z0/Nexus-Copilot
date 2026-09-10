@@ -117,11 +117,11 @@ M3 e M4.
 
 ## M3 — Fundação PostgreSQL
 
-**Estado:** Em execução. Runtime, migrations, menor privilégio e RLS foram
-exercitados localmente em 2026-09-10. O inventário inicial de capacidades e
-tabelas legadas está registrado. Backup/restore, ledger DDL automatizado,
-observabilidade e migração dos domínios permanecem pendentes; produção ainda não
-está autorizada.
+**Estado:** Em execução. O primeiro lote — runtime, migrations, menor privilégio,
+RLS e documentação operacional — foi aprovado localmente em 2026-09-10. O
+inventário inicial de capacidades e tabelas legadas está registrado.
+Backup/restore, ledger DDL automatizado, observabilidade e migração dos domínios
+permanecem pendentes; produção ainda não está autorizada.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 

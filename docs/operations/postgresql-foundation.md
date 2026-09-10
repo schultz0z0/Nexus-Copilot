@@ -401,3 +401,12 @@ limpeza de contexto após commit/rollback e rejeitou checksum alterado. A suíte
 removeu seus containers, rede, secrets temporários e volume ao final. Nenhuma VPS
 foi acessada.
 
+No gate final do mesmo dia, passaram 12 contratos Compose/SQL, 9 testes do
+runner e 5 integrações reais do PostgreSQL. Também passaram 147 testes do
+frontend, 124 do Chat Bridge, 13 do Artifact Server, 85 testes selecionados do
+Marketing Ops sem banco legado, typecheck e builds. A suíte completa do Marketing
+Ops permaneceu vermelha somente nos contratos que procuram migrations Supabase
+não copiadas, no `docker-compose.yml` histórico e nas integrações configuradas
+para `127.0.0.1:55322`. Esse baseline deve ser substituído por fatia de domínio;
+não se deve restaurar as migrations antigas dentro da baseline nova para obter
+um falso sucesso.

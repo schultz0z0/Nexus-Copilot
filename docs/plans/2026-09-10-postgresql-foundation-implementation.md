@@ -249,6 +249,28 @@ Executar e guardar resumo:
 Falhas de baseline que dependem das migrations Supabase antigas devem continuar
 registradas como dívida, nunca convertidas em falso sucesso.
 
+**Estado:** concluída em 2026-09-10 para o escopo deste lote.
+
+| Gate executado | Resultado observado |
+| --- | --- |
+| `npm run test:postgres` | 12/12 contratos e 9/9 testes do runner aprovados |
+| `npm run test:postgres:integration` | 5/5 testes em PostgreSQL real aprovados; recursos temporários removidos |
+| `npm run test:hermes` | 16 aprovados, 0 falhas e 6 pulados por ausência de shell POSIX no Windows |
+| `npm run test:chat-web` | 39 arquivos e 147/147 testes aprovados |
+| `npm run test:chat-bridge` | 124/124 testes aprovados |
+| `npm run test:artifact-server` | 13/13 testes aprovados |
+| Marketing Ops sem legado | 27 arquivos e 85/85 testes aprovados |
+| `npm run typecheck` | frontend e Marketing Ops aprovados |
+| `npm run build` | frontend e Marketing Ops aprovados; warnings conhecidos de chunk e Browserslist |
+| `npm run test:cut` | 3/3 testes aprovados |
+| higiene | `git diff --check` aprovado; nenhum secret/arquivo sensível rastreado ou container temporário ativo |
+
+A suíte completa `npm run test:marketing-ops` continua vermelha pelo baseline
+copiado: nove contratos procuram migrations Supabase ausentes, integrações tentam
+o banco legado em `127.0.0.1:55322` e um contrato procura o antigo
+`docker-compose.yml`. Essa falha é esperada até a migração do domínio; não é
+atribuída à fundação nova nem tratada como gate aprovado.
+
 ### Tarefa 12: Publicação controlada
 
 1. Commit: `docs: record PostgreSQL foundation evidence`.
@@ -265,7 +287,8 @@ registradas como dívida, nunca convertidas em falso sucesso.
 | A — runtime em container | Concluído | `1ac9721`; 3/3 contratos e dois `docker compose config --quiet` aprovados |
 | B — runner de migrations | Concluído | `fb70b64`; 9/9 testes unitários, 4/4 contratos Compose e build da imagem aprovados |
 | C — papéis e RLS | Concluído | `0755d67`; 12/12 contratos, 9/9 unitários e 5/5 integrações reais aprovados |
-| D — operação e evidências | Em execução | runbook e inventário de capacidades criados; backup/restore, ledger DDL automatizado e verificação final pendentes |
+| D — operação e evidências | Primeiro lote aprovado localmente | runbook, inventário e verificação final registrados; backup/restore, ledger DDL automatizado e gates de M3 seguem pendentes |
 
-**Próximo comando seguro:** executar a Tarefa 11 e registrar a verificação final
-do lote sem acessar a VPS.
+**Próximo comando seguro:** concluir a Tarefa 12, integrar a branch à `main` e
+publicar `origin/main`; depois abrir uma nova fatia para o ledger DDL automatizado
+ou o ADR de Auth/App API, sem acessar a VPS.
