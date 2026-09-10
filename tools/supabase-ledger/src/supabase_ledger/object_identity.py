@@ -23,14 +23,44 @@ def normalize_identifier(value: str, *, quoted: bool = False) -> str:
     return _encode(normalized)
 
 
-def _qualified(kind: str, parts: Sequence[str]) -> str:
+def _identifier(value: str, *, parsed: bool) -> str:
+    return normalize_identifier(value, quoted=parsed)
+
+
+def qualified_id(kind: str, parts: Sequence[str], *, parsed: bool = False) -> str:
     if len(parts) != 2:
         raise ObjectIdentityError(f"{kind} identity must be schema-qualified")
-    return f"{kind}:{normalize_identifier(parts[0])}.{normalize_identifier(parts[1])}"
+    return f"{kind}:{_identifier(parts[0], parsed=parsed)}.{_identifier(parts[1], parsed=parsed)}"
 
 
-def table_id(parts: Sequence[str]) -> str:
-    return _qualified("table", parts)
+def table_id(parts: Sequence[str], *, parsed: bool = False) -> str:
+    return qualified_id("table", parts, parsed=parsed)
+
+
+def schema_id(name: str, *, parsed: bool = False) -> str:
+    return f"schema:{_identifier(name, parsed=parsed)}"
+
+
+def extension_id(name: str, *, parsed: bool = False) -> str:
+    return f"extension:{_identifier(name, parsed=parsed)}"
+
+
+def relation_id(kind: str, schema: str, name: str, *, parsed: bool = False) -> str:
+    return qualified_id(kind, [schema, name], parsed=parsed)
+
+
+def nested_relation_id(
+    kind: str,
+    schema: str,
+    table: str,
+    name: str,
+    *,
+    parsed: bool = False,
+) -> str:
+    return (
+        f"{kind}:{_identifier(schema, parsed=parsed)}."
+        f"{_identifier(table, parsed=parsed)}.{_identifier(name, parsed=parsed)}"
+    )
 
 
 def _canonical_type(value: str) -> str:
@@ -39,24 +69,30 @@ def _canonical_type(value: str) -> str:
     return _encode(re.sub(r"\s+", " ", value.strip()).lower())
 
 
-def function_id(schema: str, name: str, argument_types: Sequence[str]) -> str:
+def function_id(
+    schema: str,
+    name: str,
+    argument_types: Sequence[str],
+    *,
+    parsed: bool = False,
+) -> str:
     signature = ",".join(_canonical_type(item) for item in argument_types)
     return (
-        f"function:{normalize_identifier(schema)}."
-        f"{normalize_identifier(name)}({signature})"
+        f"function:{_identifier(schema, parsed=parsed)}."
+        f"{_identifier(name, parsed=parsed)}({signature})"
     )
 
 
-def policy_id(schema: str, table: str, name: str) -> str:
+def policy_id(schema: str, table: str, name: str, *, parsed: bool = False) -> str:
     return (
-        f"policy:{normalize_identifier(schema)}.{normalize_identifier(table)}."
+        f"policy:{_identifier(schema, parsed=parsed)}.{_identifier(table, parsed=parsed)}."
         f"{normalize_identifier(name, quoted=True)}"
     )
 
 
-def trigger_id(schema: str, table: str, name: str) -> str:
+def trigger_id(schema: str, table: str, name: str, *, parsed: bool = False) -> str:
     return (
-        f"trigger:{normalize_identifier(schema)}.{normalize_identifier(table)}."
+        f"trigger:{_identifier(schema, parsed=parsed)}.{_identifier(table, parsed=parsed)}."
         f"{normalize_identifier(name, quoted=True)}"
     )
 
