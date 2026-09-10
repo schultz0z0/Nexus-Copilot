@@ -1,0 +1,95 @@
+{
+  "format_version": 1,
+  "sources": [
+    {
+      "id": "active_migrations",
+      "kind": "active_sql",
+      "match": "file",
+      "globs": [
+        "apps/chat-web/supabase/migrations/*.sql"
+      ],
+      "expected_count": 24,
+      "critical": true
+    },
+    {
+      "id": "edge_functions",
+      "kind": "edge_function",
+      "match": "directory",
+      "globs": [
+        "apps/chat-web/supabase/functions/*"
+      ],
+      "expected_count": 4,
+      "critical": true
+    },
+    {
+      "id": "legacy_migrations",
+      "kind": "historical_only",
+      "match": "file",
+      "globs": [
+        "apps/chat-web/supabase/legacy_migrations/*"
+      ],
+      "expected_count": 25,
+      "critical": false
+    },
+    {
+      "id": "ignored_migrations",
+      "kind": "historical_only",
+      "match": "file",
+      "globs": [
+        "apps/chat-web/supabase/ignored_migrations/*"
+      ],
+      "expected_count": 25,
+      "critical": false
+    },
+    {
+      "id": "retired_rag_mcp_migrations",
+      "kind": "removed_component",
+      "match": "file",
+      "globs": [
+        "services/rag-mcp/supabase/migrations/*.sql"
+      ],
+      "expected_count": 5,
+      "critical": true
+    },
+    {
+      "id": "retired_rag_mcp_service",
+      "kind": "removed_component",
+      "match": "file",
+      "globs": [
+        "services/rag-mcp/package.json"
+      ],
+      "expected_count": 1,
+      "critical": true
+    },
+    {
+      "id": "retired_graph_mcp_service",
+      "kind": "removed_component",
+      "match": "file",
+      "globs": [
+        "services/graph-mcp/package.json"
+      ],
+      "expected_count": 1,
+      "critical": true
+    },
+    {
+      "id": "retired_neo4j_migration",
+      "kind": "removed_component",
+      "match": "file",
+      "globs": [
+        "services/hermes-runtime/migrations/2026_06_29_neo4j_tenant_setup.sql"
+      ],
+      "expected_count": 1,
+      "critical": true
+    },
+    {
+      "id": "retired_hermes_fork",
+      "kind": "removed_component",
+      "match": "file",
+      "globs": [
+        "services/hermes-runtime/vendor/hermes-agent/pyproject.toml"
+      ],
+      "expected_count": 1,
+      "critical": true
+    }
+  ]
+}
