@@ -194,9 +194,23 @@ def generate_decision_document(
 
     preserved: dict[str, dict[str, Any]] = {}
     if existing is not None:
+        if existing.get("format_version") != FORMAT_VERSION:
+            raise DecisionValidationError("unsupported existing decision format_version")
         decisions = existing.get("decisions")
         if not isinstance(decisions, list):
             raise DecisionValidationError("existing decisions must be a list")
+        existing_ids = [
+            item.get("object_id") for item in decisions if isinstance(item, dict)
+        ]
+        duplicates = sorted(
+            object_id
+            for object_id, count in Counter(existing_ids).items()
+            if isinstance(object_id, str) and count > 1
+        )
+        if duplicates:
+            raise DecisionValidationError(
+                "duplicate existing decision: " + ", ".join(duplicates)
+            )
         for item in decisions:
             if (
                 isinstance(item, dict)
@@ -211,6 +225,11 @@ def generate_decision_document(
     ):
         raise DecisionValidationError("manifest contains an invalid object_id")
     object_ids.sort()
+    approved_orphans = sorted(set(preserved) - set(object_ids))
+    if approved_orphans:
+        raise DecisionValidationError(
+            "approved orphan decision: " + ", ".join(approved_orphans)
+        )
 
     return {
         "format_version": FORMAT_VERSION,

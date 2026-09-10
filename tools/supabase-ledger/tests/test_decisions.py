@@ -131,6 +131,20 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual("proposed", refreshed["decisions"][0]["review_status"])
         self.assertEqual("marketing-ops-postgres", refreshed["decisions"][0]["target_component"])
 
+    def test_rescan_rejects_duplicate_or_orphaned_approved_overrides(self) -> None:
+        manifest = manifest_for("table:public.profiles")
+        existing = generate_decision_document(manifest)
+        existing["decisions"][0]["review_status"] = "approved"
+
+        duplicated = copy.deepcopy(existing)
+        duplicated["decisions"].append(copy.deepcopy(duplicated["decisions"][0]))
+        with self.assertRaisesRegex(DecisionValidationError, "duplicate existing decision"):
+            generate_decision_document(manifest, existing=duplicated)
+
+        without_profile = manifest_for("bucket:avatars")
+        with self.assertRaisesRegex(DecisionValidationError, "approved orphan decision"):
+            generate_decision_document(without_profile, existing=existing)
+
     def test_rejects_missing_duplicate_or_orphan_decisions(self) -> None:
         manifest = manifest_for("table:public.profiles", "bucket:avatars")
         valid = generate_decision_document(manifest)
