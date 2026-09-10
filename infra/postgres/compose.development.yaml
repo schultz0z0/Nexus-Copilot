@@ -3,7 +3,6 @@ services:
     ports:
       - name: postgres-dev
         target: 5432
-        published: "55432"
+        published: "${POSTGRES_DEV_PORT:-55432}"
         host_ip: 127.0.0.1
         protocol: tcp
-

@@ -25,7 +25,7 @@ function dockerComposeAvailable() {
   return spawnSync('docker', ['compose', 'version'], { encoding: 'utf8' }).status === 0;
 }
 
-function renderCompose(overrideFile) {
+function renderCompose(overrideFile, environment = {}) {
   const secretDirectory = mkdtempSync(join(tmpdir(), 'ens-postgres-contract-'));
   const secretEnvironment = {};
 
@@ -53,7 +53,7 @@ function renderCompose(overrideFile) {
       {
         cwd: repositoryRoot,
         encoding: 'utf8',
-        env: { ...process.env, ...secretEnvironment },
+        env: { ...process.env, ...secretEnvironment, ...environment },
       },
     );
   } finally {
@@ -131,6 +131,17 @@ test(
         target: '/run/secrets/postgres_migrator_password',
       },
     ]);
+  },
+);
+
+test(
+  'development port can be isolated per test run',
+  { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
+  () => {
+    const result = renderCompose(developmentComposeFile, { POSTGRES_DEV_PORT: '55439' });
+    assert.equal(result.status, 0, result.stderr);
+    const configuration = JSON.parse(result.stdout);
+    assert.equal(configuration.services.postgres.ports[0].published, '55439');
   },
 );
 
