@@ -528,6 +528,12 @@ digest pair.
   against the Docker runtime.
 - `npm run typecheck`: chat frontend and Marketing Ops passed after reproducible
   `npm ci` installation; package manifests and lockfiles were unchanged.
+- The additional root `npm test` check confirmed 147/147 frontend tests, then
+  stopped in the known non-hermetic Marketing Ops baseline: tests reference
+  intentionally uncopied Supabase migrations, the absent legacy database on
+  port 55322, the retired root Compose and time-bound legacy delegations. Those
+  dependencies were not recreated. Run separately, Chat Bridge passed 124/124
+  and Artifact Server passed 13/13.
 - Branch diff/check and the generated-artifact safety scan found no credential,
   absolute path, raw SQL body or accidental `migrate` decision for a retired
   component. No ledger container remained active.
