@@ -1,0 +1,81 @@
+name: ens-supabase-ledger
+
+services:
+  verify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ens-supabase-ledger:local
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - ../../docs/migration/supabase-ledger:/artifacts:ro
+    command:
+      - verify
+      - --manifest
+      - /artifacts/source-manifest.json
+      - --decisions
+      - /artifacts/object-decisions.json
+      - --report
+      - /artifacts/supabase-object-ledger.md
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ens-supabase-ledger:local
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    entrypoint:
+      - python
+      - -m
+      - unittest
+    command:
+      - discover
+      - -s
+      - /app/tests
+      - -p
+      - test_*.py
+
+  scan:
+    profiles:
+      - scan
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ens-supabase-ledger:local
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - ../../docs/migration/supabase-ledger:/artifacts
+      - ${ENS_LEGACY_ROOT:-./tests/fixtures/source-tree}:/legacy:ro
+    command:
+      - scan
+      - --source
+      - /legacy
+      - --policy
+      - /artifacts/source-policy.json
+      - --manifest
+      - /artifacts/source-manifest.json
+      - --decisions
+      - /artifacts/object-decisions.json
+      - --report
+      - /artifacts/supabase-object-ledger.md
