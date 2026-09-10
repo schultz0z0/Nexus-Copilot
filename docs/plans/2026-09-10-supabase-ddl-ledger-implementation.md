@@ -469,8 +469,8 @@ old migrations to make it green.
 | C — classification | Complete | fail-closed DDL/resources classifier; `4108d97`, `a683fb7` |
 | D — decisions/report | Complete | decision verifier `33e0a36`; portable CLI/report `471fc19` |
 | E — real scan | Complete | 87 sources, 2,904 operations, 2,672 objects, zero unclassified; `ebaf727` |
-| F — container | Complete | Python 3.11.16 digest pin, 38 Linux tests and offline scan/verify; `6ed0e5a` |
-| G — final gates | In progress | documentation and cross-project verification underway |
+| F — container | Complete | Python 3.11.16 digest pin, 39 Linux tests and offline scan/verify; `6ed0e5a`, `d37a700` |
+| G — final gates | Complete | all Task 11 gates passed locally; production untouched |
 
 ### Checkpoint after Tasks 4–6 — 2026-09-10
 
@@ -505,12 +505,34 @@ digest pair.
   rows remain `proposed` and therefore require human review.
 - No retired component received `migrate`; Graph/Neo4j technology remains
   removed and RAG remains pending its ADR.
-- Container evidence: 38 tests passed on Linux, including the symlink escape
+- Container evidence: 39 tests passed on Linux, including the symlink escape
   test unavailable on the Windows host. No ledger container remained running.
 - Existing dependency audit debt observed during lockfile installation, outside
   this ledger change: chat frontend reported 9 advisories (1 low, 5 moderate,
   3 high); Marketing Ops reported 8 (6 moderate, 2 high). No automatic upgrade
   was applied because that would change unrelated dependency versions.
 
-**Next safe command:** finish Checkpoint G, review the full branch diff for
-secrets/raw SQL, then integrate only after every final gate passes.
+### Final gate evidence — 2026-09-10
+
+- `npm run test:supabase-ledger`: 39 tests passed locally; the Windows-only run
+  skipped one symlink-creation case. The same suite passed 39/39 in Linux.
+- `python -S ... verify`: passed without `site-packages` or historical source.
+- Docker build, test, verify and real-source scan passed with no network,
+  read-only root filesystem and read-only legacy mount.
+- Two consecutive real scans were byte-identical and matched the committed
+  artifacts. SHA-256: manifest `3c5e5e4102aa9fce070c3ae98584f7cb591eb324480036516e11d445f13774a0`,
+  decisions `0d10ac3f9a43d06a52a35d53ea400d09816832344a116df584d4bdb68cc722d3`,
+  report `e5336d81d54ec3f31b754ab9067ffd94fb43caa2a5e9461b4dd075e7d9582049`.
+- `npm run test:postgres`: 12 contract tests and 9 migration-runner tests
+  passed. `npm run test:postgres:integration`: 5 integration tests passed
+  against the Docker runtime.
+- `npm run typecheck`: chat frontend and Marketing Ops passed after reproducible
+  `npm ci` installation; package manifests and lockfiles were unchanged.
+- Branch diff/check and the generated-artifact safety scan found no credential,
+  absolute path, raw SQL body or accidental `migrate` decision for a retired
+  component. No ledger container remained active.
+- No VPS, production network, production database or external Supabase service
+  was accessed.
+
+**Next safe command:** fast-forward local `main`, rerun offline verification and
+unit tests there, then push `main` to `origin/main`.
