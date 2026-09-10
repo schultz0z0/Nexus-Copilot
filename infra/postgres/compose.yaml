@@ -38,6 +38,7 @@ services:
     profiles:
       - tools
     restart: "no"
+    user: postgres
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,6 +52,13 @@ services:
       - postgres_bootstrap_password
       - postgres_migrator_password
       - postgres_app_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
       - ./bootstrap:/opt/nexus-postgres/bootstrap:ro
       - ./scripts/bootstrap-roles.sh:/opt/nexus-postgres/bootstrap-roles.sh:ro

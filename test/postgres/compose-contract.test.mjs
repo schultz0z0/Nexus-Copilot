@@ -114,6 +114,8 @@ test(
     assert.equal(volumeByTarget(database, '/var/lib/postgresql')?.source, 'postgres-data');
 
     assert.equal(configuration.services['postgres-bootstrap'].restart, 'no');
+    assert.equal(configuration.services['postgres-bootstrap'].user, 'postgres');
+    assert.equal(configuration.services['postgres-bootstrap'].read_only, true);
     const migrator = configuration.services['postgres-migrate'];
     assert.equal(migrator.restart, 'no');
     assert.equal(migrator.environment.PGUSER, 'nexus_migrator');
