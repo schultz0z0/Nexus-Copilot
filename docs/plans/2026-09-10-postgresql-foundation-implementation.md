@@ -256,11 +256,10 @@ registradas como dívida, nunca convertidas em falso sucesso.
 
 | Checkpoint | Estado | Evidência |
 | --- | --- | --- |
-| A — runtime em container | Pendente | — |
+| A — runtime em container | Concluído | `1ac9721`; 3/3 contratos e dois `docker compose config --quiet` aprovados |
 | B — runner de migrations | Pendente | — |
 | C — papéis e RLS | Pendente | — |
 | D — operação e evidências | Pendente | — |
 
-**Próximo comando seguro:** iniciar a Tarefa 1 escrevendo o contrato Compose
-falho e executar `npm run test:postgres:contract`.
-
+**Próximo comando seguro:** iniciar a Tarefa 4 escrevendo os testes falhos de
+descoberta, ordem, checksum, transação e advisory lock do runner.
