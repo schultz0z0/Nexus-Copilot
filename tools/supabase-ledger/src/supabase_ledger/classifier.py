@@ -227,6 +227,12 @@ def _classify_grant(statement: ParsedStatement, node: dict[str, Any]) -> tuple[O
 
 def classify_statement(statement: ParsedStatement) -> tuple[Operation, ...]:
     node = statement.ast.get(statement.node_type, {})
+    if statement.node_type in {"InsertStmt", "SelectStmt"}:
+        from .resources import classify_resource_statement
+
+        resource_operations = classify_resource_statement(statement)
+        if resource_operations is not None:
+            return resource_operations
     if statement.node_type == "CreateSchemaStmt":
         return (_operation(statement, action="create", object_id=schema_id(node["schemaname"], parsed=True), object_type="schema"),)
     if statement.node_type == "CreateExtensionStmt":

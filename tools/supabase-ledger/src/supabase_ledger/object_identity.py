@@ -107,3 +107,15 @@ def grant_id(object_id: str, role: str, privileges: Iterable[str]) -> str:
         f"grant:{_encode(object_id)}:{normalize_identifier(role)}:"
         f"{_encode(','.join(normalized_privileges))}"
     )
+
+
+def resource_id(kind: str, name: str) -> str:
+    if not isinstance(kind, str) or not kind:
+        raise ObjectIdentityError("resource kind must be a non-empty string")
+    return f"{kind}:{_encode(name)}"
+
+
+def resource_reference_id(target: str, statement_sha256: str) -> str:
+    if len(statement_sha256) < 16:
+        raise ObjectIdentityError("resource reference requires a statement hash")
+    return f"resource_reference:{_encode(target)}:{statement_sha256[:16]}"
