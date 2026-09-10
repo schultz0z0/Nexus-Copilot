@@ -19,6 +19,7 @@ const productionComposeFile = join(
   'postgres',
   'compose.production.yaml',
 );
+const migratorDockerfile = join(repositoryRoot, 'infra', 'postgres', 'Dockerfile.migrator');
 
 function dockerComposeAvailable() {
   return spawnSync('docker', ['compose', 'version'], { encoding: 'utf8' }).status === 0;
@@ -72,6 +73,15 @@ test('base Compose pins PostgreSQL 18.6 by digest and keeps the database private
   assert.doesNotMatch(source, /POSTGRES_PASSWORD:\s*[^$\s]/);
 });
 
+test('migration image is reproducible, minimal and runs as the non-root node user', () => {
+  const source = readFileSync(migratorDockerfile, 'utf8');
+  assert.match(source, /^FROM node:22\.\d+\.\d+-bookworm-slim@sha256:[0-9a-f]{64}$/m);
+  assert.match(source, /^RUN npm ci --omit=dev$/m);
+  assert.match(source, /^USER node$/m);
+  assert.match(source, /^ENTRYPOINT \["node", "src\/migrate\.mjs"\]$/m);
+  assert.doesNotMatch(source, /curl|wget|sudo|apt-get/);
+});
+
 test(
   'development publishes only PostgreSQL on loopback and defines one-shot jobs',
   { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
@@ -104,7 +114,21 @@ test(
     assert.equal(volumeByTarget(database, '/var/lib/postgresql')?.source, 'postgres-data');
 
     assert.equal(configuration.services['postgres-bootstrap'].restart, 'no');
-    assert.equal(configuration.services['postgres-migrate'].restart, 'no');
+    const migrator = configuration.services['postgres-migrate'];
+    assert.equal(migrator.restart, 'no');
+    assert.equal(migrator.environment.PGUSER, 'nexus_migrator');
+    assert.equal(
+      migrator.environment.PGPASSWORD_FILE,
+      '/run/secrets/postgres_migrator_password',
+    );
+    assert.equal(migrator.environment.PGPASSWORD, undefined);
+    assert.equal(migrator.command ?? undefined, undefined);
+    assert.deepEqual(migrator.secrets, [
+      {
+        source: 'postgres_migrator_password',
+        target: '/run/secrets/postgres_migrator_password',
+      },
+    ]);
   },
 );
 

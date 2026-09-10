@@ -70,8 +70,16 @@ services:
     environment:
       <<: *postgres-client-environment
       PGUSER: nexus_migrator
+      PGPASSWORD_FILE: /run/secrets/postgres_migrator_password
     secrets:
       - postgres_migrator_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - postgres-data
 
@@ -90,4 +98,3 @@ secrets:
     file: ${POSTGRES_MIGRATOR_PASSWORD_FILE:-./secrets/postgres_migrator_password}
   postgres_app_password:
     file: ${POSTGRES_APP_PASSWORD_FILE:-./secrets/postgres_app_password}
-
