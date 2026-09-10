@@ -9,6 +9,7 @@
     "test": "npm run test:chat-web && npm run test:marketing-ops && npm run test:chat-bridge && npm run test:artifact-server",
     "test:cut": "node --test test/cut/*.test.mjs",
     "test:hermes": "node --test test/hermes/*.test.mjs",
+    "test:postgres:contract": "node --test test/postgres/*.test.mjs",
     "test:chat-web": "npm --prefix apps/chat-web test",
     "test:marketing-ops": "npm --prefix services/marketing-ops test",
     "test:chat-bridge": "npm --prefix services/chat-bridge test",

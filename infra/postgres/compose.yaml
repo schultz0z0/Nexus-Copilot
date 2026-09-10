@@ -1,0 +1,93 @@
+name: ens-postgres
+
+x-postgres-image: &postgres-image
+  image: postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af
+
+x-postgres-client-environment: &postgres-client-environment
+  PGHOST: postgres
+  PGPORT: "5432"
+  PGDATABASE: nexus
+
+services:
+  postgres:
+    <<: *postgres-image
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus_bootstrap
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_bootstrap_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      PGDATA: /var/lib/postgresql/18/docker
+    secrets:
+      - postgres_bootstrap_password
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks:
+      - postgres-data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  postgres-bootstrap:
+    <<: *postgres-image
+    profiles:
+      - tools
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - /opt/nexus-postgres/bootstrap-roles.sh
+    environment:
+      <<: *postgres-client-environment
+      PGUSER: nexus_bootstrap
+    secrets:
+      - postgres_bootstrap_password
+      - postgres_migrator_password
+      - postgres_app_password
+    volumes:
+      - ./bootstrap:/opt/nexus-postgres/bootstrap:ro
+      - ./scripts/bootstrap-roles.sh:/opt/nexus-postgres/bootstrap-roles.sh:ro
+    networks:
+      - postgres-data
+
+  postgres-migrate:
+    build:
+      context: ../..
+      dockerfile: infra/postgres/Dockerfile.migrator
+    profiles:
+      - tools
+    restart: "no"
+    depends_on:
+      postgres-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      <<: *postgres-client-environment
+      PGUSER: nexus_migrator
+    secrets:
+      - postgres_migrator_password
+    networks:
+      - postgres-data
+
+volumes:
+  postgres-data:
+    name: ${POSTGRES_DATA_VOLUME_NAME:-ens-postgres-data}
+
+networks:
+  postgres-data:
+    name: ${POSTGRES_DATA_NETWORK_NAME:-ens-postgres-data}
+
+secrets:
+  postgres_bootstrap_password:
+    file: ${POSTGRES_BOOTSTRAP_PASSWORD_FILE:-./secrets/postgres_bootstrap_password}
+  postgres_migrator_password:
+    file: ${POSTGRES_MIGRATOR_PASSWORD_FILE:-./secrets/postgres_migrator_password}
+  postgres_app_password:
+    file: ${POSTGRES_APP_PASSWORD_FILE:-./secrets/postgres_app_password}
+

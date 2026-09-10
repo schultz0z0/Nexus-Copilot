@@ -1,0 +1,9 @@
+services:
+  postgres:
+    ports:
+      - name: postgres-dev
+        target: 5432
+        published: "55432"
+        host_ip: 127.0.0.1
+        protocol: tcp
+

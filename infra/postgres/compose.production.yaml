@@ -1,0 +1,4 @@
+networks:
+  postgres-data:
+    internal: true
+
