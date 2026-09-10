@@ -257,9 +257,9 @@ registradas como dívida, nunca convertidas em falso sucesso.
 | Checkpoint | Estado | Evidência |
 | --- | --- | --- |
 | A — runtime em container | Concluído | `1ac9721`; 3/3 contratos e dois `docker compose config --quiet` aprovados |
-| B — runner de migrations | Pendente | — |
-| C — papéis e RLS | Pendente | — |
+| B — runner de migrations | Concluído | `fb70b64`; 9/9 testes unitários, 4/4 contratos Compose e build da imagem aprovados |
+| C — papéis e RLS | Em execução | `1c53ac6`; bootstrap aprovado em 7/7 contratos; schema e integração real pendentes |
 | D — operação e evidências | Pendente | — |
 
-**Próximo comando seguro:** iniciar a Tarefa 4 escrevendo os testes falhos de
-descoberta, ordem, checksum, transação e advisory lock do runner.
+**Próximo comando seguro:** iniciar a Tarefa 7 ampliando o contrato SQL antes de
+criar as migrations de schemas, tenancy, contexto e RLS.
