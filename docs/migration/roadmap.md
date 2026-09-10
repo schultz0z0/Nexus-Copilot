@@ -149,6 +149,12 @@ O procedimento operacional está no
 matriz inicial cobre capacidades e tabelas; o critério de saída continua aberto
 até o ledger automatizado reconciliar todos os objetos DDL.
 
+**Fatia ativa:** o
+[desenho do ledger DDL](../plans/2026-09-10-supabase-ddl-ledger-design.md) foi
+aceito em 2026-09-10. Ele cobre também fontes históricas de serviços retirados,
+para impedir que RAG MCP, Graph MCP, Neo4j ou componentes internos do Supabase
+sejam reintroduzidos por migração automática.
+
 ## M4 — Auth e App API/BFF
 
 **Objetivo:** centralizar identidade, tenant, autorização e contratos públicos.
