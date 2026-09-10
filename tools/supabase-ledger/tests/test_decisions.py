@@ -45,6 +45,16 @@ class DecisionTests(unittest.TestCase):
             "table:public.profiles": ("transform", "iam", "M4"),
             "table:public.chat_sessions": ("transform", "chat-store", "M4"),
             "table:marketing_ops.campaigns": ("transform", "marketing-ops-postgres", "M5"),
+            "grant:table%3Amarketing_ops%2Ecampaigns:authenticated:select": (
+                "transform",
+                "marketing-ops-postgres",
+                "M5",
+            ),
+            "grant:table%3Apublic%2Eprofiles:authenticated:select": (
+                "transform",
+                "iam",
+                "M4",
+            ),
             "table:public.picture_jobs": ("transform", "picture-service", "M5"),
             "bucket:avatars": ("transform", "artifact-server", "M5"),
             "edge_function:admin-create-user": ("transform", "app-api", "M4"),
@@ -54,6 +64,11 @@ class DecisionTests(unittest.TestCase):
             "table:realtime.messages": ("remove", "none", "M5"),
             "extension:supabase_vault": ("remove", "runtime-secrets", "M5"),
             "table:public.graph_entities": ("remove", "relational-review", "M5"),
+            "grant:table%3Apublic%2Egraph_entities:authenticated:select": (
+                "remove",
+                "relational-review",
+                "M5",
+            ),
             "removed_component:retired_graph_mcp_service": ("remove", "none", "M5"),
             "table:public.rag_ens": ("pending", "rag-adr", "M5"),
             "extension:vector": ("pending", "postgresql-extension-review", "M3"),
@@ -96,6 +111,25 @@ class DecisionTests(unittest.TestCase):
         preserved = next(item for item in refreshed["decisions"] if item["object_id"] == "table:public.profiles")
         self.assertEqual(existing["decisions"][0], preserved)
         self.assertEqual(manifest_digest(new_manifest), refreshed["manifest_sha256"])
+
+    def test_refreshes_unapproved_proposals_when_rules_change(self) -> None:
+        manifest = manifest_for(
+            "grant:table%3Amarketing_ops%2Ecampaigns:authenticated:select"
+        )
+        existing = generate_decision_document(manifest)
+        existing["decisions"][0].update(
+            {
+                "action": "pending",
+                "target_component": "domain-review",
+                "milestone": "M6",
+                "reason_code": "manual_domain_review",
+            }
+        )
+
+        refreshed = generate_decision_document(manifest, existing=existing)
+
+        self.assertEqual("proposed", refreshed["decisions"][0]["review_status"])
+        self.assertEqual("marketing-ops-postgres", refreshed["decisions"][0]["target_component"])
 
     def test_rejects_missing_duplicate_or_orphan_decisions(self) -> None:
         manifest = manifest_for("table:public.profiles", "bucket:avatars")

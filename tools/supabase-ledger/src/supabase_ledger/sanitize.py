@@ -54,4 +54,4 @@ def sanitize_error(error: BaseException) -> str:
     message = re.sub(r"(?<![A-Za-z0-9])/(?:[^\s:]+/)*[^\s:]+", "<path>", message)
     for pattern in _SECRET_PATTERNS:
         message = pattern.sub("<redacted>", message)
-    return f"{name}: {message[:300]}"
+    return f"{name}: {message[:4096]}"

@@ -20,6 +20,7 @@ from supabase_ledger.sql_parser import ParsedStatement  # noqa: E402
 
 
 FIXTURE = Path(__file__).parent / "fixtures/sql/ddl_cases.sql"
+MIGRATION_FIXTURE = Path(__file__).parent / "fixtures/sql/migration_cases.sql"
 
 
 class ClassifierTests(unittest.TestCase):
@@ -107,6 +108,68 @@ class ClassifierTests(unittest.TestCase):
         self.assertNotIn("SELECT p_id", serialized)
         self.assertNotIn("raw_sql", serialized)
         self.assertTrue(all("ast" not in asdict(item) for item in operations))
+
+    def test_unnamed_constraints_receive_stable_synthetic_ids(self) -> None:
+        sql = (
+            "CREATE TABLE public.example ("
+            "id uuid PRIMARY KEY, tenant_id uuid, UNIQUE (tenant_id, id)"
+            ");"
+        )
+
+        first = classify_sql(sql, "active/unnamed.sql")
+        second = classify_sql(sql, "active/unnamed.sql")
+        constraint_ids = [
+            item.object_id for item in first if item.object_type == "constraint"
+        ]
+
+        self.assertEqual(2, len(constraint_ids))
+        self.assertEqual(len(constraint_ids), len(set(constraint_ids)))
+        self.assertTrue(
+            all(item.startswith("constraint:public.example.__anonymous_") for item in constraint_ids)
+        )
+        self.assertEqual(
+            constraint_ids,
+            [item.object_id for item in second if item.object_type == "constraint"],
+        )
+
+    def test_classifies_dump_controls_alters_grants_and_data_operations(self) -> None:
+        operations = classify_sql(
+            MIGRATION_FIXTURE.read_text(encoding="utf-8"),
+            "active/migration_cases.sql",
+        )
+
+        self.assertNotIn("unclassified", {item.classification for item in operations})
+        actions = {item.action for item in operations}
+        self.assertTrue(
+            {
+                "set_config",
+                "call_review_required",
+                "alter_enum",
+                "rename",
+                "owner",
+                "comment",
+                "create",
+                "add_identity",
+                "alter_type",
+                "set_default",
+                "drop_default",
+                "set_not_null",
+                "drop_not_null",
+                "drop",
+                "validate",
+                "grant_default",
+                "grant",
+                "insert_review_required",
+                "update_review_required",
+                "do_review_required",
+            }.issubset(actions)
+        )
+        object_ids = {item.object_id for item in operations if item.object_id}
+        self.assertIn("constraint:app.items.items_tenant_fk", object_ids)
+        self.assertIn("function:app.touch(uuid)", object_ids)
+        self.assertIn("schema:app", object_ids)
+        self.assertTrue(any(item.startswith("grant:") for item in object_ids))
+        self.assertTrue(any(item.startswith("resource_reference:") for item in object_ids))
 
 
 if __name__ == "__main__":

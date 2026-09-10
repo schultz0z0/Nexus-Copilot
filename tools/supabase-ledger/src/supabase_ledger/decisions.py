@@ -5,6 +5,7 @@ import hashlib
 import json
 from collections import Counter
 from typing import Any
+from urllib.parse import unquote
 
 from .resources import RemovedComponentError, assert_removed_component_action
 
@@ -71,7 +72,7 @@ def _decision(
 
 def propose_decision(object_id: str) -> dict[str, Any]:
     """Propose a conservative destination without granting human approval."""
-    lowered = object_id.lower()
+    lowered = unquote(object_id).lower()
 
     if lowered.startswith("removed_component:"):
         return _decision(object_id, "remove", "none", "M5", "retired_component")
@@ -134,7 +135,7 @@ def propose_decision(object_id: str) -> dict[str, Any]:
         )
     if ":public.rag_" in lowered or ":rag_" in lowered or ".rag_" in lowered:
         return _decision(object_id, "pending", "rag-adr", "M5", "rag_architecture_review")
-    if lowered.startswith("table:public.profiles") or "user_chat_integrations" in lowered:
+    if ":public.profiles" in lowered or lowered.startswith("table:public.profiles") or "user_chat_integrations" in lowered:
         return _decision(
             object_id,
             "transform",
@@ -197,7 +198,11 @@ def generate_decision_document(
         if not isinstance(decisions, list):
             raise DecisionValidationError("existing decisions must be a list")
         for item in decisions:
-            if isinstance(item, dict) and isinstance(item.get("object_id"), str):
+            if (
+                isinstance(item, dict)
+                and isinstance(item.get("object_id"), str)
+                and item.get("review_status") == "approved"
+            ):
                 preserved[item["object_id"]] = copy.deepcopy(item)
 
     object_ids = [item.get("object_id") for item in objects if isinstance(item, dict)]

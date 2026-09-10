@@ -11,6 +11,8 @@ from .object_identity import (
     nested_relation_id,
     policy_id,
     relation_id,
+    resource_id,
+    resource_reference_id,
     schema_id,
     table_id,
     trigger_id,
@@ -83,6 +85,46 @@ def _type_name(value: dict[str, Any]) -> str:
     return rendered
 
 
+def _node_name_parts(value: dict[str, Any]) -> list[str]:
+    if "List" in value:
+        return _string_values(value["List"].get("items"))
+    if "String" in value:
+        candidate = value["String"].get("sval")
+        return [candidate] if isinstance(candidate, str) and candidate else []
+    if "TypeName" in value:
+        return _string_values(value["TypeName"].get("names"))
+    if "ObjectWithArgs" in value:
+        return _string_values(value["ObjectWithArgs"].get("objname"))
+    return []
+
+
+def _function_reference(value: dict[str, Any]) -> str:
+    function = value.get("ObjectWithArgs", {})
+    names = _string_values(function.get("objname"))
+    if len(names) != 2:
+        raise ManifestCoverageError("function reference is not schema-qualified")
+    arguments = [
+        _type_name(item.get("TypeName", {})) for item in function.get("objargs", [])
+    ]
+    return function_id(names[0], names[1], arguments, parsed=True)
+
+
+def _reference_operation(
+    statement: ParsedStatement,
+    target: str,
+    action: str,
+    *,
+    classification: str = "data_operation",
+) -> Operation:
+    return _operation(
+        statement,
+        action=action,
+        object_id=resource_reference_id(target, statement.statement_sha256),
+        object_type="resource_reference",
+        classification=classification,
+    )
+
+
 def _relation_object_id(kind: str, relation: dict[str, Any]) -> str:
     schema, name = _range_parts(relation)
     return relation_id(kind, schema, name, parsed=True)
@@ -98,10 +140,28 @@ def _classify_create_table(statement: ParsedStatement, node: dict[str, Any]) -> 
             object_type="table",
         )
     ]
-    ordinal = 1
+    def append_constraint(constraint: dict[str, Any]) -> None:
+        ordinal = len(operations)
+        name = constraint.get("conname")
+        if not isinstance(name, str):
+            kind = str(constraint.get("contype", "constraint")).removeprefix("CONSTR_").lower()
+            name = f"__anonymous_{kind}_{statement.statement_sha256[:12]}_{ordinal}"
+        operations.append(
+            _operation(
+                statement,
+                action="create",
+                object_id=nested_relation_id(
+                    "constraint", schema, table, name, parsed=True
+                ),
+                object_type="constraint",
+                ordinal=ordinal,
+            )
+        )
+
     for raw_element in node.get("tableElts", []):
         if "ColumnDef" in raw_element:
-            column = raw_element["ColumnDef"].get("colname")
+            definition = raw_element["ColumnDef"]
+            column = definition.get("colname")
             if not isinstance(column, str):
                 raise ManifestCoverageError("table column has no name")
             operations.append(
@@ -110,25 +170,18 @@ def _classify_create_table(statement: ParsedStatement, node: dict[str, Any]) -> 
                     action="create",
                     object_id=nested_relation_id("column", schema, table, column, parsed=True),
                     object_type="column",
-                    ordinal=ordinal,
+                    ordinal=len(operations),
                 )
             )
+            for raw_constraint in definition.get("constraints", []):
+                constraint = raw_constraint.get("Constraint", {})
+                if not constraint:
+                    raise ManifestCoverageError("unsupported column constraint")
+                append_constraint(constraint)
         elif "Constraint" in raw_element:
-            constraint = raw_element["Constraint"].get("conname")
-            if not isinstance(constraint, str):
-                raise ManifestCoverageError("table constraint has no explicit name")
-            operations.append(
-                _operation(
-                    statement,
-                    action="create",
-                    object_id=nested_relation_id("constraint", schema, table, constraint, parsed=True),
-                    object_type="constraint",
-                    ordinal=ordinal,
-                )
-            )
+            append_constraint(raw_element["Constraint"])
         else:
             raise ManifestCoverageError("unsupported CREATE TABLE element")
-        ordinal += 1
     return tuple(operations)
 
 
@@ -149,6 +202,68 @@ def _classify_alter_table(statement: ParsedStatement, node: dict[str, Any]) -> t
                     action="create",
                     object_id=nested_relation_id("column", schema, table, column, parsed=True),
                     object_type="column",
+                    ordinal=ordinal,
+                )
+            )
+        elif subtype == "AT_AddConstraint" and isinstance(command.get("def"), dict):
+            constraint = command["def"].get("Constraint", {})
+            name = constraint.get("conname")
+            if not isinstance(name, str):
+                kind = str(constraint.get("contype", "constraint")).removeprefix("CONSTR_").lower()
+                name = f"__anonymous_{kind}_{statement.statement_sha256[:12]}_{ordinal}"
+            operations.append(
+                _operation(
+                    statement,
+                    action="create",
+                    object_id=nested_relation_id(
+                        "constraint", schema, table, name, parsed=True
+                    ),
+                    object_type="constraint",
+                    ordinal=ordinal,
+                )
+            )
+        elif subtype in {
+            "AT_AddIdentity",
+            "AT_AlterColumnType",
+            "AT_ColumnDefault",
+            "AT_SetNotNull",
+            "AT_DropNotNull",
+        }:
+            column = command.get("name")
+            if not isinstance(column, str):
+                raise ManifestCoverageError(f"{subtype} column has no name")
+            if subtype == "AT_ColumnDefault":
+                action = "set_default" if command.get("def") is not None else "drop_default"
+            else:
+                action = {
+                    "AT_AddIdentity": "add_identity",
+                    "AT_AlterColumnType": "alter_type",
+                    "AT_SetNotNull": "set_not_null",
+                    "AT_DropNotNull": "drop_not_null",
+                }[subtype]
+            operations.append(
+                _operation(
+                    statement,
+                    action=action,
+                    object_id=nested_relation_id(
+                        "column", schema, table, column, parsed=True
+                    ),
+                    object_type="column",
+                    ordinal=ordinal,
+                )
+            )
+        elif subtype in {"AT_DropConstraint", "AT_ValidateConstraint"}:
+            constraint = command.get("name")
+            if not isinstance(constraint, str):
+                raise ManifestCoverageError(f"{subtype} constraint has no name")
+            operations.append(
+                _operation(
+                    statement,
+                    action="drop" if subtype == "AT_DropConstraint" else "validate",
+                    object_id=nested_relation_id(
+                        "constraint", schema, table, constraint, parsed=True
+                    ),
+                    object_type="constraint",
                     ordinal=ordinal,
                 )
             )
@@ -206,15 +321,28 @@ def _classify_function(statement: ParsedStatement, node: dict[str, Any]) -> tupl
 
 def _classify_grant(statement: ParsedStatement, node: dict[str, Any]) -> tuple[Operation, ...]:
     object_type = str(node.get("objtype", "")).removeprefix("OBJECT_").lower()
-    if object_type != "table":
+    if object_type not in {"table", "sequence", "schema", "function"}:
         return (_operation(statement, action="unclassified:grant_target", object_id=None, object_type=None, classification="unclassified"),)
     privileges = [item.get("AccessPriv", {}).get("priv_name") or "all" for item in node.get("privileges", [])] or ["all"]
     action = "grant" if node.get("is_grant") is True else "revoke"
     operations: list[Operation] = []
     ordinal = 0
     for raw_object in node.get("objects", []):
-        relation = raw_object.get("RangeVar", {})
-        target_id = _relation_object_id("table", relation)
+        if node.get("targtype") == "ACL_TARGET_ALL_IN_SCHEMA":
+            names = _node_name_parts(raw_object)
+            if len(names) != 1:
+                raise ManifestCoverageError("grant schema scope is ambiguous")
+            target_id = resource_id("grant_scope", f"{object_type}.{names[0]}")
+        elif object_type == "schema":
+            names = _node_name_parts(raw_object)
+            if len(names) != 1:
+                raise ManifestCoverageError("grant schema target is ambiguous")
+            target_id = schema_id(names[0], parsed=True)
+        elif object_type == "function":
+            target_id = _function_reference(raw_object)
+        else:
+            relation = raw_object.get("RangeVar", {})
+            target_id = _relation_object_id(object_type, relation)
         for raw_grantee in node.get("grantees", []):
             role = raw_grantee.get("RoleSpec", {}).get("rolename")
             if not isinstance(role, str):
@@ -222,6 +350,92 @@ def _classify_grant(statement: ParsedStatement, node: dict[str, Any]) -> tuple[O
             identity = grant_id(target_id, role, privileges)
             operations.append(_operation(statement, action=action, object_id=identity, object_type="grant", ordinal=ordinal))
             ordinal += 1
+    return tuple(operations)
+
+
+def _classify_owner(statement: ParsedStatement, node: dict[str, Any]) -> tuple[Operation, ...]:
+    kind = str(node.get("objectType", "")).removeprefix("OBJECT_").lower()
+    raw_object = node.get("object", {})
+    if kind == "function":
+        object_id = _function_reference(raw_object)
+    elif kind == "schema":
+        names = _node_name_parts(raw_object)
+        if len(names) != 1:
+            raise ManifestCoverageError("schema owner target is ambiguous")
+        object_id = schema_id(names[0], parsed=True)
+    elif kind == "publication":
+        names = _node_name_parts(raw_object)
+        if len(names) != 1:
+            raise ManifestCoverageError("publication owner target is ambiguous")
+        object_id = resource_id("publication", names[0])
+    else:
+        return (
+            _operation(
+                statement,
+                action=f"unclassified:owner_{kind or 'unknown'}",
+                object_id=None,
+                object_type=None,
+                classification="unclassified",
+            ),
+        )
+    return (
+        _operation(
+            statement,
+            action="owner",
+            object_id=object_id,
+            object_type=kind,
+        ),
+    )
+
+
+def _classify_comment(statement: ParsedStatement, node: dict[str, Any]) -> tuple[Operation, ...]:
+    kind = str(node.get("objtype", "")).removeprefix("OBJECT_").lower()
+    names = _node_name_parts(node.get("object", {}))
+    if kind == "table" and len(names) == 2:
+        object_id = table_id(names, parsed=True)
+    elif kind == "column" and len(names) == 3:
+        object_id = nested_relation_id("column", names[0], names[1], names[2], parsed=True)
+    elif kind == "schema" and len(names) == 1:
+        object_id = schema_id(names[0], parsed=True)
+    else:
+        return (
+            _operation(
+                statement,
+                action=f"unclassified:comment_{kind or 'unknown'}",
+                object_id=None,
+                object_type=None,
+                classification="unclassified",
+            ),
+        )
+    return (_operation(statement, action="comment", object_id=object_id, object_type=kind),)
+
+
+def _classify_drop(statement: ParsedStatement, node: dict[str, Any]) -> tuple[Operation, ...]:
+    kind = str(node.get("removeType", "")).removeprefix("OBJECT_").lower()
+    operations: list[Operation] = []
+    for ordinal, raw_object in enumerate(node.get("objects", [])):
+        names = _node_name_parts(raw_object)
+        if kind == "policy" and len(names) == 3:
+            object_id = policy_id(names[0], names[1], names[2], parsed=True)
+        elif kind == "trigger" and len(names) == 3:
+            object_id = trigger_id(names[0], names[1], names[2], parsed=True)
+        elif len(names) == 2:
+            object_id = relation_id(kind, names[0], names[1], parsed=True)
+        elif names:
+            object_id = resource_reference_id(
+                f"drop.{kind}.{names[-1]}", statement.statement_sha256
+            )
+        else:
+            raise ManifestCoverageError(f"DROP {kind} target is ambiguous")
+        operations.append(
+            _operation(
+                statement,
+                action="drop",
+                object_id=object_id,
+                object_type=kind if len(names) >= 2 else "resource_reference",
+                ordinal=ordinal,
+            )
+        )
     return tuple(operations)
 
 
@@ -239,7 +453,21 @@ def classify_statement(statement: ParsedStatement) -> tuple[Operation, ...]:
         return (_operation(statement, action="create", object_id=extension_id(node["extname"], parsed=True), object_type="extension"),)
     if statement.node_type == "CreateEnumStmt":
         names = _string_values(node.get("typeName"))
+        if len(names) != 2:
+            raise ManifestCoverageError("enum type is not schema-qualified")
         return (_operation(statement, action="create", object_id=relation_id("type", names[0], names[1], parsed=True), object_type="type"),)
+    if statement.node_type == "AlterEnumStmt":
+        names = _string_values(node.get("typeName"))
+        if len(names) != 2:
+            raise ManifestCoverageError("enum type is not schema-qualified")
+        return (
+            _operation(
+                statement,
+                action="alter_enum",
+                object_id=relation_id("type", names[0], names[1], parsed=True),
+                object_type="type",
+            ),
+        )
     if statement.node_type == "CreateSeqStmt":
         return (_operation(statement, action="create", object_id=_relation_object_id("sequence", node["sequence"]), object_type="sequence"),)
     if statement.node_type == "CreateStmt":
@@ -262,17 +490,91 @@ def classify_statement(statement: ParsedStatement) -> tuple[Operation, ...]:
         return (_operation(statement, action="create", object_id=policy_id(schema, table, node["policy_name"], parsed=True), object_type="policy"),)
     if statement.node_type == "GrantStmt":
         return _classify_grant(statement, node)
+    if statement.node_type == "AlterDefaultPrivilegesStmt":
+        action = node.get("action", {})
+        return (
+            _reference_operation(
+                statement,
+                "default_privileges",
+                "grant_default" if action.get("is_grant") is True else "revoke_default",
+                classification="object_operation",
+            ),
+        )
+    if statement.node_type == "AlterOwnerStmt":
+        return _classify_owner(statement, node)
     if statement.node_type == "CommentStmt":
-        if node.get("objtype") == "OBJECT_TABLE":
-            names = _string_values(node.get("object", {}).get("List", {}).get("items"))
-            return (_operation(statement, action="comment", object_id=table_id(names, parsed=True), object_type="table"),)
+        return _classify_comment(statement, node)
+    if statement.node_type == "RenameStmt":
+        kind = str(node.get("renameType", "")).removeprefix("OBJECT_").lower()
+        names = _node_name_parts(node.get("object", {}))
+        if kind == "type" and len(names) == 2:
+            return (
+                _operation(
+                    statement,
+                    action="rename",
+                    object_id=relation_id("type", names[0], names[1], parsed=True),
+                    object_type="type",
+                ),
+            )
+        return (
+            _operation(
+                statement,
+                action=f"unclassified:rename_{kind or 'unknown'}",
+                object_id=None,
+                object_type=None,
+                classification="unclassified",
+            ),
+        )
     if statement.node_type == "DropStmt":
-        kind = str(node.get("removeType", "")).removeprefix("OBJECT_").lower()
-        operations = []
-        for ordinal, raw_object in enumerate(node.get("objects", [])):
-            names = _string_values(raw_object.get("List", {}).get("items"))
-            operations.append(_operation(statement, action="drop", object_id=relation_id(kind, names[0], names[1], parsed=True), object_type=kind, ordinal=ordinal))
-        return tuple(operations)
+        return _classify_drop(statement, node)
+    if statement.node_type == "VariableSetStmt":
+        return (
+            _operation(
+                statement,
+                action="set_config",
+                object_id=None,
+                object_type=None,
+                classification="control_operation",
+            ),
+        )
+    if statement.node_type == "SelectStmt":
+        targets = node.get("targetList", [])
+        function_names: list[list[str]] = []
+        for target in targets:
+            raw_names = (
+                target.get("ResTarget", {})
+                .get("val", {})
+                .get("FuncCall", {})
+                .get("funcname")
+            )
+            if raw_names:
+                function_names.append(_string_values(raw_names))
+        if function_names == [["pg_catalog", "set_config"]]:
+            return (
+                _operation(
+                    statement,
+                    action="set_config",
+                    object_id=None,
+                    object_type=None,
+                    classification="control_operation",
+                ),
+            )
+        target = "select"
+        if len(function_names) == 1:
+            target = "select_function." + ".".join(function_names[0])
+        return (_reference_operation(statement, target, "call_review_required"),)
+    if statement.node_type in {"InsertStmt", "UpdateStmt"}:
+        schema, relation = _range_parts(node.get("relation", {}))
+        verb = "insert" if statement.node_type == "InsertStmt" else "update"
+        return (
+            _reference_operation(
+                statement,
+                f"{verb}.{schema}.{relation}",
+                f"{verb}_review_required",
+            ),
+        )
+    if statement.node_type == "DoStmt":
+        return (_reference_operation(statement, "do_block", "do_review_required"),)
     return (
         _operation(
             statement,

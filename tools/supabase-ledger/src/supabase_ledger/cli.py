@@ -56,13 +56,25 @@ def _file_sha256(path: Path) -> str:
 def _build_source_manifest(source_root: Path, policy_path: Path) -> dict[str, Any]:
     # These imports intentionally stay scan-only. Offline verify/render therefore
     # require only the Python standard library and the checked-in package.
-    from .classifier import build_manifest, classify_sql
+    from .classifier import build_manifest, classify_statement
+    from .manifest import ManifestCoverageError
     from .resources import source_resource_operations
     from .source_policy import discover_sources, load_source_policy
+    from .sql_parser import parse_statements
 
     policy = load_source_policy(policy_path)
     snapshot = discover_sources(source_root, policy)
     operations = []
+    gaps: dict[tuple[str, str], dict[str, Any]] = {}
+
+    def record_gap(source_path: str, start_byte: int, node_type: str, reason: str) -> None:
+        key = (node_type, reason)
+        if key not in gaps:
+            gaps[key] = {
+                "count": 0,
+                "first": f"{source_path}@{start_byte}",
+            }
+        gaps[key]["count"] += 1
     for source in snapshot.files:
         if source.kind != "active_sql":
             continue
@@ -71,7 +83,51 @@ def _build_source_manifest(source_root: Path, policy_path: Path) -> dict[str, An
             sql = sql_path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
             raise ValueError(f"cannot read active SQL source {source.path}") from error
-        operations.extend(classify_sql(sql, source.path))
+        for statement in parse_statements(sql, source.path):
+            try:
+                classified = classify_statement(statement)
+            except ManifestCoverageError as error:
+                record_gap(
+                    source.path,
+                    statement.start_byte,
+                    statement.node_type,
+                    str(error),
+                )
+                continue
+            except Exception as error:
+                record_gap(
+                    source.path,
+                    statement.start_byte,
+                    statement.node_type,
+                    f"internal {type(error).__name__}",
+                )
+                continue
+            unclassified = [
+                item for item in classified if item.classification == "unclassified"
+            ]
+            if unclassified:
+                detail = ",".join(sorted({item.action for item in unclassified}))
+                record_gap(
+                    source.path,
+                    statement.start_byte,
+                    statement.node_type,
+                    detail,
+                )
+                continue
+            operations.extend(classified)
+    if gaps:
+        limit = 25
+        rendered = []
+        for (node_type, reason), detail in sorted(gaps.items())[:limit]:
+            count = detail["count"]
+            label = "occurrence" if count == 1 else "occurrences"
+            rendered.append(
+                f"{node_type} ({reason}): {count} {label}, first {detail['first']}"
+            )
+        suffix = f"; and {len(gaps) - limit} more families" if len(gaps) > limit else ""
+        raise ManifestCoverageError(
+            "classification gaps: " + "; ".join(rendered) + suffix
+        )
     operations.extend(source_resource_operations(snapshot))
     manifest = build_manifest(tuple(operations))
     manifest["source_policy_sha256"] = _file_sha256(policy_path)
