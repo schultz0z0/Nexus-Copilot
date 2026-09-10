@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-09
+**Atualizado em:** 2026-09-10
 
 ## Regra de progressão
 
@@ -118,9 +118,10 @@ M3 e M4.
 ## M3 — Fundação PostgreSQL
 
 **Estado:** Em execução. Runtime, migrations, menor privilégio e RLS foram
-exercitados localmente em 2026-09-10. Backup/restore, observabilidade, inventário
-legado e migração dos domínios permanecem pendentes; produção ainda não está
-autorizada.
+exercitados localmente em 2026-09-10. O inventário inicial de capacidades e
+tabelas legadas está registrado. Backup/restore, ledger DDL automatizado,
+observabilidade e migração dos domínios permanecem pendentes; produção ainda não
+está autorizada.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
@@ -142,6 +143,11 @@ O procedimento operacional está no
 - usuário da aplicação não tem `BYPASSRLS` nem privilégios de owner;
 - backup e restore são exercitados;
 - inventário Supabase possui destino explícito para cada objeto.
+
+**Inventário vigente:**
+[capacidades Supabase e destinos locais](supabase-capability-inventory.md). A
+matriz inicial cobre capacidades e tabelas; o critério de saída continua aberto
+até o ledger automatizado reconciliar todos os objetos DDL.
 
 ## M4 — Auth e App API/BFF
 
@@ -166,7 +172,9 @@ API/BFF e migração gradual do frontend.
 VPS.
 
 **Escopo a decidir por ADR:** object storage, URLs assinadas, funções, jobs,
-filas, cron, realtime e envio de eventos.
+filas, cron, realtime e envio de eventos. Todas as decisões devem resultar em
+componentes operados pelo ENS e não podem reintroduzir uma dependência da
+plataforma Supabase.
 
 **Critérios de saída:**
 

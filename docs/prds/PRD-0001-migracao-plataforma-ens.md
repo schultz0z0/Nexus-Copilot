@@ -62,6 +62,7 @@ acoplamentos arquiteturais indesejados.
 | RF-012 | A produção deve instalar e executar a imagem oficial e fixada do Hermes por Docker Compose na VPS. |
 | RF-013 | A configuração do provider deve permanecer manual e fora do Git. |
 | RF-014 | Deve existir processo verificável de backup, atualização manual e rollback do runtime e dos dados. |
+| RF-015 | Toda capacidade efetivamente usada do Supabase deve ser substituída por componente operado pelo ENS, sem depender do serviço gerenciado nem de uma distribuição self-hosted do Supabase. |
 
 ## Requisitos não funcionais
 
@@ -77,6 +78,7 @@ acoplamentos arquiteturais indesejados.
 | RNF-008 | Dev e produção devem compartilhar contratos e configuração declarativa, admitindo apenas diferenças de dados, segredos, endpoints e infraestrutura. |
 | RNF-009 | Uma falha ou atualização do dashboard não pode expor a API interna do Hermes. |
 | RNF-010 | O sistema deve permitir restaurar a versão anterior do core, da distribuição ENS e dos dados compatíveis. |
+| RNF-011 | Componentes que substituem o Supabase devem possuir configuração declarativa, persistência, backup, observabilidade e runbook compatíveis com operação local e na VPS. |
 
 ## Fora de escopo
 
@@ -119,6 +121,9 @@ acoplamentos arquiteturais indesejados.
   rastreabilidade necessária.
 - **CA-009:** o roadmap, os ADRs e os runbooks refletem o estado realmente
   implantado no momento do aceite.
+- **CA-010:** cada capacidade e objeto Supabase usado possui destino,
+  transformação ou remoção aprovada, e o runtime final não requer serviço,
+  imagem, SDK, endpoint ou credencial Supabase.
 
 ## Dependências
 
@@ -128,6 +133,8 @@ acoplamentos arquiteturais indesejados.
 - Traefik externo já operado separadamente na VPS;
 - PostgreSQL, autenticação, object storage, jobs e observabilidade próprios a
   selecionar e documentar nas fases correspondentes.
+- [inventário de capacidades Supabase](../migration/supabase-capability-inventory.md),
+  mantido como ledger de escopo até a retirada do legado.
 
 ## Riscos principais
 

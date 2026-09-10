@@ -13,6 +13,12 @@ copiado ainda contém migrations, claims e papéis específicos do Supabase. Ess
 artefatos são fonte para inventário e testes de paridade, não a baseline do banco
 novo.
 
+Por decisão de produto, toda capacidade Supabase realmente usada será
+internalizada em componentes operados pelo ENS. Não haverá dependência do
+Supabase gerenciado nem implantação self-hosted da plataforma completa. O
+[inventário de capacidades](../migration/supabase-capability-inventory.md)
+registra os destinos e gates por fatia.
+
 A mudança precisa preservar as fronteiras já aprovadas:
 
 - o navegador conversa apenas com a App API/BFF;
@@ -276,10 +282,25 @@ evidência:
 ### Migração de dados
 
 - cada objeto Supabase tem destino, transformação ou remoção aprovada;
+- o ledger automatizado cobre tabelas, colunas, constraints, índices, policies,
+  funções, triggers, buckets e jobs ativos;
 - extração e carga são idempotentes;
 - contagens, checksums e invariantes são reconciliados;
 - ensaio de cutover e rollback ocorre antes do tráfego real;
 - Supabase só é removido após comprovação de paridade e janela de retorno.
+
+### Gates deliberadamente abertos em 2026-09-10
+
+- autenticação e sessões self-hosted de M4;
+- ledger DDL automatizado e migração dos schemas de domínio;
+- object storage, jobs/outbox e decisão dos fluxos RAG em M5;
+- backup/restore conjunto de banco e artefatos exercitado;
+- observabilidade de produção, TLS, `pg_hba.conf` e orçamento de conexões;
+- RPO/RTO aprovados pelo responsável do produto;
+- ensaio de extração, carga, reconciliação, cutover e rollback de M6.
+
+Esses itens não invalidam a fundação entregue neste lote, mas impedem marcar M3
+ou a retirada do Supabase como concluídos.
 
 ## Critérios de aceite do primeiro lote
 
@@ -312,4 +333,3 @@ validado antes de decidir a troca.
 - PostgreSQL: Configuration Settings Functions (`set_config`);
 - PostgreSQL: CREATE FUNCTION e segurança de `SECURITY DEFINER`;
 - Docker Official Image: postgres.
-

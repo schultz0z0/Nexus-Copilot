@@ -220,11 +220,17 @@ bootstrap, migrate, logs redigidos, parada e diagnóstico. Não executar na VPS.
 **Arquivos:**
 
 - atualizar `docs/plans/2026-09-10-postgresql-foundation-design.md`;
+- criar `docs/migration/supabase-capability-inventory.md`;
+- atualizar o PRD, roadmap e índice da documentação;
 - atualizar este plano.
 
 Registrar como pendentes, sem marcá-los concluídos: auth M4, migração dos domínios,
 backup/restore exercitado, observabilidade de produção, inventário Supabase,
 TLS/pg_hba revisados, RPO/RTO e cutover.
+
+**Estado:** concluída em 2026-09-10. A matriz registra capacidades, 51 tabelas,
+Edge Functions, grupos de RPCs/triggers, buckets, extensões e destinos. O ledger
+DDL automatizado e os demais gates permanecem explicitamente abertos.
 
 ### Tarefa 11: Verificação final do lote
 
@@ -259,7 +265,7 @@ registradas como dívida, nunca convertidas em falso sucesso.
 | A — runtime em container | Concluído | `1ac9721`; 3/3 contratos e dois `docker compose config --quiet` aprovados |
 | B — runner de migrations | Concluído | `fb70b64`; 9/9 testes unitários, 4/4 contratos Compose e build da imagem aprovados |
 | C — papéis e RLS | Concluído | `0755d67`; 12/12 contratos, 9/9 unitários e 5/5 integrações reais aprovados |
-| D — operação e evidências | Em execução | runbook criado; backup/restore, inventário e verificação final pendentes |
+| D — operação e evidências | Em execução | runbook e inventário de capacidades criados; backup/restore, ledger DDL automatizado e verificação final pendentes |
 
-**Próximo comando seguro:** executar a Tarefa 10, registrar explicitamente os
-gates ainda pendentes e preparar a verificação final do lote sem acessar a VPS.
+**Próximo comando seguro:** executar a Tarefa 11 e registrar a verificação final
+do lote sem acessar a VPS.
