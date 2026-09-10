@@ -464,13 +464,32 @@ old migrations to make it green.
 | Checkpoint | State | Evidence |
 | --- | --- | --- |
 | Design | Complete | `3c73a9d` |
-| A — sources | Pending | — |
-| B — AST/identity | Pending | — |
-| C — classification | Pending | — |
-| D — decisions/report | Pending | — |
+| A — sources | Complete | safe policy/discovery, 87 classified records; `4d34dfb` |
+| B — AST/identity | Complete | pinned parser and stable IDs; `e3c633e`, `bb72cdb` |
+| C — classification | Complete | fail-closed DDL/resources classifier; `4108d97`, `a683fb7` |
+| D — decisions/report | In progress | proposal/overlay verifier complete in `33e0a36`; deterministic CLI and generated artifacts remain in Task 7 |
 | E — real scan | Pending | — |
 | F — container | Pending | — |
 | G — final gates | Pending | — |
 
-**Next safe command:** start Task 1 by writing only the failing source-policy
-tests, then run them to observe RED.
+### Checkpoint after Tasks 4–6 — 2026-09-10
+
+- The classifier fails closed on unknown AST families and does not retain SQL
+  bodies in its manifest model.
+- Buckets, scheduled jobs, Edge Functions and explicitly retired service sources
+  receive stable, sanitized identities.
+- Decision proposals cover the approved local-service boundaries and are always
+  emitted as `proposed`, never `approved`.
+- Verification rejects source drift, missing/duplicate/orphan rows, invalid
+  action or milestone, unapproved reason codes, `approved+pending`, and attempts
+  to migrate retired components.
+- Evidence: 27 ledger unit tests passed; one symlink-escape test was skipped on
+  this Windows host because symlink creation was unavailable. The non-symlink
+  path-escape controls passed.
+- `object-decisions.json` is intentionally not bootstrapped with empty data. It
+  will be atomically generated in Task 7 from the matching deterministic source
+  manifest, preventing a stale or misleading checked-in overlay.
+
+**Next safe command:** start Task 7 with failing deterministic CLI, sanitization
+and renderer tests; materialize the manifest and decisions only as one matched
+digest pair.

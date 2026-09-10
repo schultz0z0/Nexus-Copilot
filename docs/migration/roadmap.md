@@ -20,6 +20,24 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M6 — dados e cutover | Pendente | migração validada, reconciliação e troca de tráfego |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
+## Estimativa de progresso global
+
+Esta estimativa é um sinal de planejamento, não substitui os critérios de saída.
+Cada marco tem peso proporcional ao risco e ao volume esperado; trabalho copiado
+do legado sem aceite no alvo não conta como concluído.
+
+| Marco | Peso no programa | Crédito atual estimado | Base da estimativa |
+| --- | ---: | ---: | --- |
+| M0 | 8% | 8% | concluído |
+| M1 | 12% | 9% | paridade e recuperação locais; produção e rollback do core pendentes |
+| M2 | 14% | 10% | protocolo local comprovado; provider real, VPS e RunStore pendentes |
+| M3 | 18% | 7% | fundação inicial e ledger em curso; backup/restore e domínios pendentes |
+| M4 | 18% | 0% | ainda sem aceite de Auth e App API/BFF |
+| M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
+| M6 | 10% | 0% | dados e cutover ainda não executados |
+| M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
+| **Total** | **100%** | **34% concluído / 66% restante** | estimativa conservadora em 2026-09-10 |
+
 ## M0 — Baseline e memória do projeto
 
 **Objetivo:** criar a nova fronteira do monorepo e registrar as decisões antes de
@@ -119,9 +137,12 @@ M3 e M4.
 
 **Estado:** Em execução. O primeiro lote — runtime, migrations, menor privilégio,
 RLS e documentação operacional — foi aprovado localmente em 2026-09-10. O
-inventário inicial de capacidades e tabelas legadas está registrado.
-Backup/restore, ledger DDL automatizado, observabilidade e migração dos domínios
-permanecem pendentes; produção ainda não está autorizada.
+inventário inicial de capacidades e tabelas legadas está registrado. No ledger
+DDL, descoberta segura, parser fixado, identidades estáveis, classificação
+fail-closed de DDL/recursos e verificação do overlay de decisões já estão
+implementados. CLI determinística, varredura real, container e gates finais do
+ledger permanecem abertos. Backup/restore, observabilidade e migração dos
+domínios também permanecem pendentes; produção ainda não está autorizada.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
@@ -153,7 +174,10 @@ até o ledger automatizado reconciliar todos os objetos DDL.
 [desenho do ledger DDL](../plans/2026-09-10-supabase-ddl-ledger-design.md) foi
 aceito em 2026-09-10. Ele cobre também fontes históricas de serviços retirados,
 para impedir que RAG MCP, Graph MCP, Neo4j ou componentes internos do Supabase
-sejam reintroduzidos por migração automática.
+sejam reintroduzidos por migração automática. Os checkpoints A, B e C estão
+concluídos; o checkpoint D possui o verificador de decisões concluído e aguarda
+o CLI/artefatos determinísticos. A evidência detalhada está no
+[plano de implementação do ledger](../plans/2026-09-10-supabase-ddl-ledger-implementation.md#execution-state).
 
 ## M4 — Auth e App API/BFF
 
