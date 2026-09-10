@@ -15,7 +15,8 @@ data, o resultado e as premissas usadas.
 | [Atualização e rollback do Hermes/profile](hermes-update-rollback.md) | M1 | Profile exercitado localmente em 2026-09-09; core/VPS pendentes |
 | [Backup e restore do volume Hermes](hermes-backup-restore.md) | M1 | Exercitado localmente em 2026-09-09; VPS pendente |
 | [Hermes Runs Bridge](hermes-runs-bridge.md) | M2 | Contrato sem provider exercitado localmente em 2026-09-09; provider/VPS pendentes |
-| Backup e restore do PostgreSQL | M3 | Pendente |
+| [Fundação PostgreSQL](postgresql-foundation.md) | M3 | Runtime, migrations e RLS exercitados localmente em 2026-09-10; produção bloqueada pelos gates restantes |
+| Backup e restore do PostgreSQL | M3 | Pendente; obrigatório antes de dados produtivos |
 | Incidente de Auth/sessão | M4 | Pendente |
 | Backup e restore de artefatos | M5 | Pendente |
 | Ensaio e cutover de dados | M6 | Pendente |

@@ -117,8 +117,10 @@ M3 e M4.
 
 ## M3 — Fundação PostgreSQL
 
-**Estado:** Em execução. Desenho e ADR aceitos em 2026-09-10; implementação da
-fundação local iniciada. A migração dos domínios continuará em fatias posteriores.
+**Estado:** Em execução. Runtime, migrations, menor privilégio e RLS foram
+exercitados localmente em 2026-09-10. Backup/restore, observabilidade, inventário
+legado e migração dos domínios permanecem pendentes; produção ainda não está
+autorizada.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
@@ -130,6 +132,8 @@ privilégio, modelo de tenant, RLS, seed de teste, backup/restore e observabilid
 
 **Decisão vigente:** [ADR-0002](../decisions/ADR-0002-postgresql-runtime-roles-and-rls.md)
 e [desenho da fundação](../plans/2026-09-10-postgresql-foundation-design.md).
+O procedimento operacional está no
+[runbook da fundação](../operations/postgresql-foundation.md).
 
 **Critérios de saída:**
 
