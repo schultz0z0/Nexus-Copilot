@@ -130,6 +130,7 @@ describe("stopChatbotRun", () => {
       "https://bridge.solucoes-nexus.tech/api/chat/runs/run%2Fwith%20space/stop",
       {
         method: "POST",
+        credentials: "include",
         headers: { Authorization: "Bearer token-1", Accept: "application/json" },
       },
     );

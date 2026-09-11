@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { api, type User } from "@/lib/api";
+import { api, onUnauthorized, type User } from "@/lib/api";
 import { AppRole, canManageValidatedWorks, isAdminRole, normalizeProfileRole } from "@/lib/roles";
 
 export type { User };
@@ -50,6 +50,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    };
+    onUnauthorized(handleUnauthorized);
+    return () => {
+      onUnauthorized(null);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;

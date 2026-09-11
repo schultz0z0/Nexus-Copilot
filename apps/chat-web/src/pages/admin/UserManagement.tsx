@@ -86,7 +86,7 @@ const getRoleBadgeClass = (role: string) => {
 const getFunctionErrorMessage = async (error: unknown, fallback: string) => {
   if (error && typeof error === "object" && "context" in error) {
     try {
-      const context = (error as { context?: { json?: () => Promise<any> }; message?: string }).context;
+      const context = (error as { context?: { json?: () => Promise<Record<string, unknown>> }; message?: string }).context;
       if (context?.json) {
         const payload = await context.json();
         const reason = typeof payload?.reason === "string" ? payload.reason : "";

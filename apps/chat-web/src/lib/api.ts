@@ -29,6 +29,39 @@ export interface ListMessagesResponse {
   hasMore: boolean;
 }
 
+export interface ChatRunCreatePayload {
+  session_id?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface ChatRunResponse {
+  run_id?: string;
+  id?: string;
+  state?: unknown;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export class ApiError extends Error {
+  status: number;
+  data?: unknown;
+
+  constructor(status: number, message: string, data?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export const onUnauthorized = (handler: UnauthorizedHandler | null) => {
+  unauthorizedHandler = handler;
+};
+
 const getBaseUrl = () => {
   const url = import.meta.env.VITE_APP_API_URL || "";
   return url.replace(/\/$/, "");
@@ -51,17 +84,28 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!response.ok) {
     let errorMessage = `Request failed with status ${response.status}`;
+    let errorBody: unknown = null;
     try {
-      const errorBody = await response.json();
-      if (errorBody?.error) {
-        errorMessage = typeof errorBody.error === "string" ? errorBody.error : JSON.stringify(errorBody.error);
-      } else if (errorBody?.message) {
-        errorMessage = typeof errorBody.message === "string" ? errorBody.message : JSON.stringify(errorBody.message);
+      errorBody = await response.json();
+      const parsed = errorBody as { error?: unknown; message?: unknown } | null;
+      if (parsed?.error) {
+        errorMessage = typeof parsed.error === "string" ? parsed.error : JSON.stringify(parsed.error);
+      } else if (parsed?.message) {
+        errorMessage = typeof parsed.message === "string" ? parsed.message : JSON.stringify(parsed.message);
       }
     } catch {
       // Non-JSON error body
     }
-    throw new Error(errorMessage);
+
+    if (response.status === 401 && unauthorizedHandler) {
+      try {
+        unauthorizedHandler();
+      } catch {
+        // Ignore handler error
+      }
+    }
+
+    throw new ApiError(response.status, errorMessage, errorBody);
   }
 
   const contentType = response.headers.get("content-type") || "";
@@ -163,19 +207,19 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    createRun: (payload: any): Promise<any> =>
-      request<any>("/api/chat/runs", {
+    createRun: (payload: ChatRunCreatePayload): Promise<ChatRunResponse> =>
+      request<ChatRunResponse>("/api/chat/runs", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
 
-    getRun: (id: string): Promise<any> =>
-      request<any>(`/api/chat/runs/${encodeURIComponent(id)}`, {
+    getRun: (id: string): Promise<ChatRunResponse> =>
+      request<ChatRunResponse>(`/api/chat/runs/${encodeURIComponent(id)}`, {
         method: "GET",
       }),
 
-    stopRun: (id: string): Promise<any> =>
-      request<any>(`/api/chat/runs/${encodeURIComponent(id)}/stop`, {
+    stopRun: (id: string): Promise<ChatRunResponse> =>
+      request<ChatRunResponse>(`/api/chat/runs/${encodeURIComponent(id)}/stop`, {
         method: "POST",
       }),
 

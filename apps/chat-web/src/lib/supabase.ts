@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Lightweight compatibility stub for legacy components (storage, avatars, etc.)
  * Notice: @supabase/supabase-js has been removed. All core product data and chat

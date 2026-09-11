@@ -41,10 +41,12 @@ const requestRun = async ({
   try {
     const baseUrl = resolveChatbotProxyBaseUrl();
     const { Authorization: _tenantAuthorization, ...tenantContext } = await getTenantContext();
+    const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
     return await fetch(`${baseUrl}/api/chat/runs`, {
       method: "POST",
+      credentials: "include",
       headers: {
-        Authorization: `Bearer ${token}`,
+        ...authHeader,
         "Content-Type": "application/json",
         ...tenantContext,
       },
@@ -68,10 +70,12 @@ const requestRunEvents = async ({
   resolveChatbotProxyBaseUrl: () => string;
 }) => {
   const baseUrl = resolveChatbotProxyBaseUrl();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   return await fetch(`${baseUrl}/api/chat/runs/${encodeURIComponent(runId)}/events?cursor=${cursor}`, {
     method: "GET",
+    credentials: "include",
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...authHeader,
       Accept: "text/event-stream",
     },
   });
@@ -87,10 +91,12 @@ const requestRunSnapshot = async ({
   resolveChatbotProxyBaseUrl: () => string;
 }) => {
   const baseUrl = resolveChatbotProxyBaseUrl();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   return await fetch(`${baseUrl}/api/chat/runs/${encodeURIComponent(runId)}`, {
     method: "GET",
+    credentials: "include",
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...authHeader,
       Accept: "application/json",
     },
   });
@@ -120,13 +126,15 @@ export const stopChatbotRun = async ({
   if (!normalizedRunId) throw new Error("run_not_found");
 
   const token = await getAccessToken();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   let response: Response;
   try {
     response = await fetch(
       `${resolveChatbotProxyBaseUrl()}/api/chat/runs/${encodeURIComponent(normalizedRunId)}/stop`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        credentials: "include",
+        headers: { ...authHeader, Accept: "application/json" },
       },
     );
   } catch {
