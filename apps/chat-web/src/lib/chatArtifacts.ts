@@ -1,3 +1,4 @@
+import { api } from "./api";
 import {
   parseChatMessageContent,
   serializeChatMessageContent,
@@ -25,11 +26,13 @@ const resolveChatbotProxyBaseUrl = (override?: string) => {
   }
 };
 
-const getSupabaseAccessToken = async () => {
-  const { supabase } = await import("./supabase");
-  const { data, error } = await supabase.auth.getSession();
-  if (error) return null;
-  return data.session?.access_token ?? null;
+const getAppApiAccessToken = async () => {
+  try {
+    const { user } = await api.auth.me();
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
 };
 
 const shouldRefreshArtifactSignedUrl = (
@@ -48,7 +51,7 @@ export const refreshArtifactFileUrl = async (
     now = Date.now(),
     refreshWindowMs,
     fetchImpl = fetch,
-    getAccessToken = getSupabaseAccessToken,
+    getAccessToken = getAppApiAccessToken,
     chatbotProxyBaseUrl,
   }: RefreshArtifactOptions = {},
 ) => {

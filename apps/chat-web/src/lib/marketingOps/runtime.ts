@@ -1,10 +1,14 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { createMarketingOpsClient } from './client';
 
 export const marketingOpsClient = createMarketingOpsClient({
   baseUrl: import.meta.env.VITE_MARKETING_OPS_URL ?? '',
   getAccessToken: async () => {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.access_token ?? null;
-  }
+    try {
+      const { user } = await api.auth.me();
+      return user?.id ?? null;
+    } catch {
+      return null;
+    }
+  },
 });

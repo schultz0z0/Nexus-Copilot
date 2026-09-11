@@ -1,7 +1,23 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { api, type User } from "@/lib/api";
 import { AppRole, canManageValidatedWorks, isAdminRole, normalizeProfileRole } from "@/lib/roles";
+
+export type { User };
+
+export interface Session {
+  user: User;
+  access_token?: string;
+}
+
+export type Profile = {
+  id: string;
+  role: "admin" | "manager" | "member" | "user" | "broker" | "owner" | "tenant";
+  full_name?: string | null;
+  email?: string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
+  avatar_url?: string | null;
+};
 
 interface AuthContextType {
   session: Session | null;
@@ -12,18 +28,9 @@ interface AuthContextType {
   isManager: boolean;
   canManageValidatedWorks: boolean;
   normalizedRole: AppRole;
+  signIn: (email: string, password: string) => Promise<{ user: User }>;
   signOut: () => Promise<void>;
 }
-
-type Profile = {
-  id: string;
-  role: "admin" | "manager" | "member" | "user" | "broker" | "owner" | "tenant";
-  full_name?: string | null;
-  email?: string | null;
-  updated_at?: string | null;
-  created_at?: string | null;
-  avatar_url?: string | null;
-};
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
@@ -34,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
   isManager: false,
   canManageValidatedWorks: false,
   normalizedRole: "member",
+  signIn: async () => ({ user: { id: "", email: "" } }),
   signOut: async () => {},
 });
 
@@ -44,83 +52,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    let isMounted = true;
 
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Apenas busca se o profile atual não corresponder ao usuário da sessão
-        if (!profile || profile.id !== session.user.id) {
-            fetchProfile(session.user.id);
+    api.auth
+      .me()
+      .then(({ user: currentUser }) => {
+        if (!isMounted) return;
+        if (currentUser) {
+          setUser(currentUser);
+          setSession({ user: currentUser });
+          setProfile({
+            id: currentUser.id,
+            role: (currentUser.role as Profile["role"]) || "member",
+            full_name: currentUser.full_name,
+            email: currentUser.email,
+          });
+        } else {
+          setUser(null);
+          setSession(null);
+          setProfile(null);
         }
-      } else {
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setUser(null);
+        setSession(null);
         setProfile(null);
-        setLoading(false);
-      }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { user: loggedInUser } = await api.auth.login({ email, password });
+    setUser(loggedInUser);
+    setSession({ user: loggedInUser });
+    setProfile({
+      id: loggedInUser.id,
+      role: (loggedInUser.role as Profile["role"]) || "member",
+      full_name: loggedInUser.full_name,
+      email: loggedInUser.email,
     });
-
-    return () => subscription.unsubscribe();
-  }, []); // Removido profile da dependência para evitar loops
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      // Tenta buscar o perfil até 3 vezes em caso de falha (ex: criação assíncrona)
-      let attempts = 0;
-      let data: Profile | null = null;
-      let error: unknown = null;
-
-      while (attempts < 3 && !data) {
-          const result = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", userId)
-            .single();
-          
-          data = result.data;
-          error = result.error;
-
-          if (!data) {
-              attempts++;
-              await new Promise(r => setTimeout(r, 500)); // Espera 500ms
-          }
-      }
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-        // Fallback para evitar UI quebrada
-        setProfile({ id: userId, role: 'member', full_name: 'Usuário' });
-      } else {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    return { user: loggedInUser };
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await api.auth.logout();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
       setProfile(null);
       setUser(null);
       setSession(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
     }
   };
 
@@ -134,6 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAdmin: isAdminRole(profile?.role),
     isManager: normalizedRole === "manager",
     canManageValidatedWorks: canManageValidatedWorks(profile?.role),
+    signIn,
     signOut,
   };
 

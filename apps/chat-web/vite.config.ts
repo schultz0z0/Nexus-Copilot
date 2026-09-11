@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8081,
     proxy: {
+      "/api": {
+        target: process.env.VITE_APP_API_PROXY_TARGET ?? "http://127.0.0.1:3000",
+        changeOrigin: true,
+      },
       "/marketing-ops-api": {
         target: process.env.VITE_MARKETING_OPS_PROXY_TARGET ?? "http://127.0.0.1:8091",
         changeOrigin: true,

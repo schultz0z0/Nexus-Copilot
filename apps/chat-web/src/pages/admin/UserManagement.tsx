@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppRole, getRoleLabel, isAdminRole, normalizeProfileRole } from "@/lib/roles";
@@ -85,14 +84,18 @@ const getRoleBadgeClass = (role: string) => {
 };
 
 const getFunctionErrorMessage = async (error: unknown, fallback: string) => {
-  if (error instanceof FunctionsHttpError) {
+  if (error && typeof error === "object" && "context" in error) {
     try {
-      const payload = await error.context.json();
-      const reason = typeof payload?.reason === "string" ? payload.reason : "";
-      const code = typeof payload?.error === "string" ? payload.error : "";
-      return [fallback, code, reason].filter(Boolean).join(" - ");
+      const context = (error as { context?: { json?: () => Promise<any> }; message?: string }).context;
+      if (context?.json) {
+        const payload = await context.json();
+        const reason = typeof payload?.reason === "string" ? payload.reason : "";
+        const code = typeof payload?.error === "string" ? payload.error : "";
+        return [fallback, code, reason].filter(Boolean).join(" - ");
+      }
     } catch {
-      return `${fallback}: ${error.message}`;
+      const msg = (error as { message?: string }).message;
+      return msg ? `${fallback}: ${msg}` : fallback;
     }
   }
 

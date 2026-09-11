@@ -10,7 +10,7 @@ import { usePictureWorkspace } from "@/hooks/usePictureWorkspace";
 import { chatService } from "@/lib/chatService";
 import { createPictureWorkspaceClient } from "@/lib/pictureWorkspace/client";
 import type { PictureWorkspaceClient, PictureWorkspaceFile } from "@/lib/pictureWorkspace/types";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { PictureFilesPanel } from "./PictureFilesPanel";
 import type { ResolvePictureAccessUrl } from "./PictureFilePreview";
 import { PictureWorkspaceActions } from "./PictureWorkspaceActions";
@@ -34,8 +34,12 @@ export const PictureWorkspace = ({ client: providedClient }: PictureWorkspacePro
     baseUrl: chatService.resolveChatbotProxyBaseUrl() ?? "",
     getAccessToken: async () => {
       if (session?.access_token) return session.access_token;
-      const { data } = await supabase.auth.getSession();
-      return data.session?.access_token ?? null;
+      try {
+        const { user: currentUser } = await api.auth.me();
+        return currentUser?.id ?? null;
+      } catch {
+        return null;
+      }
     },
   }), [providedClient, session?.access_token]);
   const state = usePictureWorkspace({ client });

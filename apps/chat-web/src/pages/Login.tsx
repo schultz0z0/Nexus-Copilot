@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { OrbLoader } from "@/components/ui/OrbLoader";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [email, setEmail] = useState("");
@@ -33,12 +34,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      await signIn(email, password);
 
       toast.success("Login realizado com sucesso!");
       
@@ -68,12 +64,7 @@ const Login = () => {
           return;
         }
 
-        const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-          redirectTo: `${window.location.origin}/login`,
-        });
-        if (error) throw error;
-
-        toast.success("Enviamos um e-mail com instruções para redefinir sua senha.");
+        toast.info("Redefinição de senha indisponível no momento. Contate o administrador.");
         setMode("login");
         setEmail(resetEmail);
         setPassword("");
@@ -87,12 +78,7 @@ const Login = () => {
           return;
         }
 
-        const { error } = await supabase.auth.updateUser({ password: newPassword });
-        if (error) throw error;
-
-        await supabase.auth.signOut();
-        window.location.hash = "";
-        toast.success("Senha atualizada. Faça login com sua nova senha.");
+        toast.info("Redefinição de senha indisponível no momento. Contate o administrador.");
         setMode("login");
         setNewPassword("");
       }

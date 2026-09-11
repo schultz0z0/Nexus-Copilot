@@ -35,7 +35,7 @@ import {
   type ChatMessagePart,
   type ChatMessageStatusPart,
 } from "@/lib/chatMessageParts";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { ChatEmptyState, type HomeTab } from "./ChatEmptyState";
@@ -604,19 +604,24 @@ export const ChatInterface = ({
 
   const getAccessToken = async () => {
     if (session?.access_token) return session.access_token;
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session?.access_token) {
+    try {
+      const { user: currentUser } = await api.auth.me();
+      if (!currentUser?.id) {
+        throw new Error("Sessão inválida. Faça login novamente.");
+      }
+      return currentUser.id;
+    } catch {
       throw new Error("Sessão inválida. Faça login novamente.");
     }
-    return data.session.access_token;
   };
 
   const refreshAccessToken = async () => {
-    const { data, error } = await supabase.auth.refreshSession();
-    if (error || !data.session?.access_token) {
+    try {
+      const { user: currentUser } = await api.auth.me();
+      return currentUser?.id ?? null;
+    } catch {
       return null;
     }
-    return data.session.access_token;
   };
 
   const confidenceBadges = confidenceScore !== null && !isRetrievingContext && contextStatus === "ok" ? (
