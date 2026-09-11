@@ -36,6 +36,7 @@ test('bootstrap declares separate owner, migrator and app roles with least privi
   assert.match(sql, /alter role nexus_owner nologin/);
   assert.match(sql, /alter role nexus_migrator login .*noinherit/);
   assert.match(sql, /alter role nexus_app login .*noinherit/);
+  assert.match(sql, /alter role nexus_backup login .*bypassrls/);
   assert.match(
     sql,
     /grant nexus_owner to nexus_migrator with inherit false, set true/,
@@ -50,7 +51,10 @@ test('bootstrap removes public creation rights and grants only required database
   assert.match(sql, /revoke all on database :"database_name" from public/);
   assert.match(sql, /revoke all on schema public from public/);
   assert.match(sql, /grant connect on database :"database_name" to nexus_migrator, nexus_app/);
+  assert.match(sql, /grant connect on database :"database_name" to nexus_backup/);
+  assert.match(sql, /grant pg_read_all_data to nexus_backup/);
   assert.match(sql, /grant create on database :"database_name" to nexus_owner/);
+  assert.doesNotMatch(sql, /grant .*create.* to nexus_backup/);
 });
 
 test('bootstrap obtains passwords from process environment without embedding or echoing them', () => {
@@ -59,12 +63,15 @@ test('bootstrap obtains passwords from process environment without embedding or 
 
   assert.match(sql, /\\getenv nexus_migrator_password NEXUS_MIGRATOR_PASSWORD/);
   assert.match(sql, /\\getenv nexus_app_password NEXUS_APP_PASSWORD/);
+  assert.match(sql, /\\getenv nexus_backup_password NEXUS_BACKUP_PASSWORD/);
   assert.doesNotMatch(sql, /PASSWORD\s+'[^']+'/i);
 
   assert.match(script, /^set -eu$/m);
   assert.match(script, /\/run\/secrets\/postgres_bootstrap_password/);
   assert.match(script, /\/run\/secrets\/postgres_migrator_password/);
   assert.match(script, /\/run\/secrets\/postgres_app_password/);
+  assert.match(script, /\/run\/secrets\/postgres_backup_password/);
+  assert.match(script, /NEXUS_BACKUP_PASSWORD/);
   assert.match(script, /^exec psql -X --set ON_ERROR_STOP=1 /m);
   assert.doesNotMatch(script, /echo|set -x|-v\s+\w*password/i);
 });

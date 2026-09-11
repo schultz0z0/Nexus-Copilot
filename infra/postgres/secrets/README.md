@@ -5,7 +5,8 @@ fora do Git estes três arquivos, cada um com uma senha diferente e uma única l
 
 - `postgres_bootstrap_password`;
 - `postgres_migrator_password`;
-- `postgres_app_password`.
+- `postgres_app_password`;
+- `postgres_backup_password`.
 
 Não reutilize esses valores na VPS e não copie seu conteúdo para documentação,
 logs, commits ou conversas. O runbook do M3 fornecerá comandos que geram os

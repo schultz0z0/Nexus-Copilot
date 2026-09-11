@@ -52,6 +52,7 @@ services:
       - postgres_bootstrap_password
       - postgres_migrator_password
       - postgres_app_password
+      - postgres_backup_password
     read_only: true
     tmpfs:
       - /tmp
@@ -106,3 +107,5 @@ secrets:
     file: ${POSTGRES_MIGRATOR_PASSWORD_FILE:-./secrets/postgres_migrator_password}
   postgres_app_password:
     file: ${POSTGRES_APP_PASSWORD_FILE:-./secrets/postgres_app_password}
+  postgres_backup_password:
+    file: ${POSTGRES_BACKUP_PASSWORD_FILE:-./secrets/postgres_backup_password}

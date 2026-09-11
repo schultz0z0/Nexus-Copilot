@@ -21,6 +21,7 @@ read_secret() {
 export PGPASSWORD="$(read_secret /run/secrets/postgres_bootstrap_password)"
 export NEXUS_MIGRATOR_PASSWORD="$(read_secret /run/secrets/postgres_migrator_password)"
 export NEXUS_APP_PASSWORD="$(read_secret /run/secrets/postgres_app_password)"
+export NEXUS_BACKUP_PASSWORD="$(read_secret /run/secrets/postgres_backup_password)"
 
 exec psql -X --set ON_ERROR_STOP=1 --file /opt/nexus-postgres/bootstrap/roles.sql
 

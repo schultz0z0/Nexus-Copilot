@@ -50,7 +50,7 @@ POSIX shell, Node.js 22 test runner, Python 3.12/unittest.
 - Produces: role `nexus_backup` e secret
   `/run/secrets/postgres_backup_password` para os jobs operacionais.
 
-- [ ] **Step 1: escrever testes de contrato que falham**
+- [x] **Step 1: escrever testes de contrato que falham**
 
 Adicionar ao contrato SQL uma expectativa equivalente a:
 
@@ -64,14 +64,14 @@ assert.match(script, /NEXUS_BACKUP_PASSWORD/);
 No contrato Compose, incluir `backup` na criação de secrets temporários e
 validar que o bootstrap recebe somente o caminho do secret.
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk node --test test/postgres/sql-contract.test.mjs test/postgres/compose-contract.test.mjs`
 
 Expected: FAIL porque `nexus_backup` e `postgres_backup_password` ainda não
 existem.
 
-- [ ] **Step 3: implementar o mínimo**
+- [x] **Step 3: implementar o mínimo**
 
 Criar o role de forma idempotente, com a configuração:
 
@@ -85,13 +85,13 @@ GRANT pg_read_all_data TO nexus_backup;
 Obter a senha com `\getenv`, carregar o secret sem eco no shell e declarar o
 secret configurável no Compose.
 
-- [ ] **Step 4: confirmar GREEN e regressão**
+- [x] **Step 4: confirmar GREEN e regressão**
 
 Run: `rtk npm run test:postgres:contract`
 
 Expected: PASS, incluindo os contratos existentes de menor privilégio.
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 rtk git add infra/postgres/bootstrap/roles.sql infra/postgres/scripts/bootstrap-roles.sh infra/postgres/compose.yaml infra/postgres/secrets/README.md test/postgres

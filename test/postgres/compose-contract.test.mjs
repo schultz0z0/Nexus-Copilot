@@ -29,7 +29,7 @@ function renderCompose(overrideFile, environment = {}) {
   const secretDirectory = mkdtempSync(join(tmpdir(), 'ens-postgres-contract-'));
   const secretEnvironment = {};
 
-  for (const name of ['bootstrap', 'migrator', 'app']) {
+  for (const name of ['bootstrap', 'migrator', 'app', 'backup']) {
     const secretPath = join(secretDirectory, `${name}.txt`);
     writeFileSync(secretPath, `contract-test-${name}\n`, { mode: 0o600 });
     secretEnvironment[`POSTGRES_${name.toUpperCase()}_PASSWORD_FILE`] = secretPath;
@@ -71,6 +71,7 @@ test('base Compose pins PostgreSQL 18.6 by digest and keeps the database private
   assert.doesNotMatch(source, /^\s*ports\s*:/m);
   assert.match(source, /POSTGRES_PASSWORD_FILE:\s*\/run\/secrets\/postgres_bootstrap_password/);
   assert.doesNotMatch(source, /POSTGRES_PASSWORD:\s*[^$\s]/);
+  assert.match(source, /postgres_backup_password:/);
 });
 
 test('migration image is reproducible, minimal and runs as the non-root node user', () => {
@@ -116,6 +117,15 @@ test(
     assert.equal(configuration.services['postgres-bootstrap'].restart, 'no');
     assert.equal(configuration.services['postgres-bootstrap'].user, 'postgres');
     assert.equal(configuration.services['postgres-bootstrap'].read_only, true);
+    assert.deepEqual(
+      configuration.services['postgres-bootstrap'].secrets.map((secret) => secret.source).sort(),
+      [
+        'postgres_app_password',
+        'postgres_backup_password',
+        'postgres_bootstrap_password',
+        'postgres_migrator_password',
+      ],
+    );
     const migrator = configuration.services['postgres-migrate'];
     assert.equal(migrator.restart, 'no');
     assert.equal(migrator.environment.PGUSER, 'nexus_migrator');
