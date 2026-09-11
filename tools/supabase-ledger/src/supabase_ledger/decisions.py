@@ -260,6 +260,16 @@ def _validate_row(row: dict[str, Any]) -> None:
         raise DecisionValidationError(
             f"approved decision cannot be pending for {object_id}"
         )
+    if row["review_status"] == "approved" and row["action"] == "transform":
+        if not row.get("target_name") or not isinstance(row.get("target_name"), str) or not row["target_name"].strip():
+            raise DecisionValidationError(
+                f"approved transform requires non-empty target_name for {object_id}"
+            )
+    if row["review_status"] == "approved" and row["action"] == "remove":
+        if not row.get("reason_code") or not isinstance(row.get("reason_code"), str) or not row["reason_code"].strip():
+            raise DecisionValidationError(
+                f"approved remove requires reason_code for {object_id}"
+            )
     try:
         assert_removed_component_action(object_id, row["action"])
     except RemovedComponentError as exc:

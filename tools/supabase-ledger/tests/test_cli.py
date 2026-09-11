@@ -143,5 +143,51 @@ class CliTests(unittest.TestCase):
             self.assertNotIn(str(root), message)
 
 
+    def test_reviews_overlay_integration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = self._source_tree(root)
+            manifest = root / "source-manifest.json"
+            decisions = root / "object-decisions.json"
+            report = root / "ledger.md"
+            reviews_dir = root / "reviews"
+            reviews_dir.mkdir()
+            (reviews_dir / "iam.json").write_text(
+                json.dumps(
+                    {
+                        "reviews": [
+                            {
+                                "object_id": "table:public.profiles",
+                                "action": "transform",
+                                "target_component": "iam",
+                                "target_name": "iam.principals",
+                                "milestone": "M4",
+                                "review_status": "approved",
+                                "reason_code": "identity_canonicalization",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            run_scan(root, policy, manifest, decisions, report, reviews_path=reviews_dir)
+            loaded_decisions = json.loads(decisions.read_text(encoding="utf-8"))
+            profile_decision = next(d for d in loaded_decisions["decisions"] if d["object_id"] == "table:public.profiles")
+            self.assertEqual("approved", profile_decision["review_status"])
+            self.assertEqual("iam.principals", profile_decision["target_name"])
+
+            # Verify passes with reviews
+            run_verify(manifest, decisions, report, reviews_path=reviews_dir)
+
+            # Modifying report causes verify failure
+            report.write_text("tampered\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "report drift"):
+                run_verify(manifest, decisions, report, reviews_path=reviews_dir)
+
+            # Render repairs it with reviews
+            run_render(manifest, decisions, report, reviews_path=reviews_dir)
+            run_verify(manifest, decisions, report, reviews_path=reviews_dir)
+
+
 if __name__ == "__main__":
     unittest.main()

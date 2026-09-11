@@ -59,5 +59,47 @@ class RenderTests(unittest.TestCase):
                 self.assertNotIn(unsafe, str(context.exception))
 
 
+    def test_renders_domain_summary_and_separates_approved_and_proposed_decisions(self) -> None:
+        manifest = {
+            "format_version": 1,
+            "operations": [],
+            "objects": [
+                {
+                    "object_id": "grant:table%3Apublic%2Eprofiles:authenticated:all",
+                    "object_type": "grant",
+                    "lifecycle": "present",
+                    "operation_count": 1,
+                },
+                {
+                    "object_id": "table:public.profiles",
+                    "object_type": "table",
+                    "lifecycle": "present",
+                    "operation_count": 1,
+                },
+            ],
+            "summary": {"operation_count": 0, "object_count": 2, "unclassified_count": 0},
+        }
+        decisions = generate_decision_document(manifest)
+        decisions["decisions"][0].update(
+            {
+                "action": "remove",
+                "target_component": "app-api",
+                "target_name": "authorization-without-supabase-role",
+                "review_status": "approved",
+                "reason_code": "supabase_runtime_removal",
+            }
+        )
+
+        rendered = render_markdown(manifest, decisions)
+
+        self.assertIn("## Domain summary", rendered)
+        self.assertIn("| app-api | 1 | 1 | 0 | 0 |", rendered)
+        self.assertIn("| iam | 1 | 0 | 1 | 0 |", rendered)
+        self.assertIn("## Approved decisions", rendered)
+        self.assertIn("grant:table%3Apublic%2Eprofiles:authenticated:all", rendered)
+        self.assertIn("## Proposed decisions", rendered)
+        self.assertIn("table:public.profiles", rendered)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,7 @@ from typing import Any
 
 from .decisions import generate_decision_document, verify_decisions
 from .render import render_markdown
+from .reviews import apply_review_overlay, load_reviews
 from .sanitize import assert_safe_artifact, sanitize_error
 
 
@@ -144,10 +145,14 @@ def run_scan(
     manifest_path: Path,
     decisions_path: Path,
     report_path: Path,
+    reviews_path: Path | None = None,
 ) -> None:
     manifest = _build_source_manifest(source_root, policy_path)
     existing = _load_json(decisions_path, "existing decisions") if decisions_path.exists() else None
     decisions = generate_decision_document(manifest, existing=existing)
+    if reviews_path is not None:
+        reviews = load_reviews(reviews_path)
+        decisions = apply_review_overlay(decisions, reviews)
     verify_decisions(manifest, decisions)
     assert_safe_artifact(manifest)
     assert_safe_artifact(decisions)
@@ -159,9 +164,19 @@ def run_scan(
     _atomic_write(report_path, report)
 
 
-def run_verify(manifest_path: Path, decisions_path: Path, report_path: Path) -> None:
+def run_verify(
+    manifest_path: Path,
+    decisions_path: Path,
+    report_path: Path,
+    reviews_path: Path | None = None,
+) -> None:
     manifest = _load_json(manifest_path, "source manifest")
     decisions = _load_json(decisions_path, "object decisions")
+    if reviews_path is not None:
+        reviews = load_reviews(reviews_path)
+        expected_decisions = apply_review_overlay(decisions, reviews)
+        if decisions != expected_decisions:
+            raise ValueError("decisions drift: reviews overlay has not been applied to decisions")
     assert_safe_artifact(manifest)
     assert_safe_artifact(decisions)
     verify_decisions(manifest, decisions)
@@ -175,9 +190,18 @@ def run_verify(manifest_path: Path, decisions_path: Path, report_path: Path) -> 
     assert_safe_artifact(actual)
 
 
-def run_render(manifest_path: Path, decisions_path: Path, report_path: Path) -> None:
+def run_render(
+    manifest_path: Path,
+    decisions_path: Path,
+    report_path: Path,
+    reviews_path: Path | None = None,
+) -> None:
     manifest = _load_json(manifest_path, "source manifest")
     decisions = _load_json(decisions_path, "object decisions")
+    if reviews_path is not None:
+        reviews = load_reviews(reviews_path)
+        decisions = apply_review_overlay(decisions, reviews)
+        _atomic_write(decisions_path, _json_text(decisions))
     assert_safe_artifact(manifest)
     assert_safe_artifact(decisions)
     verify_decisions(manifest, decisions)
@@ -196,12 +220,14 @@ def _parser() -> argparse.ArgumentParser:
     scan.add_argument("--manifest", type=Path, required=True)
     scan.add_argument("--decisions", type=Path, required=True)
     scan.add_argument("--report", type=Path, required=True)
+    scan.add_argument("--reviews", type=Path, default=None)
 
     for command in ("verify", "render"):
         child = subparsers.add_parser(command)
         child.add_argument("--manifest", type=Path, required=True)
         child.add_argument("--decisions", type=Path, required=True)
         child.add_argument("--report", type=Path, required=True)
+        child.add_argument("--reviews", type=Path, default=None)
     return parser
 
 
@@ -209,11 +235,11 @@ def main(arguments: list[str] | None = None) -> int:
     args = _parser().parse_args(arguments)
     try:
         if args.command == "scan":
-            run_scan(args.source, args.policy, args.manifest, args.decisions, args.report)
+            run_scan(args.source, args.policy, args.manifest, args.decisions, args.report, reviews_path=args.reviews)
         elif args.command == "verify":
-            run_verify(args.manifest, args.decisions, args.report)
+            run_verify(args.manifest, args.decisions, args.report, reviews_path=args.reviews)
         else:
-            run_render(args.manifest, args.decisions, args.report)
+            run_render(args.manifest, args.decisions, args.report, reviews_path=args.reviews)
     except Exception as error:
         print(f"ledger error: {sanitize_error(error)}", file=sys.stderr)
         return 1

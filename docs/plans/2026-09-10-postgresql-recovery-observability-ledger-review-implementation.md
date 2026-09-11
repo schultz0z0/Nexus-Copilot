@@ -404,7 +404,7 @@ rtk git commit -m "feat(postgres): add sanitized operational health report"
 - Produces: `apply_review_overlay(document, overlay) -> dict`, opção CLI
   `--reviews`, decisões/render determinísticos e seção de resumo por domínio.
 
-- [ ] **Step 1: escrever testes falhando do overlay**
+- [x] **Step 1: escrever testes falhando do overlay**
 
 Os testes devem cobrir:
 
@@ -419,13 +419,13 @@ self.assertRaisesRegex(ReviewValidationError, "wildcard", apply_review_overlay, 
 Exigir destino não vazio para `transform` aprovado e justificativa para
 `remove` aprovado.
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk python -m unittest tools.supabase-ledger.tests.test_reviews`
 
 Expected: FAIL porque `reviews.py` ainda não existe.
 
-- [ ] **Step 3: implementar overlay mínimo e CLI**
+- [x] **Step 3: implementar overlay mínimo e CLI**
 
 Formato de cada entrada:
 
@@ -444,13 +444,13 @@ Formato de cada entrada:
 Aplicar somente IDs enumerados; ordenar por `object_id`; validar o documento
 resultante com `verify_decisions`.
 
-- [ ] **Step 4: criar revisão IAM/Chat seletiva**
+- [x] **Step 4: criar revisão IAM/Chat seletiva**
 
 Enumerar explicitamente os objetos aprovados. Grants Supabase viram `remove`;
 estruturas com destino inequívoco ganham `target_name`; policies sem substituto,
 triggers entre domínios e campos de credencial permanecem `proposed`.
 
-- [ ] **Step 5: gerar e validar relatório**
+- [x] **Step 5: gerar e validar relatório**
 
 Run:
 
@@ -463,7 +463,7 @@ rtk npm run test:supabase-ledger
 Expected: PASS, relatório com aprovados e propostos separados e zero objeto
 sem decisão.
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 rtk git add tools/supabase-ledger docs/migration/supabase-ledger package.json

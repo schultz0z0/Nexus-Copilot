@@ -20,6 +20,21 @@ def render_markdown(manifest: dict[str, Any], decisions: dict[str, Any]) -> str:
         if isinstance(row, dict) and isinstance(row.get("object_id"), str)
     }
 
+    domain_stats: dict[str, dict[str, int]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        domain = row.get("target_component") or "unassigned"
+        if domain not in domain_stats:
+            domain_stats[domain] = {"total": 0, "approved": 0, "proposed": 0, "pending": 0}
+        domain_stats[domain]["total"] += 1
+        if row.get("review_status") == "approved":
+            domain_stats[domain]["approved"] += 1
+        else:
+            domain_stats[domain]["proposed"] += 1
+        if row.get("action") == "pending":
+            domain_stats[domain]["pending"] += 1
+
     lines = [
         "# Supabase object migration ledger",
         "",
@@ -35,15 +50,26 @@ def render_markdown(manifest: dict[str, Any], decisions: dict[str, Any]) -> str:
         f"- Approved: {review_counts.get('approved', 0)}",
         f"- Pending action: {action_counts.get('pending', 0)}",
         "",
-        "## Object decisions",
+        "## Domain summary",
         "",
-        "| Object | Type | Lifecycle | Action | Target | Target name | Milestone | Review | Reason |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Domain / Component | Objects | Approved | Proposed | Pending |",
+        "| --- | ---: | ---: | ---: | ---: |",
     ]
+
+    for domain in sorted(domain_stats.keys()):
+        stats = domain_stats[domain]
+        lines.append(
+            f"| {_cell(domain)} | {stats['total']} | {stats['approved']} | {stats['proposed']} | {stats['pending']} |"
+        )
+    lines.append("")
+
+    approved_rows = []
+    proposed_rows = []
+
     for item in sorted(objects, key=lambda candidate: candidate.get("object_id", "")):
         object_id = item.get("object_id")
         decision = by_id.get(object_id, {})
-        lines.append(
+        row_line = (
             "| "
             + " | ".join(
                 _cell(value)
@@ -61,4 +87,41 @@ def render_markdown(manifest: dict[str, Any], decisions: dict[str, Any]) -> str:
             )
             + " |"
         )
+        if decision.get("review_status") == "approved":
+            approved_rows.append(row_line)
+        else:
+            proposed_rows.append(row_line)
+
+    lines.extend([
+        "## Approved decisions",
+        "",
+    ])
+    if approved_rows:
+        lines.extend([
+            "| Object | Type | Lifecycle | Action | Target | Target name | Milestone | Review | Reason |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            *approved_rows,
+            "",
+        ])
+    else:
+        lines.extend([
+            "*(No approved decisions)*",
+            "",
+        ])
+
+    lines.extend([
+        "## Proposed decisions",
+        "",
+    ])
+    if proposed_rows:
+        lines.extend([
+            "| Object | Type | Lifecycle | Action | Target | Target name | Milestone | Review | Reason |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            *proposed_rows,
+        ])
+    else:
+        lines.extend([
+            "*(No proposed decisions)*",
+        ])
+
     return "\n".join(lines) + "\n"

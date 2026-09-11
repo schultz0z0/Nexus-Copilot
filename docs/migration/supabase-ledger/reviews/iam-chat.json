@@ -1,0 +1,1498 @@
+{
+  "reviews": [
+    {
+      "object_id": "column:public.chat_confidence_logs.answer_model",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.answer_model",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.avg_score",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.avg_score",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.confidence_score",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.confidence_score",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.created_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.issues",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.issues",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.iterations",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.iterations",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.mode",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.mode",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.review_state",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.review_state",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.session_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.session_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_confidence_logs.user_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.user_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_messages.content",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.content",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_messages.created_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_messages.id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_messages.role",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_messages.session_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.session_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.chain_health",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chain_health",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.chat_session_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chat_session_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.created_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.hermes_conversation_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.hermes_conversation_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.hermes_session_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.hermes_session_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.last_error_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.last_error_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.last_error_code",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.last_error_code",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.last_good_response_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.last_good_response_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.last_response_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.last_response_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.updated_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_hermes_state.user_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.user_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_summaries.last_user_message_count",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.last_user_message_count",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_summaries.session_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.session_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_summaries.summary",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.summary",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_summaries.updated_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_session_summaries.user_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.user_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.created_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.session_kind",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.session_kind",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.title",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.title",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.updated_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.user_id",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.user_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.chat_sessions.user_message_count",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.user_message_count",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "column:public.profiles.avatar_url",
+      "action": "transform",
+      "target_component": "artifact-server",
+      "target_name": "artifact.user_avatars",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "file_authority_migration"
+    },
+    {
+      "object_id": "column:public.profiles.created_at",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.email",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals.email",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.full_name",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals.full_name",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.id",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals.id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.role",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.memberships.role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.tenant_id",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.memberships.tenant_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.profiles.updated_at",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals.updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.user_chat_integrations.created_at",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations.created_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.user_chat_integrations.hermes_enabled",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations.hermes_enabled",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.user_chat_integrations.updated_at",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations.updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.user_chat_integrations.updated_by",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations.updated_by",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "column:public.user_chat_integrations.user_id",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations.user_id",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_14",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_14",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_19",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_19",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_2",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_22",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_22",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_11",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_11",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_15",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_15",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_20",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_20",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_23",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_23",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_3",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_3",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_5",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_5",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_7",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_9",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_9",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.chat_confidence_logs_pkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.chat_confidence_logs_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.chat_confidence_logs_session_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.chat_confidence_logs_session_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_confidence_logs.chat_confidence_logs_user_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs.chat_confidence_logs_user_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_default_2b283c698139_11",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_default_2b283c698139_11",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_default_2b283c698139_2",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_default_2b283c698139_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_notnull_2b283c698139_12",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_notnull_2b283c698139_12",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_notnull_2b283c698139_3",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_notnull_2b283c698139_3",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_notnull_2b283c698139_5",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_notnull_2b283c698139_5",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_notnull_2b283c698139_7",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_notnull_2b283c698139_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.__anonymous_notnull_2b283c698139_9",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.__anonymous_notnull_2b283c698139_9",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.chat_messages_pkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.chat_messages_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.chat_messages_role_check",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.chat_messages_role_check",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_messages.chat_messages_session_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.chat_messages_session_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_11",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_11",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_16",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_16",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_19",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_19",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_12",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_12",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_17",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_17",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_2",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_20",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_20",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_4",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_4",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_7",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.chat_session_hermes_state_chain_health_check",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chat_session_hermes_state_chain_health_check",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.chat_session_hermes_state_chat_session_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chat_session_hermes_state_chat_session_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.chat_session_hermes_state_pkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chat_session_hermes_state_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_hermes_state.chat_session_hermes_state_user_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.chat_session_hermes_state_user_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_12",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_default_a9c16007499e_12",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_6",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_default_a9c16007499e_6",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_9",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_default_a9c16007499e_9",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_10",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_10",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_2",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_4",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_4",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_7",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.chat_session_summaries_pkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.chat_session_summaries_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.chat_session_summaries_session_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.chat_session_summaries_session_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_session_summaries.chat_session_summaries_user_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries.chat_session_summaries_user_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_default_ff4a19747373_10",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_default_ff4a19747373_10",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_default_ff4a19747373_13",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_default_ff4a19747373_13",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_default_ff4a19747373_16",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_default_ff4a19747373_16",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_default_ff4a19747373_2",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_default_ff4a19747373_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_default_ff4a19747373_7",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_default_ff4a19747373_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_11",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_notnull_ff4a19747373_11",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_14",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_notnull_ff4a19747373_14",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_3",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_notnull_ff4a19747373_3",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_5",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_notnull_ff4a19747373_5",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_8",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.__anonymous_notnull_ff4a19747373_8",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.chat_sessions_pkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.chat_sessions_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.chat_sessions_session_kind_check",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.chat_sessions_session_kind_check",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.chat_sessions.chat_sessions_user_id_fkey",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.chat_sessions_user_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "constraint:public.profiles.__anonymous_default_4758aa5e7e43_7",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_default_4758aa5e7e43_7",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.profiles.__anonymous_default_4758aa5e7e43_9",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_default_4758aa5e7e43_9",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.profiles.__anonymous_notnull_4758aa5e7e43_2",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_notnull_4758aa5e7e43_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.profiles.profiles_pkey",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.profiles_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.profiles.profiles_role_check",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.profiles_role_check",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_11",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_default_0f149198e01a_11",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_4",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_default_0f149198e01a_4",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_8",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_default_0f149198e01a_8",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_12",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_notnull_0f149198e01a_12",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_2",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_notnull_0f149198e01a_2",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_5",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_notnull_0f149198e01a_5",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_9",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.__anonymous_notnull_0f149198e01a_9",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.user_chat_integrations_pkey",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations_pkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.user_chat_integrations_updated_by_fkey",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations_updated_by_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "constraint:public.user_chat_integrations.user_chat_integrations_user_id_fkey",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations_user_id_fkey",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "edge_function:proxy-chatbot",
+      "action": "transform",
+      "target_component": "chat-bridge",
+      "target_name": "chat-bridge-proxy",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "hermes_boundary"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_confidence_logs:anon:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_confidence_logs:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_confidence_logs:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_messages:anon:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_messages:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_messages:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_session_hermes_state:anon:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_session_hermes_state:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_session_hermes_state:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_session_summaries:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:anon:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:authenticated:insert",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:authenticated:insert%2Cupdate",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:authenticated:update",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Echat_sessions:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Eprofiles:anon:delete%2Cinsert%2Cmaintain%2Creferences%2Ctrigger%2Ctruncate%2Cupdate",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Eprofiles:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Eprofiles:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Euser_chat_integrations:anon:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Euser_chat_integrations:authenticated:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "grant:table%3Apublic%2Euser_chat_integrations:service_role:all",
+      "action": "remove",
+      "target_component": "app-api",
+      "target_name": "authorization-without-supabase-role",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "supabase_runtime_removal"
+    },
+    {
+      "object_id": "index:public.chat_confidence_logs_session_idx",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs_session_idx",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "index:public.chat_confidence_logs_user_idx",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs_user_idx",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "index:public.chat_session_hermes_state_hermes_session_id_idx",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state_hermes_session_id_idx",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "index:public.chat_session_hermes_state_user_id_idx",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state_user_id_idx",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "index:public.chat_session_summaries_user_id_idx",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries_user_id_idx",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.chat_confidence_logs",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_confidence_logs",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.chat_messages",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.chat_session_hermes_state",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.chat_session_summaries",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_summaries",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.chat_sessions",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "table:public.profiles",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.principals",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "table:public.user_chat_integrations",
+      "action": "transform",
+      "target_component": "iam",
+      "target_name": "iam.user_chat_integrations",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "identity_canonicalization"
+    },
+    {
+      "object_id": "trigger:public.chat_messages.update_message_count_trigger",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_messages.update_message_count_trigger",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "trigger:public.chat_session_hermes_state.touch_chat_session_hermes_state_updated_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_session_hermes_state.touch_chat_session_hermes_state_updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    },
+    {
+      "object_id": "trigger:public.chat_sessions.update_chat_sessions_updated_at",
+      "action": "transform",
+      "target_component": "chat-store",
+      "target_name": "chat.chat_sessions.update_chat_sessions_updated_at",
+      "milestone": "M4",
+      "review_status": "approved",
+      "reason_code": "chat_persistence_migration"
+    }
+  ]
+}

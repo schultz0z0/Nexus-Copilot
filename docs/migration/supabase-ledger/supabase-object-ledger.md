@@ -8,11 +8,200 @@
 - Operations: 2904
 - Objects: 2672
 - Unclassified: 0
-- Proposed: 2672
-- Approved: 0
+- Proposed: 2506
+- Approved: 166
 - Pending action: 1070
 
-## Object decisions
+## Domain summary
+
+| Domain / Component | Objects | Approved | Proposed | Pending |
+| --- | ---: | ---: | ---: | ---: |
+| app-api | 25 | 22 | 3 | 0 |
+| artifact-server | 1 | 1 | 0 | 0 |
+| chat-bridge | 1 | 1 | 0 | 0 |
+| chat-store | 135 | 113 | 22 | 0 |
+| domain-review | 1013 | 0 | 1013 | 1013 |
+| iam | 41 | 29 | 12 | 0 |
+| marketing-ops-postgres | 1093 | 0 | 1093 | 0 |
+| none | 5 | 0 | 5 | 0 |
+| picture-service | 246 | 0 | 246 | 0 |
+| postgresql-extension-review | 5 | 0 | 5 | 5 |
+| rag-adr | 52 | 0 | 52 | 52 |
+| relational-review | 54 | 0 | 54 | 0 |
+| runtime-secrets | 1 | 0 | 1 | 0 |
+
+## Approved decisions
+
+| Object | Type | Lifecycle | Action | Target | Target name | Milestone | Review | Reason |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| column:public.chat_confidence_logs.answer_model | column | present | transform | chat-store | chat.chat_confidence_logs.answer_model | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.avg_score | column | present | transform | chat-store | chat.chat_confidence_logs.avg_score | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.confidence_score | column | present | transform | chat-store | chat.chat_confidence_logs.confidence_score | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.created_at | column | present | transform | chat-store | chat.chat_confidence_logs.created_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.id | column | present | transform | chat-store | chat.chat_confidence_logs.id | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.issues | column | present | transform | chat-store | chat.chat_confidence_logs.issues | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.iterations | column | present | transform | chat-store | chat.chat_confidence_logs.iterations | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.mode | column | present | transform | chat-store | chat.chat_confidence_logs.mode | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.review_state | column | present | transform | chat-store | chat.chat_confidence_logs.review_state | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.session_id | column | present | transform | chat-store | chat.chat_confidence_logs.session_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_confidence_logs.user_id | column | present | transform | chat-store | chat.chat_confidence_logs.user_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_messages.content | column | present | transform | chat-store | chat.chat_messages.content | M4 | approved | chat_persistence_migration |
+| column:public.chat_messages.created_at | column | present | transform | chat-store | chat.chat_messages.created_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_messages.id | column | present | transform | chat-store | chat.chat_messages.id | M4 | approved | chat_persistence_migration |
+| column:public.chat_messages.role | column | present | transform | chat-store | chat.chat_messages.role | M4 | approved | chat_persistence_migration |
+| column:public.chat_messages.session_id | column | present | transform | chat-store | chat.chat_messages.session_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.chain_health | column | present | transform | chat-store | chat.chat_session_hermes_state.chain_health | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.chat_session_id | column | present | transform | chat-store | chat.chat_session_hermes_state.chat_session_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.created_at | column | present | transform | chat-store | chat.chat_session_hermes_state.created_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.hermes_conversation_id | column | present | transform | chat-store | chat.chat_session_hermes_state.hermes_conversation_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.hermes_session_id | column | present | transform | chat-store | chat.chat_session_hermes_state.hermes_session_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.last_error_at | column | present | transform | chat-store | chat.chat_session_hermes_state.last_error_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.last_error_code | column | present | transform | chat-store | chat.chat_session_hermes_state.last_error_code | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.last_good_response_id | column | present | transform | chat-store | chat.chat_session_hermes_state.last_good_response_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.last_response_id | column | present | transform | chat-store | chat.chat_session_hermes_state.last_response_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.updated_at | column | present | transform | chat-store | chat.chat_session_hermes_state.updated_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_hermes_state.user_id | column | present | transform | chat-store | chat.chat_session_hermes_state.user_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_summaries.last_user_message_count | column | present | transform | chat-store | chat.chat_session_summaries.last_user_message_count | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_summaries.session_id | column | present | transform | chat-store | chat.chat_session_summaries.session_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_summaries.summary | column | present | transform | chat-store | chat.chat_session_summaries.summary | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_summaries.updated_at | column | present | transform | chat-store | chat.chat_session_summaries.updated_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_session_summaries.user_id | column | present | transform | chat-store | chat.chat_session_summaries.user_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.created_at | column | present | transform | chat-store | chat.chat_sessions.created_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.id | column | present | transform | chat-store | chat.chat_sessions.id | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.session_kind | column | present | transform | chat-store | chat.chat_sessions.session_kind | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.title | column | present | transform | chat-store | chat.chat_sessions.title | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.updated_at | column | present | transform | chat-store | chat.chat_sessions.updated_at | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.user_id | column | present | transform | chat-store | chat.chat_sessions.user_id | M4 | approved | chat_persistence_migration |
+| column:public.chat_sessions.user_message_count | column | present | transform | chat-store | chat.chat_sessions.user_message_count | M4 | approved | chat_persistence_migration |
+| column:public.profiles.avatar_url | column | present | transform | artifact-server | artifact.user_avatars | M4 | approved | file_authority_migration |
+| column:public.profiles.created_at | column | present | transform | iam | iam.principals.created_at | M4 | approved | identity_canonicalization |
+| column:public.profiles.email | column | present | transform | iam | iam.principals.email | M4 | approved | identity_canonicalization |
+| column:public.profiles.full_name | column | present | transform | iam | iam.principals.full_name | M4 | approved | identity_canonicalization |
+| column:public.profiles.id | column | present | transform | iam | iam.principals.id | M4 | approved | identity_canonicalization |
+| column:public.profiles.role | column | present | transform | iam | iam.memberships.role | M4 | approved | identity_canonicalization |
+| column:public.profiles.tenant_id | column | present | transform | iam | iam.memberships.tenant_id | M4 | approved | identity_canonicalization |
+| column:public.profiles.updated_at | column | present | transform | iam | iam.principals.updated_at | M4 | approved | identity_canonicalization |
+| column:public.user_chat_integrations.created_at | column | present | transform | iam | iam.user_chat_integrations.created_at | M4 | approved | identity_canonicalization |
+| column:public.user_chat_integrations.hermes_enabled | column | present | transform | iam | iam.user_chat_integrations.hermes_enabled | M4 | approved | identity_canonicalization |
+| column:public.user_chat_integrations.updated_at | column | present | transform | iam | iam.user_chat_integrations.updated_at | M4 | approved | identity_canonicalization |
+| column:public.user_chat_integrations.updated_by | column | present | transform | iam | iam.user_chat_integrations.updated_by | M4 | approved | identity_canonicalization |
+| column:public.user_chat_integrations.user_id | column | present | transform | iam | iam.user_chat_integrations.user_id | M4 | approved | identity_canonicalization |
+| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_14 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_14 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_19 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_19 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_2 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_2 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_22 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_default_053499b7e9eb_22 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_11 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_11 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_15 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_15 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_20 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_20 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_23 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_23 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_3 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_3 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_5 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_5 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_7 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_7 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_9 | constraint | present | transform | chat-store | chat.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_9 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.chat_confidence_logs_pkey | constraint | present | transform | chat-store | chat.chat_confidence_logs.chat_confidence_logs_pkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.chat_confidence_logs_session_id_fkey | constraint | present | transform | chat-store | chat.chat_confidence_logs.chat_confidence_logs_session_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_confidence_logs.chat_confidence_logs_user_id_fkey | constraint | present | transform | chat-store | chat.chat_confidence_logs.chat_confidence_logs_user_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_default_2b283c698139_11 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_default_2b283c698139_11 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_default_2b283c698139_2 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_default_2b283c698139_2 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_12 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_notnull_2b283c698139_12 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_3 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_notnull_2b283c698139_3 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_5 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_notnull_2b283c698139_5 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_7 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_notnull_2b283c698139_7 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_9 | constraint | present | transform | chat-store | chat.chat_messages.__anonymous_notnull_2b283c698139_9 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.chat_messages_pkey | constraint | present | transform | chat-store | chat.chat_messages.chat_messages_pkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.chat_messages_role_check | constraint | present | transform | chat-store | chat.chat_messages.chat_messages_role_check | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_messages.chat_messages_session_id_fkey | constraint | present | transform | chat-store | chat.chat_messages.chat_messages_session_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_11 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_11 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_16 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_16 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_19 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_19 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_12 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_12 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_17 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_17 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_2 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_2 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_20 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_20 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_4 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_4 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_7 | constraint | present | transform | chat-store | chat.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_7 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.chat_session_hermes_state_chain_health_check | constraint | present | transform | chat-store | chat.chat_session_hermes_state.chat_session_hermes_state_chain_health_check | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.chat_session_hermes_state_chat_session_id_fkey | constraint | present | transform | chat-store | chat.chat_session_hermes_state.chat_session_hermes_state_chat_session_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.chat_session_hermes_state_pkey | constraint | present | transform | chat-store | chat.chat_session_hermes_state.chat_session_hermes_state_pkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_hermes_state.chat_session_hermes_state_user_id_fkey | constraint | present | transform | chat-store | chat.chat_session_hermes_state.chat_session_hermes_state_user_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_12 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_default_a9c16007499e_12 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_6 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_default_a9c16007499e_6 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_9 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_default_a9c16007499e_9 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_10 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_10 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_2 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_2 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_4 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_4 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_7 | constraint | present | transform | chat-store | chat.chat_session_summaries.__anonymous_notnull_a9c16007499e_7 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.chat_session_summaries_pkey | constraint | present | transform | chat-store | chat.chat_session_summaries.chat_session_summaries_pkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.chat_session_summaries_session_id_fkey | constraint | present | transform | chat-store | chat.chat_session_summaries.chat_session_summaries_session_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_session_summaries.chat_session_summaries_user_id_fkey | constraint | present | transform | chat-store | chat.chat_session_summaries.chat_session_summaries_user_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_10 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_default_ff4a19747373_10 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_13 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_default_ff4a19747373_13 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_16 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_default_ff4a19747373_16 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_2 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_default_ff4a19747373_2 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_7 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_default_ff4a19747373_7 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_11 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_notnull_ff4a19747373_11 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_14 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_notnull_ff4a19747373_14 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_3 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_notnull_ff4a19747373_3 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_5 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_notnull_ff4a19747373_5 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_8 | constraint | present | transform | chat-store | chat.chat_sessions.__anonymous_notnull_ff4a19747373_8 | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.chat_sessions_pkey | constraint | present | transform | chat-store | chat.chat_sessions.chat_sessions_pkey | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.chat_sessions_session_kind_check | constraint | present | transform | chat-store | chat.chat_sessions.chat_sessions_session_kind_check | M4 | approved | chat_persistence_migration |
+| constraint:public.chat_sessions.chat_sessions_user_id_fkey | constraint | present | transform | chat-store | chat.chat_sessions.chat_sessions_user_id_fkey | M4 | approved | chat_persistence_migration |
+| constraint:public.profiles.__anonymous_default_4758aa5e7e43_7 | constraint | present | transform | iam | iam.__anonymous_default_4758aa5e7e43_7 | M4 | approved | identity_canonicalization |
+| constraint:public.profiles.__anonymous_default_4758aa5e7e43_9 | constraint | present | transform | iam | iam.__anonymous_default_4758aa5e7e43_9 | M4 | approved | identity_canonicalization |
+| constraint:public.profiles.__anonymous_notnull_4758aa5e7e43_2 | constraint | present | transform | iam | iam.__anonymous_notnull_4758aa5e7e43_2 | M4 | approved | identity_canonicalization |
+| constraint:public.profiles.profiles_pkey | constraint | present | transform | iam | iam.profiles_pkey | M4 | approved | identity_canonicalization |
+| constraint:public.profiles.profiles_role_check | constraint | present | transform | iam | iam.profiles_role_check | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_11 | constraint | present | transform | iam | iam.__anonymous_default_0f149198e01a_11 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_4 | constraint | present | transform | iam | iam.__anonymous_default_0f149198e01a_4 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_8 | constraint | present | transform | iam | iam.__anonymous_default_0f149198e01a_8 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_12 | constraint | present | transform | iam | iam.__anonymous_notnull_0f149198e01a_12 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_2 | constraint | present | transform | iam | iam.__anonymous_notnull_0f149198e01a_2 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_5 | constraint | present | transform | iam | iam.__anonymous_notnull_0f149198e01a_5 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_9 | constraint | present | transform | iam | iam.__anonymous_notnull_0f149198e01a_9 | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.user_chat_integrations_pkey | constraint | present | transform | iam | iam.user_chat_integrations_pkey | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.user_chat_integrations_updated_by_fkey | constraint | present | transform | iam | iam.user_chat_integrations_updated_by_fkey | M4 | approved | identity_canonicalization |
+| constraint:public.user_chat_integrations.user_chat_integrations_user_id_fkey | constraint | present | transform | iam | iam.user_chat_integrations_user_id_fkey | M4 | approved | identity_canonicalization |
+| edge_function:proxy-chatbot | edge_function | present | transform | chat-bridge | chat-bridge-proxy | M4 | approved | hermes_boundary |
+| grant:table%3Apublic%2Echat_confidence_logs:anon:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_confidence_logs:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_confidence_logs:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_messages:anon:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_messages:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_messages:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_session_hermes_state:anon:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_session_hermes_state:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_session_hermes_state:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_session_summaries:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:anon:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:authenticated:insert | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:authenticated:insert%2Cupdate | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:authenticated:update | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Echat_sessions:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Eprofiles:anon:delete%2Cinsert%2Cmaintain%2Creferences%2Ctrigger%2Ctruncate%2Cupdate | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Eprofiles:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Eprofiles:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Euser_chat_integrations:anon:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Euser_chat_integrations:authenticated:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| grant:table%3Apublic%2Euser_chat_integrations:service_role:all | grant | unknown | remove | app-api | authorization-without-supabase-role | M4 | approved | supabase_runtime_removal |
+| index:public.chat_confidence_logs_session_idx | index | present | transform | chat-store | chat.chat_confidence_logs_session_idx | M4 | approved | chat_persistence_migration |
+| index:public.chat_confidence_logs_user_idx | index | present | transform | chat-store | chat.chat_confidence_logs_user_idx | M4 | approved | chat_persistence_migration |
+| index:public.chat_session_hermes_state_hermes_session_id_idx | index | present | transform | chat-store | chat.chat_session_hermes_state_hermes_session_id_idx | M4 | approved | chat_persistence_migration |
+| index:public.chat_session_hermes_state_user_id_idx | index | present | transform | chat-store | chat.chat_session_hermes_state_user_id_idx | M4 | approved | chat_persistence_migration |
+| index:public.chat_session_summaries_user_id_idx | index | present | transform | chat-store | chat.chat_session_summaries_user_id_idx | M4 | approved | chat_persistence_migration |
+| table:public.chat_confidence_logs | table | present | transform | chat-store | chat.chat_confidence_logs | M4 | approved | chat_persistence_migration |
+| table:public.chat_messages | table | present | transform | chat-store | chat.chat_messages | M4 | approved | chat_persistence_migration |
+| table:public.chat_session_hermes_state | table | present | transform | chat-store | chat.chat_session_hermes_state | M4 | approved | chat_persistence_migration |
+| table:public.chat_session_summaries | table | present | transform | chat-store | chat.chat_session_summaries | M4 | approved | chat_persistence_migration |
+| table:public.chat_sessions | table | present | transform | chat-store | chat.chat_sessions | M4 | approved | chat_persistence_migration |
+| table:public.profiles | table | present | transform | iam | iam.principals | M4 | approved | identity_canonicalization |
+| table:public.user_chat_integrations | table | present | transform | iam | iam.user_chat_integrations | M4 | approved | identity_canonicalization |
+| trigger:public.chat_messages.update_message_count_trigger | trigger | present | transform | chat-store | chat.chat_messages.update_message_count_trigger | M4 | approved | chat_persistence_migration |
+| trigger:public.chat_session_hermes_state.touch_chat_session_hermes_state_updated_at | trigger | present | transform | chat-store | chat.chat_session_hermes_state.touch_chat_session_hermes_state_updated_at | M4 | approved | chat_persistence_migration |
+| trigger:public.chat_sessions.update_chat_sessions_updated_at | trigger | present | transform | chat-store | chat.chat_sessions.update_chat_sessions_updated_at | M4 | approved | chat_persistence_migration |
+
+## Proposed decisions
 
 | Object | Type | Lifecycle | Action | Target | Target name | Milestone | Review | Reason |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -327,45 +516,6 @@
 | column:public.agent_playbooks.system_scope | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.agent_playbooks.tenant_id | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.agent_playbooks.updated_at | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| column:public.chat_confidence_logs.answer_model | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.avg_score | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.confidence_score | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.created_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.issues | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.iterations | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.mode | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.review_state | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.session_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_confidence_logs.user_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_messages.content | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_messages.created_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_messages.id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_messages.role | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_messages.session_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.chain_health | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.chat_session_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.created_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.hermes_conversation_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.hermes_session_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.last_error_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.last_error_code | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.last_good_response_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.last_response_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.updated_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_hermes_state.user_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_summaries.last_user_message_count | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_summaries.session_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_summaries.summary | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_summaries.updated_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_session_summaries.user_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.created_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.session_kind | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.title | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.updated_at | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.user_id | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| column:public.chat_sessions.user_message_count | column | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | column:public.daily_metrics.account_id | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.daily_metrics.ad_id | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.daily_metrics.campaign_id | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -475,14 +625,6 @@
 | column:public.picture_workspaces.validated_artifact_id | column | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | column:public.picture_workspaces.validated_work_id | column | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | column:public.picture_workspaces.version | column | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
-| column:public.profiles.avatar_url | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.created_at | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.email | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.full_name | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.id | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.role | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.tenant_id | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.profiles.updated_at | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | column:public.rag_email_html.content | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | column:public.rag_email_html.embedding | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | column:public.rag_email_html.id | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
@@ -495,12 +637,7 @@
 | column:public.rag_marketing.embedding | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | column:public.rag_marketing.id | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | column:public.rag_marketing.metadata | column | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
-| column:public.user_chat_integrations.created_at | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | column:public.user_chat_integrations.hermes_base_url | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.user_chat_integrations.hermes_enabled | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.user_chat_integrations.updated_at | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.user_chat_integrations.updated_by | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| column:public.user_chat_integrations.user_id | column | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | column:public.validated_works.artifact_filename | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.validated_works.artifact_height | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | column:public.validated_works.artifact_id | column | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -1040,67 +1177,6 @@
 | constraint:public.agent_playbooks.agent_playbooks_text_check | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.agent_playbooks.agent_playbooks_title_check | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.agent_playbooks.agent_playbooks_unique_source | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_14 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_19 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_2 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_default_053499b7e9eb_22 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_11 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_15 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_20 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_23 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_3 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_5 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_7 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.__anonymous_notnull_053499b7e9eb_9 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.chat_confidence_logs_pkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.chat_confidence_logs_session_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_confidence_logs.chat_confidence_logs_user_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_default_2b283c698139_11 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_default_2b283c698139_2 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_12 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_3 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_5 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_7 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.__anonymous_notnull_2b283c698139_9 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.chat_messages_pkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.chat_messages_role_check | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_messages.chat_messages_session_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_11 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_16 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_default_2fd54e84eeb3_19 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_12 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_17 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_2 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_20 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_4 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.__anonymous_notnull_2fd54e84eeb3_7 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.chat_session_hermes_state_chain_health_check | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.chat_session_hermes_state_chat_session_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.chat_session_hermes_state_pkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_hermes_state.chat_session_hermes_state_user_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_12 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_6 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_default_a9c16007499e_9 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_10 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_2 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_4 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.__anonymous_notnull_a9c16007499e_7 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.chat_session_summaries_pkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.chat_session_summaries_session_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_session_summaries.chat_session_summaries_user_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_10 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_13 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_16 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_2 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_default_ff4a19747373_7 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_11 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_14 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_3 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_5 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.__anonymous_notnull_ff4a19747373_8 | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.chat_sessions_pkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.chat_sessions_session_kind_check | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| constraint:public.chat_sessions.chat_sessions_user_id_fkey | constraint | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | constraint:public.daily_metrics.__anonymous_default_9523d6331ca0_11 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.daily_metrics.__anonymous_default_9523d6331ca0_13 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.daily_metrics.__anonymous_default_9523d6331ca0_15 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -1262,12 +1338,7 @@
 | constraint:public.picture_workspaces.picture_workspaces_current_job_id_fkey | constraint | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | constraint:public.picture_workspaces.picture_workspaces_title_check | constraint | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | constraint:public.picture_workspaces.picture_workspaces_validated_state_check | constraint | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
-| constraint:public.profiles.__anonymous_default_4758aa5e7e43_7 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.profiles.__anonymous_default_4758aa5e7e43_9 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.profiles.__anonymous_notnull_4758aa5e7e43_2 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | constraint:public.profiles.profiles_id_fkey | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.profiles.profiles_pkey | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.profiles.profiles_role_check | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | constraint:public.rag_email_html.__anonymous_default_17a5411bde86_5 | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | constraint:public.rag_email_html.__anonymous_notnull_17a5411bde86_2 | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | constraint:public.rag_email_html.rag_email_html_pkey | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
@@ -1277,17 +1348,7 @@
 | constraint:public.rag_marketing.__anonymous_default_e9ba15dbdb25_5 | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | constraint:public.rag_marketing.__anonymous_notnull_e9ba15dbdb25_2 | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | constraint:public.rag_marketing.rag_marketing_pkey | constraint | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
-| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_11 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_4 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_default_0f149198e01a_8 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_12 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_2 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_5 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.__anonymous_notnull_0f149198e01a_9 | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | constraint:public.user_chat_integrations.user_chat_integrations_base_url_https_check | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.user_chat_integrations_pkey | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.user_chat_integrations_updated_by_fkey | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
-| constraint:public.user_chat_integrations.user_chat_integrations_user_id_fkey | constraint | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | constraint:public.validated_works.__anonymous_default_7681576762e4_14 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.validated_works.__anonymous_default_7681576762e4_2 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | constraint:public.validated_works.__anonymous_default_7681576762e4_20 | constraint | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -1367,7 +1428,6 @@
 | edge_function:admin-create-user | edge_function | present | transform | app-api | — | M4 | proposed | privileged_application_flow |
 | edge_function:admin-delete-user | edge_function | present | transform | app-api | — | M4 | proposed | privileged_application_flow |
 | edge_function:admin-reset-password | edge_function | present | transform | app-api | — | M4 | proposed | privileged_application_flow |
-| edge_function:proxy-chatbot | edge_function | present | transform | chat-bridge | — | M4 | proposed | hermes_boundary |
 | extension:pg_stat_statements | extension | present | pending | postgresql-extension-review | — | M3 | proposed | extension_compatibility_review |
 | extension:pg_trgm | extension | present | pending | postgresql-extension-review | — | M3 | proposed | extension_compatibility_review |
 | extension:pgcrypto | extension | present | pending | postgresql-extension-review | — | M3 | proposed | extension_compatibility_review |
@@ -2251,22 +2311,6 @@
 | grant:table%3Apublic%2Eads:service_role:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Eagent_playbooks:authenticated:select | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Eagent_playbooks:service_role:insert%2Cselect%2Cupdate | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| grant:table%3Apublic%2Echat_confidence_logs:anon:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_confidence_logs:authenticated:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_confidence_logs:service_role:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_messages:anon:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_messages:authenticated:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_messages:service_role:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_session_hermes_state:anon:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_session_hermes_state:authenticated:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_session_hermes_state:service_role:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_session_summaries:service_role:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:anon:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:authenticated:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:authenticated:insert | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:authenticated:insert%2Cupdate | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:authenticated:update | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| grant:table%3Apublic%2Echat_sessions:service_role:all | grant | unknown | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | grant:table%3Apublic%2Edaily_metrics:anon:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Edaily_metrics:authenticated:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Edaily_metrics:service_role:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -2302,9 +2346,6 @@
 | grant:table%3Apublic%2Epicture_workspaces:authenticated:all | grant | unknown | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | grant:table%3Apublic%2Epicture_workspaces:authenticated:select | grant | unknown | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | grant:table%3Apublic%2Epicture_workspaces:service_role:all | grant | unknown | transform | picture-service | — | M5 | proposed | media_domain_migration |
-| grant:table%3Apublic%2Eprofiles:anon:delete%2Cinsert%2Cmaintain%2Creferences%2Ctrigger%2Ctruncate%2Cupdate | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
-| grant:table%3Apublic%2Eprofiles:authenticated:all | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
-| grant:table%3Apublic%2Eprofiles:service_role:all | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
 | grant:table%3Apublic%2Erag_email_html:anon:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | grant:table%3Apublic%2Erag_email_html:authenticated:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | grant:table%3Apublic%2Erag_email_html:service_role:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
@@ -2314,9 +2355,6 @@
 | grant:table%3Apublic%2Erag_marketing:anon:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | grant:table%3Apublic%2Erag_marketing:authenticated:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | grant:table%3Apublic%2Erag_marketing:service_role:all | grant | unknown | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
-| grant:table%3Apublic%2Euser_chat_integrations:anon:all | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
-| grant:table%3Apublic%2Euser_chat_integrations:authenticated:all | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
-| grant:table%3Apublic%2Euser_chat_integrations:service_role:all | grant | unknown | transform | iam | — | M4 | proposed | identity_canonicalization |
 | grant:table%3Apublic%2Evalidated_works:anon:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Evalidated_works:authenticated:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | grant:table%3Apublic%2Evalidated_works:service_role:all | grant | unknown | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -2383,11 +2421,6 @@
 | index:public.agent_playbooks_metadata_gin_idx | index | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | index:public.agent_playbooks_status_created_idx | index | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | index:public.agent_playbooks_tenant_scope_agent_idx | index | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| index:public.chat_confidence_logs_session_idx | index | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| index:public.chat_confidence_logs_user_idx | index | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| index:public.chat_session_hermes_state_hermes_session_id_idx | index | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| index:public.chat_session_hermes_state_user_id_idx | index | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| index:public.chat_session_summaries_user_id_idx | index | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | index:public.graph_entities_name_type_idx | index | present | remove | relational-review | — | M5 | proposed | retired_graph_capability |
 | index:public.graph_entities_type_idx | index | present | remove | relational-review | — | M5 | proposed | retired_graph_capability |
 | index:public.graph_relations_from_idx | index | present | remove | relational-review | — | M5 | proposed | retired_graph_capability |
@@ -2608,11 +2641,6 @@
 | table:public.ad_sets | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:public.ads | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:public.agent_playbooks | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| table:public.chat_confidence_logs | table | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| table:public.chat_messages | table | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| table:public.chat_session_hermes_state | table | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| table:public.chat_session_summaries | table | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| table:public.chat_sessions | table | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | table:public.daily_metrics | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:public.generated_images | table | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | table:public.graph_entities | table | present | remove | relational-review | — | M5 | proposed | retired_graph_capability |
@@ -2624,11 +2652,9 @@
 | table:public.market_trends | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:public.picture_jobs | table | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | table:public.picture_workspaces | table | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
-| table:public.profiles | table | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | table:public.rag_email_html | table | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | table:public.rag_ens | table | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
 | table:public.rag_marketing | table | present | pending | rag-adr | — | M5 | proposed | rag_architecture_review |
-| table:public.user_chat_integrations | table | present | transform | iam | — | M4 | proposed | identity_canonicalization |
 | table:public.validated_works | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:smart_mail.campaign_requests | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
 | table:smart_mail.knowledge_sources | table | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
@@ -2661,9 +2687,6 @@
 | trigger:marketing_ops.item_dependencies.item_dependencies_enforce_graph | trigger | present | transform | marketing-ops-postgres | — | M5 | proposed | marketing_domain_migration |
 | trigger:marketing_ops.memberships.memberships_touch_updated_at | trigger | present | transform | marketing-ops-postgres | — | M5 | proposed | marketing_domain_migration |
 | trigger:public.agent_playbooks.trg_agent_playbooks_set_updated_at | trigger | present | pending | domain-review | — | M6 | proposed | manual_domain_review |
-| trigger:public.chat_messages.update_message_count_trigger | trigger | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| trigger:public.chat_session_hermes_state.touch_chat_session_hermes_state_updated_at | trigger | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
-| trigger:public.chat_sessions.update_chat_sessions_updated_at | trigger | present | transform | chat-store | — | M4 | proposed | chat_persistence_migration |
 | trigger:public.picture_jobs.touch_picture_jobs_updated_at | trigger | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | trigger:public.picture_workspaces.touch_picture_workspaces_updated_at | trigger | present | transform | picture-service | — | M5 | proposed | media_domain_migration |
 | trigger:public.profiles.profiles_sync_ens_marketing_membership | trigger | present | transform | iam | — | M4 | proposed | identity_canonicalization |
