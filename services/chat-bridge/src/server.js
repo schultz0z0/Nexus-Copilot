@@ -687,7 +687,7 @@ class RunStore {
 
   async init() {
     // Fetch all active runs from Postgres where status is not terminal
-    const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?select=state`, {
+    const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?select=state&state->>status=not.in.(completed,failed,cancelled,canceled,expired,interrupted)`, {
       headers: this.headers
     }).catch(() => null);
 
@@ -720,8 +720,21 @@ class RunStore {
     }
   }
 
-  get(id) {
-    return this.runs.get(id) || null;
+  async get(id) {
+    if (this.runs.has(id)) {
+      return this.runs.get(id);
+    }
+    const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?id=eq.${id}&select=state`, {
+      headers: this.headers
+    }).catch(() => null);
+
+    if (response?.ok) {
+      const rows = await response.json();
+      if (rows.length > 0) {
+        return rows[0].state;
+      }
+    }
+    return null;
   }
 
   async persist(run) {
@@ -743,8 +756,8 @@ class RunStore {
     this.notify(run.id);
   }
 
-  subscribe(runId, res, { closeOnTerminal = false, startIndex = 0 } = {}) {
-    const run = this.get(runId);
+  async subscribe(runId, res, { closeOnTerminal = false, startIndex = 0 } = {}) {
+    const run = await this.get(runId);
     if (!run) return null;
 
     const subscriber = {
@@ -765,19 +778,20 @@ class RunStore {
     };
 
     res.on("close", cleanup);
-    this.flushSubscriber(runId, subscriber);
+    this.flushSubscriber(run, subscriber);
     return cleanup;
   }
 
   notify(runId) {
     const subscribers = this.subscribers.get(runId);
     if (!subscribers) return;
-    subscribers.forEach((subscriber) => this.flushSubscriber(runId, subscriber));
+    const run = this.runs.get(runId);
+    if (!run) return;
+    subscribers.forEach((subscriber) => this.flushSubscriber(run, subscriber));
   }
 
-  flushSubscriber(runId, subscriber) {
+  flushSubscriber(run, subscriber) {
     if (subscriber.closed) return;
-    const run = this.get(runId);
     if (!run) return;
 
     while (subscriber.index < run.events.length) {
@@ -1099,7 +1113,7 @@ class HermesBridge {
   }
 
   async failRun(runId, error) {
-    const run = this.store.get(runId);
+    const run = await this.store.get(runId);
     if (!run || terminalStatuses.has(run.status)) return;
     run.status = "failed";
     run.error_message = error instanceof Error ? error.message : String(error);
@@ -1660,7 +1674,7 @@ class HermesBridge {
       throw new Error("missing_or_invalid_HERMES_API_BASE_URL");
     }
 
-    const run = this.store.get(runId);
+    const run = await this.store.get(runId);
     if (!run) return;
 
     const state = await this.ensureHermesSessionBinding(run, hermesBaseUrl, {
@@ -1785,7 +1799,7 @@ const handleRequest = async (req, res) => {
     const token = typeof payload.delegation_token === "string" ? payload.delegation_token : "";
     try {
       const claims = decodeJwt(token);
-      const run = typeof claims.run_id === "string" ? store.get(claims.run_id) : null;
+      const run = typeof claims.run_id === "string" ? await store.get(claims.run_id) : null;
       const refreshed = await refreshMarketingOpsDelegation(token, run, config.marketingOpsDelegation);
       const refreshedClaims = decodeJwt(refreshed);
       jsonResponse(res, 200, {
@@ -1811,7 +1825,7 @@ const handleRequest = async (req, res) => {
     const token = typeof payload.delegation_token === "string" ? payload.delegation_token : "";
     try {
       const claims = decodeJwt(token);
-      const run = typeof claims.run_id === "string" ? store.get(claims.run_id) : null;
+      const run = typeof claims.run_id === "string" ? await store.get(claims.run_id) : null;
       const refreshed = await refreshPictureDelegation(token, run, config.pictureDelegation);
       const refreshedClaims = decodeJwt(refreshed);
       jsonResponse(res, 200, {
@@ -1830,7 +1844,7 @@ const handleRequest = async (req, res) => {
     const graphHealth = await fetchGraphHealth();
 
     if (runId) {
-      const run = store.get(runId);
+      const run = await store.get(runId);
       if (!run || run.user_id !== user.id) {
         jsonResponse(res, 404, { error: "run_not_found" }, corsHeaders);
         return;
@@ -1989,7 +2003,7 @@ const handleRequest = async (req, res) => {
     const payload = await readJsonBody(req);
     const run = await bridge.createRun({ user, payload });
     writeSseHeaders(req, res);
-    store.subscribe(run.id, res, { closeOnTerminal: true });
+    await store.subscribe(run.id, res, { closeOnTerminal: true });
     return;
   }
 
@@ -1997,7 +2011,7 @@ const handleRequest = async (req, res) => {
   if (stopRunMatch && req.method === "POST") {
     const user = await verifyUser(req);
     const runId = decodeURIComponent(stopRunMatch[1]);
-    const run = store.get(runId);
+    const run = await store.get(runId);
     assertStoppableHermesRun(run, user.id);
 
     const hermesBaseUrl = normalizeBaseUrl(config.hermesBaseUrl);
@@ -2058,7 +2072,7 @@ const handleRequest = async (req, res) => {
   if (runMatch && req.method === "GET") {
     const user = await verifyUser(req);
     const runId = decodeURIComponent(runMatch[1]);
-    const run = store.get(runId);
+    const run = await store.get(runId);
     if (!run || run.user_id !== user.id) {
       jsonResponse(res, 404, { error: "run_not_found" }, corsHeaders);
       return;
@@ -2067,7 +2081,7 @@ const handleRequest = async (req, res) => {
     if (url.pathname.endsWith("/events")) {
       writeSseHeaders(req, res);
       const cursor = Number(url.searchParams.get("cursor") ?? "0");
-      store.subscribe(run.id, res, {
+      await store.subscribe(run.id, res, {
         closeOnTerminal: true,
         startIndex: Number.isFinite(cursor) ? Math.max(0, Math.floor(cursor)) : 0,
       });
@@ -2086,7 +2100,7 @@ const handleRequest = async (req, res) => {
       requestId: body.request_id,
       choice,
     });
-    const run = store.get(approval.bridgeRunId);
+    const run = await store.get(approval.bridgeRunId);
     if (
       !run
       || run.user_id !== user.id
