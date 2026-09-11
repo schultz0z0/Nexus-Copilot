@@ -89,7 +89,7 @@ describe(
       assert.equal(report.database.available, true);
       assert.equal(typeof report.database.database_size_bytes, 'number');
       assert.equal(typeof report.database.connections_used, 'number');
-      assert.equal(report.database.latest_migration_version, '0003');
+      assert.equal(report.database.latest_migration_version, '0004');
 
       assert.equal(report.backup.status, 'ok');
       assert.match(report.backup.archive_sha256, /^[0-9a-f]{64}$/);

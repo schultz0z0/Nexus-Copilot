@@ -63,10 +63,10 @@ describe(
     });
 
     test('applies all migrations to an empty database and skips them on the second run', () => {
-      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003"\]/);
+      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004"\]/);
       const secondOutput = harness.migrate().stdout;
       assert.match(secondOutput, /"applied":\[\]/);
-      assert.match(secondOutput, /"skipped":\["0001","0002","0003"\]/);
+      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004"\]/);
     });
 
     test('creates non-owner application roles and owner-controlled RLS tables', async () => {
@@ -157,6 +157,7 @@ describe(
           'iam.memberships:memberships_select_current_tenant:SELECT',
           'iam.principals:principals_select_current:SELECT',
           'iam.tenants:tenants_select_current:SELECT',
+          'iam.user_chat_integrations:nexus_app_all:ALL',
         ],
       );
 
@@ -273,6 +274,31 @@ describe(
         }),
         /checksum mismatch.*0001/i,
       );
+    });
+
+    test('creates chat domain tables with nexus_app permissions', async () => {
+      const chatTables = await bootstrap.query(
+        `SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'chat' ORDER BY tablename`,
+      );
+      assert.deepEqual(
+        chatTables.rows.map((r) => r.tablename),
+        [
+          'bridge_runs',
+          'chat_confidence_logs',
+          'chat_messages',
+          'chat_session_hermes_state',
+          'chat_session_summaries',
+          'chat_sessions',
+        ],
+      );
+
+      const sessionInsert = await app.query(
+        `INSERT INTO chat.chat_sessions (id, user_id, title)
+         VALUES ('40000000-0000-4000-8000-000000000001', $1, 'Integration Test Session')
+         RETURNING id, title`,
+        [ids.userA],
+      );
+      assert.equal(sessionInsert.rows[0].title, 'Integration Test Session');
     });
   },
 );

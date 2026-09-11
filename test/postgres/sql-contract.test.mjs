@@ -135,11 +135,29 @@ test('RLS migration uses transaction-local context helpers and indexed tenant po
   assert.doesNotMatch(sql, /grant all/);
 });
 
+test('chat store migration creates chat schema, tables and evolutions', () => {
+  const sql = compactSql(migration('0004_chat_store.sql'));
+
+  assert.match(sql, /alter table iam\.principals add column email text unique/);
+  assert.match(sql, /alter table iam\.principals add column full_name text/);
+  assert.match(sql, /create table iam\.user_chat_integrations/);
+  assert.match(sql, /create schema chat authorization nexus_owner/);
+  assert.match(sql, /create table chat\.chat_sessions/);
+  assert.match(sql, /create table chat\.chat_messages/);
+  assert.match(sql, /create table chat\.chat_session_summaries/);
+  assert.match(sql, /create table chat\.chat_confidence_logs/);
+  assert.match(sql, /create table chat\.chat_session_hermes_state/);
+  assert.match(sql, /create table chat\.bridge_runs/);
+  assert.match(sql, /grant usage on schema chat to nexus_app/);
+  assert.match(sql, /grant select, insert, update, delete on all tables in schema chat to nexus_app/);
+});
+
 test('new PostgreSQL migrations contain no Supabase identity or role dependency', () => {
   const sql = [
     migration('0001_foundation_schemas.sql'),
     migration('0002_iam_tenancy.sql'),
     migration('0003_rls_canary.sql'),
+    migration('0004_chat_store.sql'),
   ].join('\n');
 
   assert.doesNotMatch(sql, /supabase|auth\.uid|request\.jwt|\bauthenticated\b/i);
