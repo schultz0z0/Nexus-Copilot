@@ -689,35 +689,39 @@ class RunStore {
     // Fetch all active runs from Postgres where status is not terminal
     const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?select=state&state->>status=not.in.(completed,failed,cancelled,canceled,expired,interrupted)`, {
       headers: this.headers
-    }).catch(() => null);
+    });
 
-    if (response?.ok) {
-      const rows = await response.json();
-      for (const row of rows) {
-        const run = row.state;
-        if (!run?.id) continue;
-        
-        if (!terminalStatuses.has(run.status)) {
-          if (!Array.isArray(run.events)) run.events = [];
-          if (!Array.isArray(run.files)) run.files = [];
-          if (!Array.isArray(run.attachments)) run.attachments = [];
-          if (!run.memory_diagnostics) {
-            run.memory_diagnostics = createInitialMemoryDiagnostics({
-              tenantId: run.tenant_id ?? config.defaultTenantId,
-              userId: run.user_id ?? "unknown",
-              routingContractEnabled: isNexusMemoryRoutingContractEnabled(),
-            });
-          }
-          
-          run.status = "interrupted";
-          run.error_message = "Bridge reiniciou antes do run terminar.";
-          run.updated_at = new Date().toISOString();
-          
-          this.runs.set(run.id, run);
-          await this.persist(run); // save interruption status back
+    if (!response.ok) {
+      throw new Error(`Failed to init RunStore: ${response.statusText}`);
+    }
+
+    const rows = await response.json();
+    const runsToPersist = [];
+    for (const row of rows) {
+      const run = row.state;
+      if (!run?.id) continue;
+      
+      if (!terminalStatuses.has(run.status)) {
+        if (!Array.isArray(run.events)) run.events = [];
+        if (!Array.isArray(run.files)) run.files = [];
+        if (!Array.isArray(run.attachments)) run.attachments = [];
+        if (!run.memory_diagnostics) {
+          run.memory_diagnostics = createInitialMemoryDiagnostics({
+            tenantId: run.tenant_id ?? config.defaultTenantId,
+            userId: run.user_id ?? "unknown",
+            routingContractEnabled: isNexusMemoryRoutingContractEnabled(),
+          });
         }
+        
+        run.status = "interrupted";
+        run.error_message = "Bridge reiniciou antes do run terminar.";
+        run.updated_at = new Date().toISOString();
+        
+        this.runs.set(run.id, run);
+        runsToPersist.push(run);
       }
     }
+    await Promise.all(runsToPersist.map(run => this.persist(run)));
   }
 
   async get(id) {
@@ -726,19 +730,22 @@ class RunStore {
     }
     const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?id=eq.${id}&select=state`, {
       headers: this.headers
-    }).catch(() => null);
+    });
 
-    if (response?.ok) {
-      const rows = await response.json();
-      if (rows.length > 0) {
-        return rows[0].state;
-      }
+    if (!response.ok) {
+      throw new Error(`Failed to get run ${id}: ${response.statusText}`);
     }
+
+    const rows = await response.json();
+    if (rows.length > 0) {
+      return rows[0].state;
+    }
+    
     return null;
   }
 
   async persist(run) {
-    await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?on_conflict=id`, {
+    const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?on_conflict=id`, {
       method: "POST",
       headers: { ...this.headers, Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify({
@@ -747,6 +754,10 @@ class RunStore {
         state: run
       })
     });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to persist run ${run.id}: ${response.statusText}`);
+    }
   }
 
   async save(run) {
