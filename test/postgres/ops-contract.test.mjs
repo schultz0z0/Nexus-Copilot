@@ -23,6 +23,8 @@ const dockerfileOps = join(repositoryRoot, 'infra', 'postgres', 'Dockerfile.ops'
 const backupScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'backup.sh');
 const commonScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'common.sh');
 const initRepoScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'init-repository.sh');
+const restoreDrillScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'restore-drill.sh');
+const validateRestoreSql = join(repositoryRoot, 'infra', 'postgres', 'ops', 'validate-restore.sql');
 
 function dockerComposeAvailable() {
   return spawnSync('docker', ['compose', 'version'], { encoding: 'utf8' }).status === 0;
@@ -127,5 +129,55 @@ test(
       'postgres_backup_password',
       'postgres_restic_password',
     ]);
+  },
+);
+
+test('restore-drill script verifies sha256 checksum, pg_restore, validate-restore.sql and fails closed if targeting postgres', () => {
+  const drill = readFileSync(restoreDrillScript, 'utf8');
+  assert.match(drill, /restic restore latest/);
+  assert.match(drill, /sha256sum --check/);
+  assert.match(drill, /pg_restore .*--list/);
+  assert.match(drill, /pg_restore .*--exit-on-error/);
+  assert.match(drill, /validate-restore\.sql/);
+  assert.match(drill, /PGHOST.*postgres/);
+  assert.doesNotMatch(drill, /set -x|echo .*password/i);
+});
+
+test('validate-restore.sql checks critical relations, role least-privilege, and sentinel data count', () => {
+  const sql = readFileSync(validateRestoreSql, 'utf8');
+  assert.match(sql, /iam\.tenants/);
+  assert.match(sql, /iam\.principals/);
+  assert.match(sql, /iam\.memberships/);
+  assert.match(sql, /app_private\.tenant_canary/);
+  assert.match(sql, /infra\.schema_migrations/);
+  assert.match(sql, /nexus_app/);
+  assert.match(sql, /nexus_owner/);
+});
+
+test(
+  'Compose defines isolated postgres-restore and postgres-restore-drill services without published ports',
+  { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
+  () => {
+    const result = renderOpsCompose(developmentComposeFile);
+    assert.equal(result.status, 0, result.stderr);
+
+    const configuration = JSON.parse(result.stdout);
+    const restoreService = configuration.services['postgres-restore'];
+    assert.ok(restoreService, 'postgres-restore service should exist');
+    assert.equal(restoreService.ports, undefined);
+
+    const restoreVolumes = restoreService.volumes ?? [];
+    assert.ok(
+      restoreVolumes.some((v) => v.source === 'postgres-restore-data' || v.target === '/var/lib/postgresql'),
+    );
+    assert.ok(
+      !restoreVolumes.some((v) => v.source === 'postgres-data'),
+      'postgres-restore must never mount postgres-data',
+    );
+
+    const drillService = configuration.services['postgres-restore-drill'];
+    assert.ok(drillService, 'postgres-restore-drill service should exist');
+    assert.equal(drillService.environment.PGHOST, 'postgres-restore');
+    assert.notEqual(drillService.environment.PGHOST, 'postgres');
   },
 );

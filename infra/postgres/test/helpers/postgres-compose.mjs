@@ -49,6 +49,7 @@ export class PostgresComposeHarness {
       POSTGRES_DATA_NETWORK_NAME: `${this.projectName}-network`,
       POSTGRES_BACKUP_VOLUME_NAME: `${this.projectName}-backup`,
       POSTGRES_BACKUP_ROOT: this.backupDirectory,
+      POSTGRES_RESTORE_DATA_VOLUME_NAME: `${this.projectName}-restore-data`,
     };
   }
 
@@ -140,6 +141,38 @@ export class PostgresComposeHarness {
 
   get backupStatusPath() {
     return join(this.backupDirectory, 'status', 'last-backup.json');
+  }
+
+  restoreDrill() {
+    this.compose(['up', '-d', '--wait', 'postgres-restore']);
+    this.compose(['run', '--rm', '--no-deps', 'postgres-restore-bootstrap']);
+    return this.compose(['run', '--rm', '--no-deps', 'postgres-restore-drill'], { allowFailure: true });
+  }
+
+  get restoreDrillStatusPath() {
+    return join(this.backupDirectory, 'status', 'last-restore-drill.json');
+  }
+
+  queryRestoredDatabase(sql) {
+    const result = this.compose(
+      [
+        'exec',
+        '-T',
+        '-e',
+        `PGPASSWORD=${this.passwords.bootstrap}`,
+        'postgres-restore',
+        'psql',
+        '-U',
+        'nexus_bootstrap',
+        '-d',
+        'nexus',
+        '-At',
+        '-c',
+        sql,
+      ],
+      { allowFailure: false },
+    );
+    return result.stdout.trim();
   }
 
   connectionConfig(role) {

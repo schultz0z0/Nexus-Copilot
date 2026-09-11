@@ -127,11 +127,111 @@ services:
     networks:
       - postgres-data
 
+  postgres-restore:
+    <<: *postgres-image
+    profiles:
+      - ops
+    restart: "no"
+    environment:
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus_bootstrap
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_bootstrap_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      PGDATA: /var/lib/postgresql/18/docker
+    secrets:
+      - postgres_bootstrap_password
+    volumes:
+      - postgres-restore-data:/var/lib/postgresql
+    networks:
+      - postgres-data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  postgres-restore-bootstrap:
+    <<: *postgres-image
+    profiles:
+      - ops
+    restart: "no"
+    user: postgres
+    depends_on:
+      postgres-restore:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - /opt/nexus-postgres/bootstrap-roles.sh
+    environment:
+      PGHOST: postgres-restore
+      PGPORT: "5432"
+      PGDATABASE: nexus
+      PGUSER: nexus_bootstrap
+    secrets:
+      - postgres_bootstrap_password
+      - postgres_migrator_password
+      - postgres_app_password
+      - postgres_backup_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./bootstrap:/opt/nexus-postgres/bootstrap:ro
+      - ./scripts/bootstrap-roles.sh:/opt/nexus-postgres/bootstrap-roles.sh:ro
+    networks:
+      - postgres-data
+
+  postgres-restore-drill:
+    build:
+      context: .
+      dockerfile: Dockerfile.ops
+    profiles:
+      - ops
+    restart: "no"
+    depends_on:
+      postgres-restore-bootstrap:
+        condition: service_completed_successfully
+    entrypoint:
+      - /bin/sh
+      - /opt/nexus-postgres/ops/restore-drill.sh
+    environment:
+      PGHOST: postgres-restore
+      PGPORT: "5432"
+      PGDATABASE: nexus
+      PGUSER: nexus_bootstrap
+      PGPASSWORD_FILE: /run/secrets/postgres_bootstrap_password
+      RESTIC_PASSWORD_FILE: /run/secrets/postgres_restic_password
+      RESTIC_REPOSITORY: /var/lib/nexus-backup/restic
+    secrets:
+      - postgres_bootstrap_password
+      - postgres_restic_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - postgres-backup:/var/lib/nexus-backup
+      - ./ops:/opt/nexus-postgres/ops:ro
+    networks:
+      - postgres-data
+
 volumes:
   postgres-data:
     name: ${POSTGRES_DATA_VOLUME_NAME:-ens-postgres-data}
   postgres-backup:
     name: ${POSTGRES_BACKUP_VOLUME_NAME:-ens-postgres-backup}
+  postgres-restore-data:
+    name: ${POSTGRES_RESTORE_DATA_VOLUME_NAME:-ens-postgres-restore-data}
 
 networks:
   postgres-data:

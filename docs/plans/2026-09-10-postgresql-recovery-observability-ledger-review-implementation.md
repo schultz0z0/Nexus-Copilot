@@ -285,19 +285,19 @@ rtk git commit -m "test(postgres): verify encrypted backup end to end"
   `/var/lib/nexus-backup/status/last-restore-drill.json` com duração e
   `rto_compliant`; método `harness.restoreDrill()`.
 
-- [ ] **Step 1: escrever contratos e integração falhando**
+- [x] **Step 1: escrever contratos e integração falhando**
 
 Exigir que `postgres-restore` use `postgres-restore-data`, não publique portas e
 não monte `postgres-data`. A integração deve remover/mutar dados da origem após
 o backup, restaurar no destino e comparar as sentinelas recuperadas.
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk node --test test/postgres/ops-contract.test.mjs infra/postgres/test/restore-drill.integration.test.mjs`
 
 Expected: FAIL pela ausência do serviço e script.
 
-- [ ] **Step 3: implementar restore mínimo e fail-closed**
+- [x] **Step 3: implementar restore mínimo e fail-closed**
 
 O script deve executar:
 
@@ -312,13 +312,13 @@ psql -X --set ON_ERROR_STOP=1 --file /opt/nexus-postgres/validate-restore.sql
 Antes de restaurar, confirmar que o destino não contém relações de usuário.
 Nunca aceitar `PGHOST=postgres` no job de drill.
 
-- [ ] **Step 4: confirmar GREEN e falhas seguras**
+- [x] **Step 4: confirmar GREEN e falhas seguras**
 
 Run: `rtk node --test test/postgres/ops-contract.test.mjs infra/postgres/test/restore-drill.integration.test.mjs`
 
 Expected: PASS para sucesso, checksum inválido, destino não vazio e senha errada.
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 rtk git add infra/postgres/ops infra/postgres/compose.yaml infra/postgres/test test/postgres/ops-contract.test.mjs

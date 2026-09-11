@@ -11,3 +11,8 @@ services:
     volumes:
       - "${POSTGRES_BACKUP_ROOT:-postgres-backup}:/var/lib/nexus-backup"
       - ./ops:/opt/nexus-postgres/ops:ro
+
+  postgres-restore-drill:
+    volumes:
+      - "${POSTGRES_BACKUP_ROOT:-postgres-backup}:/var/lib/nexus-backup"
+      - ./ops:/opt/nexus-postgres/ops:ro
