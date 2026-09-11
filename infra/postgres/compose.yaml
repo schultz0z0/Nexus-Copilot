@@ -92,9 +92,46 @@ services:
     networks:
       - postgres-data
 
+  postgres-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.ops
+    profiles:
+      - ops
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - /opt/nexus-postgres/ops/backup.sh
+    environment:
+      <<: *postgres-client-environment
+      PGUSER: nexus_backup
+      PGPASSWORD_FILE: /run/secrets/postgres_backup_password
+      RESTIC_PASSWORD_FILE: /run/secrets/postgres_restic_password
+      RESTIC_REPOSITORY: /var/lib/nexus-backup/restic
+    secrets:
+      - postgres_backup_password
+      - postgres_restic_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - postgres-backup:/var/lib/nexus-backup
+      - ./ops:/opt/nexus-postgres/ops:ro
+    networks:
+      - postgres-data
+
 volumes:
   postgres-data:
     name: ${POSTGRES_DATA_VOLUME_NAME:-ens-postgres-data}
+  postgres-backup:
+    name: ${POSTGRES_BACKUP_VOLUME_NAME:-ens-postgres-backup}
 
 networks:
   postgres-data:
@@ -109,3 +146,5 @@ secrets:
     file: ${POSTGRES_APP_PASSWORD_FILE:-./secrets/postgres_app_password}
   postgres_backup_password:
     file: ${POSTGRES_BACKUP_PASSWORD_FILE:-./secrets/postgres_backup_password}
+  postgres_restic_password:
+    file: ${POSTGRES_RESTIC_PASSWORD_FILE:-./secrets/postgres_restic_password}

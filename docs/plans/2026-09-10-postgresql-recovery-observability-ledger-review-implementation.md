@@ -119,7 +119,7 @@ rtk git commit -m "feat(postgres): add isolated backup role"
   `nexus.dump` e `manifest.json`, e status atômico
   `/var/lib/nexus-backup/status/last-backup.json`.
 
-- [ ] **Step 1: escrever contrato falhando da imagem e scripts**
+- [x] **Step 1: escrever contrato falhando da imagem e scripts**
 
 O teste deve exigir:
 
@@ -138,13 +138,13 @@ assert.doesNotMatch(backup, /set -x|echo .*password/i);
 Também renderizar o Compose e validar `read_only`, `cap_drop: ALL`,
 `no-new-privileges`, ausência de portas e secrets por arquivo.
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk node --test test/postgres/ops-contract.test.mjs`
 
 Expected: FAIL porque imagem, scripts e serviço ainda não existem.
 
-- [ ] **Step 3: implementar helper e inicialização explícita**
+- [x] **Step 3: implementar helper e inicialização explícita**
 
 `common.sh` deve oferecer somente estas funções públicas:
 
@@ -157,7 +157,7 @@ require_directory() # valida mount esperado sem criá-lo silenciosamente
 `init-repository.sh` executa `restic snapshots`; inicializa apenas quando
 `ALLOW_REPOSITORY_INIT=1` e o erro indicar repositório inexistente.
 
-- [ ] **Step 4: implementar backup mínimo**
+- [x] **Step 4: implementar backup mínimo**
 
 `backup.sh` deve:
 
@@ -173,19 +173,19 @@ restic check --read-data-subset "${RESTIC_CHECK_SUBSET:-5%}"
 O `trap` remove staging em qualquer saída; erro gera status com código estável,
 sem mensagem bruta potencialmente sensível.
 
-- [ ] **Step 5: confirmar GREEN**
+- [x] **Step 5: confirmar GREEN**
 
 Run: `rtk node --test test/postgres/ops-contract.test.mjs`
 
 Expected: PASS.
 
-- [ ] **Step 6: validar Compose completo**
+- [x] **Step 6: validar Compose completo**
 
 Run: `rtk npm run test:postgres:contract`
 
 Expected: PASS.
 
-- [ ] **Step 7: commit**
+- [x] **Step 7: commit**
 
 ```bash
 rtk git add infra/postgres/Dockerfile.ops infra/postgres/ops infra/postgres/compose.yaml test/postgres/ops-contract.test.mjs package.json

@@ -29,7 +29,7 @@ function renderCompose(overrideFile, environment = {}) {
   const secretDirectory = mkdtempSync(join(tmpdir(), 'ens-postgres-contract-'));
   const secretEnvironment = {};
 
-  for (const name of ['bootstrap', 'migrator', 'app', 'backup']) {
+  for (const name of ['bootstrap', 'migrator', 'app', 'backup', 'restic']) {
     const secretPath = join(secretDirectory, `${name}.txt`);
     writeFileSync(secretPath, `contract-test-${name}\n`, { mode: 0o600 });
     secretEnvironment[`POSTGRES_${name.toUpperCase()}_PASSWORD_FILE`] = secretPath;
