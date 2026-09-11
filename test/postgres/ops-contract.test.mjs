@@ -25,6 +25,8 @@ const commonScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'common.sh
 const initRepoScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'init-repository.sh');
 const restoreDrillScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'restore-drill.sh');
 const validateRestoreSql = join(repositoryRoot, 'infra', 'postgres', 'ops', 'validate-restore.sql');
+const observeScript = join(repositoryRoot, 'infra', 'postgres', 'ops', 'observe.sh');
+const observeSql = join(repositoryRoot, 'infra', 'postgres', 'ops', 'observe.sql');
 
 function dockerComposeAvailable() {
   return spawnSync('docker', ['compose', 'version'], { encoding: 'utf8' }).status === 0;
@@ -179,5 +181,31 @@ test(
     assert.ok(drillService, 'postgres-restore-drill service should exist');
     assert.equal(drillService.environment.PGHOST, 'postgres-restore');
     assert.notEqual(drillService.environment.PGHOST, 'postgres');
+
+    const observeService = configuration.services['postgres-observe'];
+    assert.ok(observeService, 'postgres-observe service should exist');
+    assert.equal(observeService.ports, undefined);
+    assert.equal(observeService.read_only, true);
+    assert.equal(observeService.environment.PGUSER, 'nexus_backup');
   },
 );
+
+test('observe script sanitizes outputs and evaluates compliance with fail closed on critical', () => {
+  const observe = readFileSync(observeScript, 'utf8');
+  assert.match(observe, /observe\.sql/);
+  assert.match(observe, /last-backup\.json/);
+  assert.match(observe, /last-restore-drill\.json/);
+  assert.match(observe, /3600/);
+  assert.match(observe, /7200/);
+  assert.doesNotMatch(observe, /set -x|echo .*password/i);
+});
+
+test('observe.sql queries database size, activity and migrations without selecting query texts', () => {
+  const sql = readFileSync(observeSql, 'utf8');
+  assert.match(sql, /version\(\)/);
+  assert.match(sql, /pg_database_size/);
+  assert.match(sql, /pg_stat_activity/);
+  assert.match(sql, /pg_locks/);
+  assert.match(sql, /infra\.schema_migrations/);
+  assert.doesNotMatch(sql, /query\b|query_start|client_addr/i);
+});

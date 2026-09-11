@@ -341,7 +341,7 @@ rtk git commit -m "feat(postgres): add isolated restore drill"
 - Produces: um objeto JSON em stdout com `database`, `backup`, `restore_drill`
   e `compliance`; zero quando saudável e não zero quando RPO/RTO falham.
 
-- [ ] **Step 1: escrever teste falhando do contrato JSON**
+- [x] **Step 1: escrever teste falhando do contrato JSON**
 
 Validar chaves permitidas e negar recursivamente nomes como:
 
@@ -352,32 +352,32 @@ assert.equal(report.compliance.rpo_target_seconds, 3600);
 assert.equal(report.compliance.rto_target_seconds, 7200);
 ```
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk node --test infra/postgres/test/observability.integration.test.mjs`
 
 Expected: FAIL porque o comando não existe.
 
-- [ ] **Step 3: implementar consulta allowlisted**
+- [x] **Step 3: implementar consulta allowlisted**
 
 `observe.sql` deve construir JSON diretamente no PostgreSQL usando apenas
 `version()`, `pg_database_size`, `pg_stat_activity`, `pg_locks` e
 `infra.schema_migrations`. Não selecionar texto de query, nomes de aplicações,
 endereços ou identificadores de negócio.
 
-- [ ] **Step 4: implementar avaliação de status**
+- [x] **Step 4: implementar avaliação de status**
 
 `observe.sh` valida JSON de backup/drill, aplica 3600/7200 segundos e imprime
 apenas o documento final. Ausência ou expiração deve resultar em estado
 `critical` e código não zero.
 
-- [ ] **Step 5: confirmar GREEN e regressão**
+- [x] **Step 5: confirmar GREEN e regressão**
 
 Run: `rtk node --test infra/postgres/test/observability.integration.test.mjs && rtk npm run test:postgres`
 
 Expected: PASS.
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 rtk git add infra/postgres/ops infra/postgres/compose.yaml infra/postgres/test test/postgres/ops-contract.test.mjs

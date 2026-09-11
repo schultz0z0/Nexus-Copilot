@@ -16,3 +16,8 @@ services:
     volumes:
       - "${POSTGRES_BACKUP_ROOT:-postgres-backup}:/var/lib/nexus-backup"
       - ./ops:/opt/nexus-postgres/ops:ro
+
+  postgres-observe:
+    volumes:
+      - "${POSTGRES_BACKUP_ROOT:-postgres-backup}:/var/lib/nexus-backup:ro"
+      - ./ops:/opt/nexus-postgres/ops:ro

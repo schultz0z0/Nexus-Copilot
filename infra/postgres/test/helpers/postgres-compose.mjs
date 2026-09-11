@@ -91,6 +91,7 @@ export class PostgresComposeHarness {
     this.compose(['run', '--rm', '--no-deps', 'postgres-bootstrap']);
     this.compose(['build', 'postgres-migrate']);
     this.compose(['build', 'postgres-backup']);
+    this.compose(['build', 'postgres-observe']);
     return this.migrate();
   }
 
@@ -173,6 +174,10 @@ export class PostgresComposeHarness {
       { allowFailure: false },
     );
     return result.stdout.trim();
+  }
+
+  observe() {
+    return this.compose(['run', '--rm', '--no-deps', '-T', 'postgres-observe'], { allowFailure: true });
   }
 
   connectionConfig(role) {

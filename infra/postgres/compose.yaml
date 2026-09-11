@@ -225,6 +225,38 @@ services:
     networks:
       - postgres-data
 
+  postgres-observe:
+    build:
+      context: .
+      dockerfile: Dockerfile.ops
+    profiles:
+      - ops
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - /opt/nexus-postgres/ops/observe.sh
+    environment:
+      <<: *postgres-client-environment
+      PGUSER: nexus_backup
+      PGPASSWORD_FILE: /run/secrets/postgres_backup_password
+    secrets:
+      - postgres_backup_password
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - postgres-backup:/var/lib/nexus-backup:ro
+      - ./ops:/opt/nexus-postgres/ops:ro
+    networks:
+      - postgres-data
+
 volumes:
   postgres-data:
     name: ${POSTGRES_DATA_VOLUME_NAME:-ens-postgres-data}
