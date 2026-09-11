@@ -29,14 +29,14 @@ do legado sem aceite no alvo não conta como concluído.
 | Marco | Peso no programa | Crédito atual estimado | Base da estimativa |
 | --- | ---: | ---: | --- |
 | M0 | 8% | 8% | concluído |
-| M1 | 12% | 9% | paridade e recuperação locais; produção e rollback do core pendentes |
+| M1 | 12% | 12% | concluído; paridade local, recuperação e deploy em produção na VPS validados |
 | M2 | 14% | 12% | protocolo local comprovado; RunStore migrado para PostgreSQL; provider real e VPS pendentes |
 | M3 | 18% | 16% | fundação, backup/restore, observabilidade e schemas de domínio chat/iam aprovados com Docker; VPS pendente |
-| M4 | 18% | 0% | ainda sem aceite de Auth e App API/BFF |
+| M4 | 18% | 0% | ADR-0003 e plano arquitetural registrados; implementação de Auth e App API/BFF pendente |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **45% concluído / 55% restante** | estimativa conservadora em 2026-09-11 |
+| **Total** | **100%** | **48% concluído / 52% restante** | estimativa em 2026-09-11 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -78,21 +78,15 @@ corporativo além do escopo aprovado.
 **Plano ativo:**
 [2026-08-28-hermes-official-runtime-implementation.md](../plans/2026-08-28-hermes-official-runtime-implementation.md).
 
-**Situação em 2026-09-09:** a
-[paridade Docker Desktop](../operations/hermes-docker-desktop-parity.md) foi
-exercitada no projeto isolado `ens-hermes-m1`. Init/update real, um único
-gateway `ens`, health/capabilities, restart, recriação e persistência passaram;
-o volume de evidência foi preservado e nenhum container ficou ativo.
-
-Em um segundo exercício local, backup/checksum, restore em volume novo e
-update/rollback do Profile ENS passaram com smoke autenticado. Os volumes de
-origem e restore foram preservados e nenhum container permaneceu ativo.
-
-M1 não está concluído: rollback do core entre dois pins auditados e o deploy VPS
-com HTTPS/OAuth real continuam sem exercício. Na produção, o responsável humano
-executará os comandos fornecidos e devolverá saídas/logs redigidos para validação;
-o agente não acessará a VPS diretamente. A matriz detalhada está no
-[plano de implementação](../plans/2026-08-28-hermes-official-runtime-implementation.md#matriz-de-aceite-em-2026-09-09).
+**Situação em 2026-09-11:** M1 **concluído com sucesso na VPS**. O deploy em produção
+foi executado pelo operador humano com apoio copiloto do agente em 2026-09-11
+([runbook de primeiro deploy](../operations/hermes-first-deploy.md)).
+O container `ens-hermes-hermes-1` está ativo e saudável (`Up healthy`) sob
+supervisão do `s6-overlay`. O profile `ens@0.1.1` está ativo no volume persistente
+`ens-hermes-data` com schemas migrados até a versão 39. A API interna (`8642`)
+passou com `PASS` em liveness e capabilities. O Dashboard está seguro e publicado
+via Traefik em `https://hermes.solucoes-nexus.tech` com TLSv1.3 e Let's Encrypt,
+com autenticação básica ativa. A porta `8642` permanece isolada da internet.
 
 ## M2 — Protocolo oficial do agente
 

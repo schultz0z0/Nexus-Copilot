@@ -1,30 +1,47 @@
 # Primeiro deploy do Hermes oficial na VPS
 
-Status: implementado, ainda não exercitado em VPS.
+Status: exercitado com sucesso na VPS em 2026-09-11; runtime oficial ativo e saudável.
 
-## Evidência do ensaio Docker Desktop
+## Evidência do deploy na VPS (2026-09-11)
 
-**Estado em 2026-09-09: paridade Docker Desktop comprovada.** Depois de
-autorização específica, o ensaio isolado executou pull do digest fixado, init
-real, runtime, health/capabilities, restart, segundo init e recriação completa.
+Deploy executado pelo operador humano com apoio de copiloto do agente,
+conforme as regras do `AGENTS.md`.
 
 Evidência resumida:
 
-- Docker Desktop `4.88.1`, Engine `29.7.2`, Compose `v5.4.0`, `linux/amd64`;
-- imagem observada com o digest aprovado e revisão upstream
-  `5fc308a70719a83cccdbba4c0e39c23f5a8239d5`;
-- Profile Distribution `ens@0.1.1`, configs raiz/profile no schema `39`;
-- somente o gateway `ens` em execução; gateway `default` parado;
-- container `healthy`, modelo virtual `ens`, liveness/capabilities aprovadas e
-  única degradação em `model` por provider deliberadamente ausente;
-- bind local somente em `127.0.0.1:18642`, dashboard desabilitado;
-- volume `ens-hermes-m1-data` preservado depois de restart e `down`/`up`;
-- nenhum container do projeto permaneceu ao final.
+- Host: Linux `x86_64`, Docker Engine `29.4.0`, Docker Compose `v5.1.2`, Node.js `v22.22.2`;
+- Diretório de checkout: `/opt/prometeus-marketing`, commit `1c9618e`;
+- Imagem: `nousresearch/hermes-agent:v2026.8.27` no digest fixado
+  `sha256:e0df6adebddf29b91112aefc999d4aaf6846c9eb544faca5672a16a13590ff79`;
+- Volume: `ens-hermes-data` criado;
+- Profile Distribution: `ens@0.1.1` instalado no volume dedicado, schemas migrados
+  para `_config_version: 39`;
+- Supervisão e runtime: container `ens-hermes-hermes-1` executando sob `s6-overlay`,
+  com status `Up (healthy)`;
+- Correção de supervisão: remoção da flag legada `--no-supervise` no Compose,
+  permitindo que o `s6` gerencie o gateway em background e auto-reinicie em falhas;
+- Autenticação do dashboard: configurada na raiz do volume (`/opt/data/config.yaml`)
+  com `dashboard.basic_auth.username = admin` e hash criptográfico `scrypt`;
+- Smoke test interno na API (`8642`):
+  - Liveness: `PASS`
+  - Capabilities: `PASS` (motor oficial de Runs, Events SSE e Approvals ativo)
+  - Readiness: `DEGRADED provider_unconfigured` (deliberado e permitido no primeiro deploy);
+- Traefik e HTTPS: Traefik externo (`network_mode: host`) roteando
+  `https://hermes.solucoes-nexus.tech` para a porta `9119` do container;
+  resposta `HTTP/2 302` redirecionando para `/login?next=%2F` com certificado válido
+  Let's Encrypt (TLSv1.3);
+- Fronteira de segurança: API interna (`8642`) sem publicação de portas e inacessível
+  pela internet.
 
-O registro completo, inclusive falhas encontradas e correções, está no runbook
-de [paridade no Docker Desktop](hermes-docker-desktop-parity.md). Backup/restore
-e update/rollback do Profile ENS foram comprovados depois, em volume isolado.
-Esta evidência ainda não comprova deploy VPS, HTTPS/OAuth nem rollback do core.
+## Evidência prévia do ensaio Docker Desktop (2026-09-09)
+
+Evidência local anterior preservada para referência histórica:
+
+- Docker Desktop `4.88.1`, Engine `29.7.2`, Compose `v5.4.0`, `linux/amd64`;
+- imagem observada com o digest aprovado e revisão upstream `5fc308a70719a83cccdbba4c0e39c23f5a8239d5`;
+- Profile Distribution `ens@0.1.1`, configs raiz/profile no schema `39`;
+- container `healthy`, bind local somente em `127.0.0.1:18642`, dashboard desabilitado;
+- volume `ens-hermes-m1-data` preservado após ciclos de restart e `down`/`up`.
 
 ## Responsabilidade pela execução na VPS
 

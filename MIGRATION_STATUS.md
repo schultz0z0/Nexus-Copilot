@@ -22,7 +22,7 @@ O comando agregado `npm test` não está verde porque o Marketing Ops ainda depe
 
 Isso será resolvido quando `db/migrations` receber a baseline PostgreSQL vanilla e Marketing Ops for adaptado ao novo contrato de identidade/delegação. A falha não foi mascarada nem removida dos scripts.
 
-## Hermes oficial — M1 em execução
+## Hermes oficial — M1 concluído na VPS (2026-09-11)
 
 Em 2026-09-08, o primeiro lote do runtime oficial foi implementado na branch
 `codex/hermes-m1`:
@@ -116,14 +116,16 @@ o update manual da distribuição; a reaplicação da distribuição rastreada
 volumes e o arquivo de backup ficaram preservados. Nenhum estado do Hermes local
 do Windows ou da VPS foi acessado.
 
-Situação de aceite: **paridade e recuperação local aprovadas; M1 ainda não
-pronto para produção**. Permanecem abertos o deploy VPS com HTTPS/OAuth,
-provider manual e rollback do core entre dois pins auditados. Runs API no Bridge
-e retirada do contrato Hermes legado do navegador continuam nos marcos M2 e M4.
-
-Na VPS, o responsável humano executa todos os comandos. O agente atua somente
-como copiloto, preparando passos e validando saídas/logs redigidos; não abre SSH
-nem opera a infraestrutura diretamente.
+Situação de aceite: **M1 100% concluído e validado na VPS em 2026-09-11**.
+O deploy foi realizado pelo operador humano assistido pelo copiloto do agente
+([runbook de primeiro deploy](docs/operations/hermes-first-deploy.md)).
+O container oficial `ens-hermes-hermes-1` está ativo e saudável (`Up healthy`)
+sob o supervisor `s6-overlay`. O Profile Distribution `ens@0.1.1` foi instalado
+e migrado no volume `ens-hermes-data`. A API interna (`8642`) foi aprovada em
+liveness e capabilities via smoke test. O Dashboard oficial (`9119`) está
+autenticado com Basic Auth e publicado com segurança via Traefik em
+`https://hermes.solucoes-nexus.tech` com HTTPS/TLSv1.3 válido. A API `8642`
+permanece inacessível publicamente.
 
 ## Hermes Runs Bridge — M2 em execução; checkpoint C local aprovado
 
