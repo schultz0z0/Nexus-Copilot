@@ -98,8 +98,7 @@ acoplamentos arquiteturais indesejados.
 - 0 chamadas do frontend para SDK/endpoints Supabase no build de produção final.
 - 0 componentes do core Hermes copiados ou modificados no monorepo.
 - 0 portas públicas não aprovadas para banco, API Hermes, Bridge ou MCPs.
-- restauração do backup testada dentro do objetivo de recuperação que será
-  definido no ADR operacional.
+- restauração do backup lógico e drill de integridade testados com objetivos operacionais comprovados (RPO 1h / RTO 2h).
 - documentação de cada fase contém evidência suficiente para retomada por uma
   nova sessão.
 
@@ -153,7 +152,7 @@ acoplamentos arquiteturais indesejados.
 - desenho exato de RLS e propagação de identidade/tenant no PostgreSQL;
 - object storage local e política de retenção;
 - substitutos para realtime, filas, cron e funções legadas do Supabase;
-- SLOs, RPO e RTO definitivos;
+- SLOs definitivos de runtime da aplicação (RPO de 1h e RTO de 2h para PostgreSQL definidos e exercitados em M3);
 - critérios e data para retirar o dashboard Hermes da internet.
 
 Cada decisão estrutural pendente deverá gerar um ADR antes da implementação.

@@ -1,7 +1,7 @@
 # Inventário de capacidades Supabase e destinos locais
 
-**Estado:** Em execução  
-**Atualizado em:** 2026-09-10  
+**Estado:** Em execução
+**Atualizado em:** 2026-09-11
 **Marcos:** M3, M4, M5 e M6  
 **Fonte histórica:** `projeto-ens-unificado/apps/chat-web/supabase`
 
@@ -41,13 +41,14 @@ de todos os objetos DDL — tabelas, colunas, constraints, índices, policies,
 funções, triggers, buckets e jobs — com decisão `migrar`, `transformar` ou
 `remover` e responsável definido.
 
-## Ledger automatizado em 2026-09-10
+## Ledger automatizado e revisão em 2026-09-11
 
-O [ledger sanitizado](supabase-ledger/supabase-object-ledger.md) agora reconcilia
-as fontes allowlisted sem executar SQL e sem versionar corpos SQL, dados ou
-caminhos absolutos. Os JSONs verificáveis são o
-[manifesto de fontes](supabase-ledger/source-manifest.json) e o
-[overlay de decisões](supabase-ledger/object-decisions.json).
+O [ledger sanitizado](supabase-ledger/supabase-object-ledger.md) reconcilia as fontes
+allowlisted sem executar SQL e sem versionar corpos SQL, dados ou caminhos
+absolutos. Os artefatos verificáveis são o
+[manifesto de fontes](supabase-ledger/source-manifest.json), o
+[overlay de decisões](supabase-ledger/object-decisions.json) e as
+[revisões humanas aprovadas](supabase-ledger/reviews/iam-chat.json).
 
 | Medida | Resultado |
 | --- | ---: |
@@ -59,24 +60,18 @@ caminhos absolutos. Os JSONs verificáveis são o
 | Operações sanitizadas | 2.904 |
 | Objetos lógicos | 2.672 |
 | Operações não classificadas | 0 |
-| Propostas `transform` | 1.542 |
-| Propostas `remove` | 60 |
+| Decisões aprovadas (overlay humano) | 166 |
+| Decisões propostas restantes | 2.506 |
 | Propostas `pending` | 1.070 |
-| Decisões aprovadas automaticamente | 0 |
 
-O scanner usa Python 3.11, `pglast==8.4` com hashes e uma imagem de paridade
-Python 3.11.16 slim-bookworm fixada pelo digest
-`sha256:528257d48c1da0dcecc2e725d1ae34498d60c965f1241e39cd6a85a8859bdf84`.
-A verificação offline passou sem carregar `site-packages`; o scan real gerou os
-mesmos bytes no Windows e no container Linux sem rede, com a origem montada
-somente para leitura.
-
-Limites deliberados: corpos PL/pgSQL não são analisados como texto; `DO`, DML e
-chamadas de backfill não reconhecidas viram referências por hash com revisão
-obrigatória. Constraints sem nome explícito recebem identidade sintética estável
-para a versão da fonte. Todas as 2.672 linhas continuam `proposed`; as 1.070
-linhas `pending` precisam de resolução de domínio/ADR antes de o critério de
-destino aprovado em M3 ser considerado atendido.
+Em 2026-09-11, foi aplicado o primeiro lote de revisão humana seletiva
+(`iam-chat.json`), aprovando 166 objetos: 22 grants Supabase obsoletos foram
+marcados para remoção (`remove`), o proxy do chatbot foi aprovado para
+transformação no Chat Bridge e estruturas canônicas de IAM e Chat Store
+receberam destinos nomeados. Conforme a regra de menor privilégio, policies sem
+substituto aprovado, triggers entre domínios e campos de credencial/segredos
+permaneceram deliberadamente como `proposed`. As 1.070 linhas `pending` continuam
+exigindo resolução de domínio/ADR antes do cutover final.
 
 ## Matriz de capacidades
 

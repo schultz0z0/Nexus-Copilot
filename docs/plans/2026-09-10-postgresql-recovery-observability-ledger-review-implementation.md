@@ -488,13 +488,13 @@ rtk git commit -m "feat(ledger): apply selective IAM and chat review"
 - Produces: procedimentos completos para desenvolvimento e produção e estado de
   migração atualizado com percentual conservador.
 
-- [ ] **Step 1: documentar desenvolvimento**
+- [x] **Step 1: documentar desenvolvimento**
 
 Registrar inicialização do Restic, backup, inspeção, restore drill,
 observabilidade e limpeza. Cada comando deve indicar saída esperada e arquivos
 temporários criados.
 
-- [ ] **Step 2: documentar produção para o operador**
+- [x] **Step 2: documentar produção para o operador**
 
 Para cada ação incluir:
 
@@ -508,13 +508,13 @@ Para cada ação incluir:
 
 Não pedir que credenciais sejam coladas no chat.
 
-- [ ] **Step 3: atualizar governança**
+- [x] **Step 3: atualizar governança**
 
 Marcar critérios realmente comprovados, registrar limitações de backup no mesmo
 host, itens restantes de M3/M4 e recalcular o percentual global sem declarar
 conclusão de Auth/Chat.
 
-- [ ] **Step 4: executar verificação final fresca**
+- [x] **Step 4: executar verificação final fresca**
 
 Run:
 
@@ -528,7 +528,7 @@ rtk git diff --check
 
 Expected: todas as suítes do escopo passam; nenhum erro de whitespace.
 
-- [ ] **Step 5: inspecionar segredos e artefatos**
+- [x] **Step 5: inspecionar segredos e artefatos**
 
 Run:
 
@@ -540,7 +540,7 @@ rtk git ls-files | Select-String -Pattern 'last-backup|last-restore|nexus\.dump|
 Expected: somente fontes/documentação esperadas; nenhum dump, status ou password
 versionado.
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 rtk git add docs package.json infra/postgres tools/supabase-ledger test/postgres

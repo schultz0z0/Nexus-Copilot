@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-10
+**Atualizado em:** 2026-09-11
 
 ## Regra de progressão
 
@@ -14,7 +14,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
 | M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
 | M2 — protocolo do agente | Em execução; checkpoint C local aprovado | contrato Bridge/Runtime comprovado sem provider; aceite real com provider e VPS pendentes |
-| M3 — fundação PostgreSQL | Pendente | schema, migrações, RLS e operação local próprios |
+| M3 — fundação PostgreSQL | Em execução; fundação, recuperação e observabilidade locais aprovadas | schema, migrações, RLS, backup Restic, restore drill e observabilidade comprovados; VPS e domínios pendentes |
 | M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
 | M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
 | M6 — dados e cutover | Pendente | migração validada, reconciliação e troca de tráfego |
@@ -31,12 +31,12 @@ do legado sem aceite no alvo não conta como concluído.
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 9% | paridade e recuperação locais; produção e rollback do core pendentes |
 | M2 | 14% | 10% | protocolo local comprovado; provider real, VPS e RunStore pendentes |
-| M3 | 18% | 8% | fundação e ledger local; aprovação, backup/restore e domínios pendentes |
+| M3 | 18% | 13% | fundação, backup/restore, observabilidade e revisão IAM/Chat locais aprovados; domínios e VPS pendentes |
 | M4 | 18% | 0% | ainda sem aceite de Auth e App API/BFF |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **35% concluído / 65% restante** | estimativa conservadora em 2026-09-10 |
+| **Total** | **100%** | **40% concluído / 60% restante** | estimativa conservadora em 2026-09-11 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -135,16 +135,18 @@ M3 e M4.
 
 ## M3 — Fundação PostgreSQL
 
-**Estado:** Em execução. O primeiro lote — runtime, migrations, menor privilégio,
-RLS e documentação operacional — foi aprovado localmente em 2026-09-10. O
-inventário inicial de capacidades e tabelas legadas está registrado. No ledger
-DDL, descoberta segura, parser fixado, identidades estáveis, classificação
-fail-closed de DDL/recursos e verificação do overlay de decisões já estão
-implementados. CLI determinística, varredura real das 87 fontes e paridade em
-container Linux sem rede foram comprovadas. As 2.672 propostas ainda exigem
-revisão humana, incluindo 1.070 ações pendentes. Backup/restore, observabilidade
-e migração dos domínios também permanecem pendentes; produção ainda não está
-autorizada.
+**Estado:** Em execução. O runtime, migrations, menor privilégio, RLS e a operação
+básica foram aprovados em 2026-09-10. Em 2026-09-11, o lote de operações de
+recuperação e observabilidade foi concluído: papel de menor privilégio
+`nexus_backup`, imagem e container hardened de operações, backup lógico
+criptografado no Restic com retenção (48h, 14d, 8w), restore drill isolado com
+verificação fail-closed e teste de dados sentinela, e observabilidade
+sanitizada com avaliação de conformidade de RPO (3600s) e RTO (7200s). No ledger,
+o primeiro lote de revisão humana seletiva (`iam-chat.json`) foi aplicado,
+aprovando 166 objetos e marcando 22 grants Supabase obsoletos para remoção.
+As 1.070 ações `pending` continuam exigindo resolução de domínio/ADR; a migração
+dos schemas de aplicação e o deploy assistido na VPS continuam pendentes antes
+do encerramento deste marco.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
@@ -152,34 +154,31 @@ autorizada.
 legado.
 
 **Entregas:** Compose do PostgreSQL, ferramenta de migrations, roles com menor
-privilégio, modelo de tenant, RLS, seed de teste, backup/restore e observabilidade.
+privilégio, modelo de tenant, RLS, seed de teste, backup lógico Restic, restore
+drill isolado, observabilidade sanitizada e ledger de migração.
 
 **Decisão vigente:** [ADR-0002](../decisions/ADR-0002-postgresql-runtime-roles-and-rls.md)
 e [desenho da fundação](../plans/2026-09-10-postgresql-foundation-design.md).
-O procedimento operacional está no
-[runbook da fundação](../operations/postgresql-foundation.md).
+Os procedimentos operacionais estão em
+[runbook da fundação](../operations/postgresql-foundation.md),
+[runbook de backup e restore](../operations/postgresql-backup-restore.md) e
+[runbook de observabilidade](../operations/postgresql-observability.md).
 
 **Critérios de saída:**
 
 - migrations sobem uma base vazia e são testadas em CI/local;
 - testes provam negação anônima, cross-tenant e por papel;
 - usuário da aplicação não tem `BYPASSRLS` nem privilégios de owner;
-- backup e restore são exercitados;
+- backup lógico e restore drill são exercitados e comprovados;
 - inventário Supabase possui destino explícito para cada objeto.
 
 **Inventário vigente:**
-[capacidades Supabase e destinos locais](supabase-capability-inventory.md). A
-matriz inicial cobre capacidades e tabelas; o critério de saída continua aberto
-até o ledger automatizado reconciliar todos os objetos DDL.
+[capacidades Supabase e destinos locais](supabase-capability-inventory.md).
+O ledger automatizado reconcilia todos os 2.672 objetos DDL e agora integra
+revisões humanas incrementais versionadas em `docs/migration/supabase-ledger/reviews/`.
 
-**Fatia ativa:** o
-[desenho do ledger DDL](../plans/2026-09-10-supabase-ddl-ledger-design.md) foi
-aceito em 2026-09-10. Ele cobre também fontes históricas de serviços retirados,
-para impedir que RAG MCP, Graph MCP, Neo4j ou componentes internos do Supabase
-sejam reintroduzidos por migração automática. Os checkpoints A a F estão
-concluídos localmente; o checkpoint G reúne os gates finais e a publicação. A
-evidência detalhada está no
-[plano de implementação do ledger](../plans/2026-09-10-supabase-ddl-ledger-implementation.md#execution-state).
+**Plano ativo:**
+[2026-09-10-postgresql-recovery-observability-ledger-review-implementation.md](../plans/2026-09-10-postgresql-recovery-observability-ledger-review-implementation.md).
 
 ## M4 — Auth e App API/BFF
 
