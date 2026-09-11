@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { loadConfig } from "./config.js";
 import { createDatabase } from "./db.js";
 import { authRoutes } from "./auth/routes.js";
+import { chatRoutes } from "./chat/routes.js";
 
 /**
  * Creates and configures the Fastify App API application.
@@ -37,6 +38,7 @@ export async function createApp(options = {}) {
   });
 
   await app.register(authRoutes, { db, config });
+  await app.register(chatRoutes, { db, config });
 
   if (db?.close) {
     app.addHook("onClose", async () => {

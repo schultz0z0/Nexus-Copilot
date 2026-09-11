@@ -28,6 +28,7 @@ export function loadConfig(env = process.env) {
       : env.NODE_ENV === "production"
         ? false
         : true,
+    chatBridgeUrl: env.CHAT_BRIDGE_URL ?? "http://localhost:8080",
     db: {
       connectionString: env.DATABASE_URL,
       host: env.PGHOST ?? "localhost",
