@@ -30,7 +30,6 @@ services:
       - ${HERMES_PROFILE_NAME:-ens}
       - gateway
       - run
-      - --no-supervise
     restart: unless-stopped
     depends_on:
       hermes-profile-init:
