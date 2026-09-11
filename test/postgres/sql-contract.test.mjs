@@ -152,13 +152,32 @@ test('chat store migration creates chat schema, tables and evolutions', () => {
   assert.match(sql, /grant select, insert, update, delete on all tables in schema chat to nexus_app/);
 });
 
+test('auth sessions migration creates user credentials, sessions and hardens chat RLS', () => {
+  const sql = compactSql(migration('0005_auth_sessions.sql'));
+
+  assert.match(sql, /create table iam\.user_credentials/);
+  assert.match(sql, /password_hash text not null/);
+  assert.match(sql, /create table iam\.user_sessions/);
+  assert.match(sql, /session_token_hash text not null unique/);
+  assert.match(sql, /create index user_sessions_user_id_idx on iam\.user_sessions\(user_id\)/);
+  assert.match(sql, /create index user_sessions_expires_at_idx on iam\.user_sessions\(expires_at\)/);
+  assert.match(sql, /grant select, insert, update, delete on iam\.user_credentials to nexus_app/);
+  assert.match(sql, /grant select, insert, update, delete on iam\.user_sessions to nexus_app/);
+  assert.match(sql, /drop policy if exists nexus_app_all on chat\.chat_sessions/);
+  assert.match(sql, /create policy chat_sessions_user_isolation on chat\.chat_sessions to nexus_app/);
+  assert.match(sql, /create policy chat_messages_user_isolation on chat\.chat_messages to nexus_app/);
+  assert.match(sql, /alter table chat\.chat_sessions force row level security/);
+});
+
 test('new PostgreSQL migrations contain no Supabase identity or role dependency', () => {
   const sql = [
     migration('0001_foundation_schemas.sql'),
     migration('0002_iam_tenancy.sql'),
     migration('0003_rls_canary.sql'),
     migration('0004_chat_store.sql'),
+    migration('0005_auth_sessions.sql'),
   ].join('\n');
 
   assert.doesNotMatch(sql, /supabase|auth\.uid|request\.jwt|\bauthenticated\b/i);
 });
+

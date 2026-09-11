@@ -63,10 +63,10 @@ describe(
     });
 
     test('applies all migrations to an empty database and skips them on the second run', () => {
-      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004"\]/);
+      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004","0005"\]/);
       const secondOutput = harness.migrate().stdout;
       assert.match(secondOutput, /"applied":\[\]/);
-      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004"\]/);
+      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004","0005"\]/);
     });
 
     test('creates non-owner application roles and owner-controlled RLS tables', async () => {
@@ -158,6 +158,8 @@ describe(
           'iam.principals:principals_select_current:SELECT',
           'iam.tenants:tenants_select_current:SELECT',
           'iam.user_chat_integrations:nexus_app_all:ALL',
+          'iam.user_credentials:nexus_app_all:ALL',
+          'iam.user_sessions:nexus_app_all:ALL',
         ],
       );
 
