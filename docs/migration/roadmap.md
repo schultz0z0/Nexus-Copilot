@@ -31,12 +31,12 @@ do legado sem aceite no alvo não conta como concluído.
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 12% | concluído; paridade local, recuperação e deploy em produção na VPS validados |
 | M2 | 14% | 14% | concluído; protocolo oficial de Runs, testes do Chat Bridge (124/124) e smoke test validados na VPS |
-| M3 | 18% | 16% | fundação, backup/restore, observabilidade e schemas de domínio chat/iam aprovados com Docker; VPS pendente |
+| M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (23/23) validados na VPS |
 | M4 | 18% | 0% | ADR-0003 e plano arquitetural registrados; implementação de Auth e App API/BFF pendente |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **50% concluído / 50% restante** | estimativa em 2026-09-11 |
+| **Total** | **100%** | **52% concluído / 48% restante** | estimativa em 2026-09-11 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -132,16 +132,15 @@ O marco alcança 14% de 14% concluído. A fundação PostgreSQL segue em M3.
 
 ## M3 — Fundação PostgreSQL
 
-**Estado:** Em execução. O runtime, migrations, menor privilégio, RLS e a operação
-básica foram aprovados em 2026-09-10. Em 2026-09-11, o lote de recuperação e observabilidade
-foi concluído (`nexus_backup`, backup Restic, restore drill e observabilidade com RPO/RTO).
-Na sequência, o lote de schemas de domínio (`chat` e evolução de `iam`) foi implementado
-através da migration `0004_chat_store.sql` e verificado via Docker Desktop:
-tabelas `chat_sessions`, `chat_messages`, `chat_session_summaries`, `chat_confidence_logs`,
-`chat_session_hermes_state` e `bridge_runs`, índices em FKs, triggers automáticas de
-`updated_at`, e extensão de `iam.principals` (email único, full_name) e `user_chat_integrations`.
-Todos os testes contratuais e de integração contra contêiner PostgreSQL 18.6 real foram
-aprovados. O deploy assistido na VPS continua pendente antes do encerramento deste marco.
+**Estado:** M3 **concluído com sucesso na VPS em 2026-09-11**. A fundação do
+PostgreSQL oficial (18.6-bookworm fixado por digest SHA256) foi homologada em produção:
+1. Container `ens-postgres-postgres-1` ativo e saudável (`healthy`) em rede estritamente interna (`internal: true`).
+2. Papéis de menor privilégio criados via bootstrap (`nexus_owner`, `nexus_migrator`, `nexus_app`, `nexus_backup`) com senhas fortes fora do Git em `/etc/ens/secrets/postgres/`.
+3. Migrations versionadas `0001` a `0004` aplicadas com sucesso pelo migrador idempotente sob advisory lock.
+4. Schemas `infra`, `iam` e `chat` e tabelas do domínio de chat (`chat_sessions`, `chat_messages`, `bridge_runs`, etc.) criadas com `nexus_owner`.
+5. Isolamento e proteção de Row-Level Security (RLS) testados e validados conectando como `nexus_app`.
+6. Suíte de 23 testes contratuais do PostgreSQL aprovada na íntegra na VPS (`✔ pass 23, fail 0`).
+O marco alcança 18% de 18% concluído. A arquitetura de Auth e App API/BFF segue em M4.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 

@@ -149,20 +149,18 @@ Em 2026-09-11, a **homologação na VPS foi concluída com sucesso**:
 - Smoke test oficial Node (`smoke-hermes-runtime.mjs`): liveness aprovada (`PASS`), readiness com `provider_unconfigured (allowed)` e capabilities aprovadas (`PASS`).
 - Protocolo oficial Hermes validado ponta a ponta sem qualquer dependência de código ou fork legado.
 
-Na verificação final deste checkpoint, `npm test` passou o frontend 147/147 e
-então manteve o gate agregado vermelho no Marketing Ops pelas mesmas premissas
-herdadas: migrations Supabase deliberadamente ausentes, PostgreSQL indisponível
-em `127.0.0.1:55322`, `docker-compose.yml` legado não copiado e testes de
-delegação presos a premissas temporais antigas. O agregador interrompe antes do
-Bridge e Artifact Server; ambos foram executados separadamente e passaram
-124/124 e 13/13. Nenhuma dessas falhas foi mascarada ou corrigida com a
-reintrodução de infraestrutura proibida.
+## Fundação PostgreSQL — M3 concluído na VPS (2026-09-11)
 
-Uma nova execução de `npm test` em 2026-09-08 manteve o gate agregado vermelho:
-frontend passou 145/145, mas Marketing Ops ainda procura migrations Supabase não
-copiadas e PostgreSQL em `127.0.0.1:55322`. O comando interrompe antes de Bridge
-e Artifact Server, que seguem aprovados quando executados separadamente. Essa
-falha herdada não foi removida nem atribuída ao lote Hermes.
+Em 2026-09-10 e 2026-09-11, a fundação PostgreSQL e os schemas de domínio foram implementados e testados:
+- PostgreSQL 18.6-bookworm fixado pelo digest `sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af`;
+- Rede `ens-postgres-data` interna (`internal: true`) sem exposição pública de portas;
+- Papéis e privilégios mínimos (`nexus_owner`, `nexus_migrator`, `nexus_app`, `nexus_backup`) com SCRAM-SHA-256 e senhas armazenadas fora do Git em `/etc/ens/secrets/postgres/`;
+- Migrations `0001` a `0004` aplicadas via migrador transacional idempotente com advisory lock;
+- Tabelas do domínio `chat` (`bridge_runs`, `chat_sessions`, `chat_messages`, etc.) e evolução do schema `iam` ativas;
+- RLS (Row-Level Security) ativo e forçado, verificado em produção assistida via consulta com `nexus_app`;
+- Suíte de contratos `test:postgres:contract` com 23/23 testes aprovados na VPS.
+
+M3 está 100% concluído (18% de 18%). O progresso global da migração atinge 52%.
 
 ## Dívida de dependências herdada
 
