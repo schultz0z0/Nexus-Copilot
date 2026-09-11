@@ -42,6 +42,7 @@ export async function chatRoutes(fastify, options) {
     }
 
     request.user = user;
+    request.token = token;
   });
 
   // POST /api/chat/sessions
@@ -137,8 +138,9 @@ export async function chatRoutes(fastify, options) {
       "x-user-id": req.user.id,
       "x-tenant-id": req.user.tenant_id ?? "",
     };
-    if (req.headers.authorization) {
-      headers.authorization = req.headers.authorization;
+    const authHeader = req.headers.authorization || (req.token ? `Bearer ${req.token}` : undefined);
+    if (authHeader) {
+      headers.authorization = authHeader;
     }
 
     try {
@@ -146,6 +148,7 @@ export async function chatRoutes(fastify, options) {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(15000),
       });
 
       const contentType = response.headers.get("content-type") || "";
@@ -160,8 +163,15 @@ export async function chatRoutes(fastify, options) {
     }
   };
 
-  // POST /api/chat/runs (Proxy)
+  // POST /api/chat/runs (Proxy with session ownership check)
   fastify.post("/api/chat/runs", async (request, reply) => {
+    if (request.body?.session_id) {
+      const session = await getChatSession(db, request.user, request.body.session_id);
+      if (!session) {
+        return reply.code(404).send({ error: "Session not found" });
+      }
+    }
+
     return forwardToBridge(
       `${chatBridgeUrl}/api/chat/runs`,
       "POST",
@@ -174,6 +184,7 @@ export async function chatRoutes(fastify, options) {
   // GET /api/chat/runs/:id (Proxy with DB fallback)
   fastify.get("/api/chat/runs/:id", async (request, reply) => {
     const { id } = request.params;
+    const authHeader = request.headers.authorization || (request.token ? `Bearer ${request.token}` : undefined);
     try {
       const response = await fetch(
         `${chatBridgeUrl}/api/chat/runs/${encodeURIComponent(id)}`,
@@ -183,8 +194,9 @@ export async function chatRoutes(fastify, options) {
             "content-type": "application/json",
             "x-user-id": request.user.id,
             "x-tenant-id": request.user.tenant_id ?? "",
-            ...(request.headers.authorization ? { authorization: request.headers.authorization } : {}),
+            ...(authHeader ? { authorization: authHeader } : {}),
           },
+          signal: AbortSignal.timeout(15000),
         }
       );
 
@@ -207,6 +219,59 @@ export async function chatRoutes(fastify, options) {
         // Fallback failed
       }
       return reply.code(502).send({ error: "Chat Bridge unavailable" });
+    }
+  });
+
+  // GET /api/chat/runs/:id/events (SSE Stream Proxy)
+  fastify.get("/api/chat/runs/:id/events", async (request, reply) => {
+    const { id } = request.params;
+    const cursor = request.query?.cursor ?? "0";
+    const authHeader = request.headers.authorization || (request.token ? `Bearer ${request.token}` : undefined);
+    const url = `${chatBridgeUrl}/api/chat/runs/${encodeURIComponent(id)}/events?cursor=${encodeURIComponent(cursor)}`;
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "x-user-id": request.user.id,
+          "x-tenant-id": request.user.tenant_id ?? "",
+          ...(authHeader ? { authorization: authHeader } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Stream error");
+        return reply.code(response.status).send({ error: errorText });
+      }
+
+      reply.raw.writeHead(response.status, {
+        "content-type": response.headers.get("content-type") || "text/event-stream",
+        "cache-control": "no-cache",
+        "connection": "keep-alive",
+      });
+
+      if (response.body) {
+        const reader = response.body.getReader();
+        const pump = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              reply.raw.write(value);
+            }
+          } catch {
+            // Client closed or stream ended
+          } finally {
+            reply.raw.end();
+          }
+        };
+        pump();
+      } else {
+        reply.raw.end();
+      }
+      return reply;
+    } catch {
+      return reply.code(502).send({ error: "Chat Bridge stream unavailable" });
     }
   });
 

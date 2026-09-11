@@ -673,6 +673,15 @@ test("Fastify Chat Routes - Message Endpoints", async (t) => {
 
 test("Fastify Chat Routes - Chat Bridge Proxy Endpoints", async (t) => {
   const { db, config } = createTestEnv();
+  const validSessionId = "11111111-1111-4111-8111-111111111111";
+  db.chatSessions.push({
+    id: validSessionId,
+    user_id: TEST_USER.id,
+    title: "Session for Run",
+    session_kind: "normal",
+    updated_at: new Date().toISOString(),
+  });
+
   const app = await createApp({ db, config });
   const authHeaders = { authorization: `Bearer ${TEST_TOKEN}` };
 
@@ -703,7 +712,7 @@ test("Fastify Chat Routes - Chat Bridge Proxy Endpoints", async (t) => {
       method: "POST",
       url: "/api/chat/runs",
       headers: authHeaders,
-      payload: { session_id: "sess-123", message: "Quero uma cotacao" },
+      payload: { session_id: validSessionId, message: "Quero uma cotacao" },
     });
 
     assert.strictEqual(res.statusCode, 202);
@@ -713,7 +722,7 @@ test("Fastify Chat Routes - Chat Bridge Proxy Endpoints", async (t) => {
     assert.strictEqual(capturedMethod, "POST");
     assert.strictEqual(capturedHeaders["x-user-id"], TEST_USER.id);
     assert.strictEqual(capturedHeaders["x-tenant-id"], TEST_USER.tenant_id);
-    assert.strictEqual(capturedBody.session_id, "sess-123");
+    assert.strictEqual(capturedBody.session_id, validSessionId);
   });
 
   await t.test("GET /api/chat/runs/:id forwards to chat-bridge", async () => {
@@ -812,5 +821,94 @@ test("Fastify Chat Routes - Chat Bridge Proxy Endpoints", async (t) => {
     assert.strictEqual(body.run.id, "run-fallback");
     assert.strictEqual(body.run.status, "interrupted");
   });
+
+  await t.test("proxy propagates Bearer token when authenticated via cookie", async () => {
+    let capturedHeaders = null;
+    globalThis.fetch = async (url, options) => {
+      capturedHeaders = options.headers;
+      return {
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({ run: { id: "run-cookie", status: "queued" } }),
+      };
+    };
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/chat/runs",
+      headers: {
+        cookie: `ens_session=${TEST_TOKEN}`,
+      },
+      payload: { message: "from cookie" },
+    });
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.ok(capturedHeaders.authorization, "authorization header must be propagated to bridge");
+    assert.strictEqual(capturedHeaders.authorization, `Bearer ${TEST_TOKEN}`);
+    assert.strictEqual(capturedHeaders["x-user-id"], TEST_USER.id);
+  });
+
+  await t.test("POST /api/chat/runs rejects when session_id does not belong to user", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/chat/runs",
+      headers: authHeaders,
+      payload: {
+        session_id: "00000000-0000-0000-0000-000000000999",
+        message: "replay attack attempt",
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 404);
+    const body = JSON.parse(res.body);
+    assert.strictEqual(body.error, "Session not found");
+  });
+
+  await t.test("GET /api/chat/sessions/:id handles invalid UUID gracefully with 404", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/chat/sessions/not-a-valid-uuid",
+      headers: authHeaders,
+    });
+
+    assert.strictEqual(res.statusCode, 404);
+    const body = JSON.parse(res.body);
+    assert.strictEqual(body.error, "Session not found");
+  });
+
+  await t.test("GET /api/chat/runs/:id/events proxies SSE stream from chat-bridge", async () => {
+    globalThis.fetch = async (url) => {
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "text/event-stream" }),
+        body: {
+          getReader() {
+            let sent = false;
+            return {
+              async read() {
+                if (!sent) {
+                  sent = true;
+                  return { done: false, value: Buffer.from("data: {\"event\":\"test\"}\n\n") };
+                }
+                return { done: true };
+              },
+            };
+          },
+        },
+      };
+    };
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/chat/runs/run-sse-123/events?cursor=0",
+      headers: authHeaders,
+    });
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.match(res.headers["content-type"], /text\/event-stream/);
+    assert.match(res.body, /data: \{"event":"test"\}/);
+  });
 });
+
 

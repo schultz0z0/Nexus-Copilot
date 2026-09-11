@@ -194,3 +194,11 @@ REVOKE ALL ON FUNCTION iam.resolve_session(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION iam.authenticate_by_email(text) TO nexus_app;
 GRANT EXECUTE ON FUNCTION iam.resolve_session(text) TO nexus_app;
 
+-- Performance indexes for chat pagination and listing
+CREATE INDEX IF NOT EXISTS chat_messages_session_created_idx
+  ON chat.chat_messages (session_id, created_at DESC, id DESC);
+
+CREATE INDEX IF NOT EXISTS chat_sessions_user_kind_idx
+  ON chat.chat_sessions (user_id, session_kind, updated_at DESC);
+
+

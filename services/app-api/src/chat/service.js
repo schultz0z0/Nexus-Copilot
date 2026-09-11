@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const isValidUuid = (id) => typeof id === "string" && UUID_REGEX.test(id.trim());
+
 /**
  * Extracts string user ID from user object or string.
  *
@@ -25,7 +28,7 @@ export async function createChatSession(
   { id, title = "Nova Conversa", session_kind = "normal" } = {}
 ) {
   const userId = getUserId(user);
-  const sessionId = id || randomUUID();
+  const sessionId = id && isValidUuid(id) ? id : randomUUID();
   const queryText = `INSERT INTO chat.chat_sessions (id, user_id, title, session_kind)
     VALUES ($1, $2, $3, $4)
     RETURNING *`;
@@ -68,6 +71,9 @@ export async function listChatSessions(
  * @returns {Promise<object|null>}
  */
 export async function getChatSession(db, user, sessionId) {
+  if (!isValidUuid(sessionId)) {
+    return null;
+  }
   const userId = getUserId(user);
   const queryText = `SELECT * FROM chat.chat_sessions WHERE id = $1 AND user_id = $2`;
 
@@ -86,6 +92,9 @@ export async function getChatSession(db, user, sessionId) {
  * @returns {Promise<object|null>} Updated session or null
  */
 export async function updateChatSession(db, user, sessionId, { title }) {
+  if (!isValidUuid(sessionId)) {
+    return null;
+  }
   const userId = getUserId(user);
   const queryText = `UPDATE chat.chat_sessions
     SET title = $3, updated_at = transaction_timestamp()
@@ -105,6 +114,9 @@ export async function updateChatSession(db, user, sessionId, { title }) {
  * @returns {Promise<boolean>} True if deleted, false otherwise
  */
 export async function deleteChatSession(db, user, sessionId) {
+  if (!isValidUuid(sessionId)) {
+    return false;
+  }
   const userId = getUserId(user);
   const queryText = `DELETE FROM chat.chat_sessions WHERE id = $1 AND user_id = $2`;
 
@@ -124,12 +136,15 @@ export async function deleteChatSession(db, user, sessionId) {
  * @returns {Promise<{ messages: Array<object>, hasMore: boolean }|null>}
  */
 export async function listChatMessages(db, user, sessionId, { limit = 50, before } = {}) {
+  if (!isValidUuid(sessionId)) {
+    return null;
+  }
   const session = await getChatSession(db, user, sessionId);
   if (!session) {
     return null;
   }
 
-  const parsedLimit = Number.isInteger(limit) && limit > 0 ? limit : 50;
+  const parsedLimit = Math.min(Math.max(1, Number.parseInt(limit, 10) || 50), 100);
   const fetchLimit = parsedLimit + 1;
 
   let queryText;
@@ -174,12 +189,15 @@ export async function listChatMessages(db, user, sessionId, { limit = 50, before
  * @returns {Promise<object|null>} Created message or null if session not found
  */
 export async function createChatMessage(db, user, sessionId, { id, role, content }) {
+  if (!isValidUuid(sessionId)) {
+    return null;
+  }
   const session = await getChatSession(db, user, sessionId);
   if (!session) {
     return null;
   }
 
-  const messageId = id || randomUUID();
+  const messageId = id && isValidUuid(id) ? id : randomUUID();
   const insertSql = `INSERT INTO chat.chat_messages (id, session_id, role, content)
     VALUES ($1, $2, $3, $4)
     RETURNING *`;
