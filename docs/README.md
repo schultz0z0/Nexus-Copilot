@@ -23,18 +23,15 @@ nova.
 | Item | Estado | Documento |
 | --- | --- | --- |
 | Fundação documental | Concluída | este índice, PRD, arquitetura e roadmap |
-| Runtime Hermes oficial | Em execução; paridade Docker aprovada | [plano de implementação](plans/2026-08-28-hermes-official-runtime-implementation.md) e [evidência Docker Desktop](operations/hermes-docker-desktop-parity.md) |
-| Hermes Runs Bridge | Em execução; checkpoint C local aprovado | [desenho](plans/2026-09-09-hermes-runs-bridge-design.md), [plano](plans/2026-09-09-hermes-runs-bridge-implementation.md) e [runbook](operations/hermes-runs-bridge.md) |
-| Fundação PostgreSQL | Em execução; primeiro lote aprovado localmente | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [plano e evidências](plans/2026-09-10-postgresql-foundation-implementation.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md) e [runbook](operations/postgresql-foundation.md) |
+| Runtime Hermes oficial (M1) | Concluído na VPS | [primeiro deploy](operations/hermes-first-deploy.md) e [guia VPS](operations/vps-architecture-and-layout.md) |
+| Hermes Runs Bridge (M2) | Concluído na VPS | [desenho](plans/2026-09-09-hermes-runs-bridge-design.md), [plano](plans/2026-09-09-hermes-runs-bridge-implementation.md) e [runbook](operations/hermes-runs-bridge.md) |
+| Fundação PostgreSQL (M3) | Concluído na VPS | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md), [runbook](operations/postgresql-foundation.md) e [guia VPS](operations/vps-architecture-and-layout.md) |
+| Auth, Sessões e App API (M4) | Em planejamento / início | [ADR-0003](decisions/ADR-0003-auth-sessions-and-app-api.md) e [desenho de arquitetura M4](plans/2026-09-11-m4-auth-bff-architecture-design.md) |
 | Migração de Supabase | Em execução; inventário inicial registrado | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) e [inventário de capacidades](migration/supabase-capability-inventory.md) |
-| Ledger DDL do Supabase | Implementação e scan local concluídos; revisão humana das propostas pendente | [relatório](migration/supabase-ledger/supabase-object-ledger.md), [plano/evidências](plans/2026-09-10-supabase-ddl-ledger-implementation.md) e [desenho](plans/2026-09-10-supabase-ddl-ledger-design.md) |
+| Ledger DDL do Supabase | Implementação e scan local concluídos | [relatório](migration/supabase-ledger/supabase-object-ledger.md) e [plano/evidências](plans/2026-09-10-supabase-ddl-ledger-implementation.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
 
-O próximo gate externo do Hermes é configurar manualmente um provider e provar
-run completo, approval, rejeição e cancelamento conforme o runbook M2. Em
-paralelo, o próximo trabalho local de M3 é revisar o ledger por domínio,
-exercitar backup/restore e iniciar o desenho de Auth/App API sem importar DDL do
-Supabase.
+Com M1, M2 e M3 concluídos e homologados na VPS (52% do roadmap concluído), o próximo lote de trabalho é o **Marco M4**: implementação da App API/BFF com autenticação e sessões próprias em PostgreSQL (conforme o ADR-0003), eliminando a dependência do Supabase Auth.
 
 ## Mapa da documentação
 
