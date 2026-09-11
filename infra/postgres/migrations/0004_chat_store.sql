@@ -1,7 +1,7 @@
 -- 0004_chat_store.sql
 
 -- IAM Schema Evolutions
-ALTER TABLE iam.principals ADD COLUMN email text;
+ALTER TABLE iam.principals ADD COLUMN email text UNIQUE;
 ALTER TABLE iam.principals ADD COLUMN full_name text;
 
 CREATE TABLE iam.user_chat_integrations (
@@ -11,6 +11,7 @@ CREATE TABLE iam.user_chat_integrations (
   updated_at timestamptz NOT NULL DEFAULT transaction_timestamp(),
   updated_by uuid REFERENCES iam.principals(id)
 );
+CREATE INDEX user_chat_integrations_updated_by_idx ON iam.user_chat_integrations(updated_by);
 
 -- Chat Schema Creation
 CREATE SCHEMA chat AUTHORIZATION nexus_owner;
@@ -28,6 +29,7 @@ CREATE TABLE chat.chat_sessions (
   created_at timestamptz NOT NULL DEFAULT transaction_timestamp(),
   updated_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX chat_sessions_user_id_idx ON chat.chat_sessions(user_id);
 
 CREATE TABLE chat.chat_messages (
   id uuid PRIMARY KEY,
@@ -36,6 +38,7 @@ CREATE TABLE chat.chat_messages (
   content text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX chat_messages_session_id_idx ON chat.chat_messages(session_id);
 
 CREATE TABLE chat.chat_session_summaries (
   session_id uuid PRIMARY KEY REFERENCES chat.chat_sessions(id) ON DELETE CASCADE,
@@ -44,6 +47,7 @@ CREATE TABLE chat.chat_session_summaries (
   last_user_message_count integer NOT NULL DEFAULT 0,
   updated_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX chat_session_summaries_user_id_idx ON chat.chat_session_summaries(user_id);
 
 CREATE TABLE chat.chat_confidence_logs (
   id uuid PRIMARY KEY,
@@ -58,6 +62,8 @@ CREATE TABLE chat.chat_confidence_logs (
   review_state text,
   created_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX chat_confidence_logs_session_id_idx ON chat.chat_confidence_logs(session_id);
+CREATE INDEX chat_confidence_logs_user_id_idx ON chat.chat_confidence_logs(user_id);
 
 CREATE TABLE chat.chat_session_hermes_state (
   chat_session_id uuid PRIMARY KEY REFERENCES chat.chat_sessions(id) ON DELETE CASCADE,
@@ -72,6 +78,7 @@ CREATE TABLE chat.chat_session_hermes_state (
   created_at timestamptz NOT NULL DEFAULT transaction_timestamp(),
   updated_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX chat_session_hermes_state_user_id_idx ON chat.chat_session_hermes_state(user_id);
 
 CREATE TABLE chat.bridge_runs (
   id uuid PRIMARY KEY,
@@ -80,6 +87,38 @@ CREATE TABLE chat.bridge_runs (
   created_at timestamptz NOT NULL DEFAULT transaction_timestamp(),
   updated_at timestamptz NOT NULL DEFAULT transaction_timestamp()
 );
+CREATE INDEX bridge_runs_user_id_idx ON chat.bridge_runs(user_id);
+
+-- Updated At Triggers
+CREATE OR REPLACE FUNCTION infra.set_current_timestamp_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = transaction_timestamp();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER user_chat_integrations_updated_at_trigger
+BEFORE UPDATE ON iam.user_chat_integrations
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
+
+CREATE TRIGGER chat_sessions_updated_at_trigger
+BEFORE UPDATE ON chat.chat_sessions
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
+
+CREATE TRIGGER chat_session_summaries_updated_at_trigger
+BEFORE UPDATE ON chat.chat_session_summaries
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
+
+CREATE TRIGGER chat_session_hermes_state_updated_at_trigger
+BEFORE UPDATE ON chat.chat_session_hermes_state
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
+
+CREATE TRIGGER bridge_runs_updated_at_trigger
+BEFORE UPDATE ON chat.bridge_runs
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
 
 -- RLS
 GRANT USAGE ON SCHEMA chat TO nexus_app;
