@@ -7,7 +7,7 @@ Data da baseline: 2026-08-27
 - Instalação por lockfile concluída nos quatro pacotes.
 - Typecheck do frontend e Marketing Ops: aprovado.
 - Frontend: 39 arquivos de teste e 145 testes aprovados.
-- Chat Bridge: 90 testes aprovados.
+- Chat Bridge: 124 testes aprovados.
 - Artifact Server: 13 testes aprovados.
 - Build de produção do frontend e build TypeScript do Marketing Ops: aprovados.
 - Profile Distribution ENS: YAML e JSON carregados e estrutura mínima validada.

@@ -30,13 +30,13 @@ do legado sem aceite no alvo não conta como concluído.
 | --- | ---: | ---: | --- |
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 9% | paridade e recuperação locais; produção e rollback do core pendentes |
-| M2 | 14% | 10% | protocolo local comprovado; provider real, VPS e RunStore pendentes |
-| M3 | 18% | 13% | fundação, backup/restore, observabilidade e revisão IAM/Chat locais aprovados; domínios e VPS pendentes |
+| M2 | 14% | 12% | protocolo local comprovado; RunStore migrado para PostgreSQL; provider real e VPS pendentes |
+| M3 | 18% | 16% | fundação, backup/restore, observabilidade e schemas de domínio chat/iam aprovados com Docker; VPS pendente |
 | M4 | 18% | 0% | ainda sem aceite de Auth e App API/BFF |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **40% concluído / 60% restante** | estimativa conservadora em 2026-09-11 |
+| **Total** | **100%** | **45% concluído / 55% restante** | estimativa conservadora em 2026-09-11 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -130,23 +130,21 @@ evidência `ens-hermes-m2-fresh-data` foi preservado.
 O M2 permanece em execução: run completo, approval, rejeição e cancelamento com
 provider real dependem da configuração manual do operador; a validação de VPS
 também continua pendente e não autoriza operação direta pelo agente. O RunStore
-em PostgreSQL e a fronteira pública na App API/BFF continuam deliberadamente em
-M3 e M4.
+foi migrado para o PostgreSQL (tabela `chat.bridge_runs` com PostgREST e cache em
+memória ativo) em 2026-09-11; a fronteira pública na App API/BFF segue em M4.
 
 ## M3 — Fundação PostgreSQL
 
 **Estado:** Em execução. O runtime, migrations, menor privilégio, RLS e a operação
-básica foram aprovados em 2026-09-10. Em 2026-09-11, o lote de operações de
-recuperação e observabilidade foi concluído: papel de menor privilégio
-`nexus_backup`, imagem e container hardened de operações, backup lógico
-criptografado no Restic com retenção (48h, 14d, 8w), restore drill isolado com
-verificação fail-closed e teste de dados sentinela, e observabilidade
-sanitizada com avaliação de conformidade de RPO (3600s) e RTO (7200s). No ledger,
-o primeiro lote de revisão humana seletiva (`iam-chat.json`) foi aplicado,
-aprovando 166 objetos e marcando 22 grants Supabase obsoletos para remoção.
-As 1.070 ações `pending` continuam exigindo resolução de domínio/ADR; a migração
-dos schemas de aplicação e o deploy assistido na VPS continuam pendentes antes
-do encerramento deste marco.
+básica foram aprovados em 2026-09-10. Em 2026-09-11, o lote de recuperação e observabilidade
+foi concluído (`nexus_backup`, backup Restic, restore drill e observabilidade com RPO/RTO).
+Na sequência, o lote de schemas de domínio (`chat` e evolução de `iam`) foi implementado
+através da migration `0004_chat_store.sql` e verificado via Docker Desktop:
+tabelas `chat_sessions`, `chat_messages`, `chat_session_summaries`, `chat_confidence_logs`,
+`chat_session_hermes_state` e `bridge_runs`, índices em FKs, triggers automáticas de
+`updated_at`, e extensão de `iam.principals` (email único, full_name) e `user_chat_integrations`.
+Todos os testes contratuais e de integração contra contêiner PostgreSQL 18.6 real foram
+aprovados. O deploy assistido na VPS continua pendente antes do encerramento deste marco.
 
 **Objetivo:** estabelecer o banco próprio antes de migrar fluxos de produto.
 
