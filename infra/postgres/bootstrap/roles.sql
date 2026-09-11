@@ -47,7 +47,7 @@ REVOKE nexus_owner FROM nexus_app;
 REVOKE ALL ON DATABASE :"database_name" FROM PUBLIC;
 GRANT CONNECT ON DATABASE :"database_name" TO nexus_migrator, nexus_app;
 GRANT CONNECT ON DATABASE :"database_name" TO nexus_backup;
-GRANT pg_read_all_data TO nexus_backup;
+GRANT pg_read_all_data TO nexus_backup WITH INHERIT TRUE;
 GRANT CREATE ON DATABASE :"database_name" TO nexus_owner;
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;

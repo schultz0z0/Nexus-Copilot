@@ -6,7 +6,8 @@
   "scripts": {
     "migrate": "node src/migrate.mjs",
     "test": "node --test test/migration-files.test.mjs test/migration-runner.test.mjs",
-    "test:integration": "node --test test/foundation.integration.test.mjs"
+    "test:integration": "node --test test/*.integration.test.mjs",
+    "test:backup": "node --test test/backup.integration.test.mjs"
   },
   "dependencies": {
     "pg": "8.23.0"

@@ -209,7 +209,7 @@ rtk git commit -m "feat(postgres): add encrypted logical backup job"
 - Produces: helper `harness.initializeBackupRepository()` e
   `harness.backup()`; teste comprova snapshot criptografado e status sanitizado.
 
-- [ ] **Step 1: escrever integração falhando**
+- [x] **Step 1: escrever integração falhando**
 
 O teste deve inserir duas linhas sentinela em tenants distintos e então:
 
@@ -227,13 +227,13 @@ assert.doesNotMatch(JSON.stringify(status), /password|postgresql:\/\//i);
 Listar snapshots com senha correta deve funcionar; senha errada deve falhar sem
 revelar a senha.
 
-- [ ] **Step 2: confirmar RED**
+- [x] **Step 2: confirmar RED**
 
 Run: `rtk node --test infra/postgres/test/backup.integration.test.mjs`
 
 Expected: FAIL porque o harness ainda não expõe os comandos.
 
-- [ ] **Step 3: estender o harness minimamente**
+- [x] **Step 3: estender o harness minimamente**
 
 Adicionar secrets `backup` e `restic`, raiz temporária absoluta e os métodos:
 
@@ -247,19 +247,19 @@ get backupStatusPath(): string
 Cleanup deve verificar o caminho resolvido antes de remover e manter todos os
 recursos limitados ao projeto Compose aleatório do teste.
 
-- [ ] **Step 4: confirmar GREEN**
+- [x] **Step 4: confirmar GREEN**
 
 Run: `rtk node --test infra/postgres/test/backup.integration.test.mjs`
 
 Expected: PASS com snapshot real.
 
-- [ ] **Step 5: regressão PostgreSQL**
+- [x] **Step 5: regressão PostgreSQL**
 
 Run: `rtk npm run test:postgres && rtk npm run test:postgres:integration`
 
 Expected: PASS.
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 rtk git add infra/postgres/test infra/postgres/compose.development.yaml infra/postgres/package.json package.json

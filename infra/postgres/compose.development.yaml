@@ -6,3 +6,8 @@ services:
         published: "${POSTGRES_DEV_PORT:-55432}"
         host_ip: 127.0.0.1
         protocol: tcp
+
+  postgres-backup:
+    volumes:
+      - "${POSTGRES_BACKUP_ROOT:-postgres-backup}:/var/lib/nexus-backup"
+      - ./ops:/opt/nexus-postgres/ops:ro
