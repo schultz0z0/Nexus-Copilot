@@ -38,7 +38,7 @@ export async function createApp(options = {}) {
 
   await app.register(authRoutes, { db, config });
 
-  if (!options.db && db?.close) {
+  if (db?.close) {
     app.addHook("onClose", async () => {
       await db.close();
     });
@@ -51,6 +51,20 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const config = loadConfig();
   const db = createDatabase(config.db);
   const app = await createApp({ config, db, logger: true });
+
+  const shutdown = async (signal) => {
+    console.log(`[app-api] received ${signal}, closing server...`);
+    try {
+      await app.close();
+      process.exit(0);
+    } catch (err) {
+      console.error("[app-api] error during shutdown:", err);
+      process.exit(1);
+    }
+  };
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 
   try {
     await app.listen({ port: config.port, host: config.host });

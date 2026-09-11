@@ -40,10 +40,10 @@ function createMockDb(initialData = {}) {
         return { rows: [session], rowCount: 1 };
       }
 
-      // SELECT from iam.user_sessions (validateSession)
+      // SELECT from iam.resolve_session or iam.user_sessions (validateSession)
       if (
-        normalizedSql.includes("select") &&
-        normalizedSql.includes("from iam.user_sessions")
+        normalizedSql.includes("iam.resolve_session") ||
+        (normalizedSql.includes("select") && normalizedSql.includes("from iam.user_sessions"))
       ) {
         const [tokenHash] = params;
         const session = sessions.find((s) => s.session_token_hash === tokenHash);
@@ -87,10 +87,11 @@ function createMockDb(initialData = {}) {
         return { rowCount: 0 };
       }
 
-      // SELECT from iam.principals JOIN iam.user_credentials (login)
+      // SELECT from iam.authenticate_by_email or iam.principals JOIN iam.user_credentials (login)
       if (
-        normalizedSql.includes("from iam.principals") &&
-        normalizedSql.includes("iam.user_credentials")
+        normalizedSql.includes("iam.authenticate_by_email") ||
+        (normalizedSql.includes("from iam.principals") &&
+          normalizedSql.includes("iam.user_credentials"))
       ) {
         const [email] = params;
         const principal = principals.find(
@@ -532,4 +533,51 @@ test("Fastify Auth Routes & Server", async (t) => {
     });
     assert.strictEqual(meResAfterLogout.statusCode, 401);
   });
+
+  await t.test("GET /api/auth/session works as an alias to /api/auth/me", async () => {
+    const { app } = await setupApp();
+
+    const loginRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "operator@nexus.local",
+        password: validPassword,
+      },
+    });
+
+    const setCookie = loginRes.headers["set-cookie"];
+    const match = setCookie.match(/ens_session=([^;]+)/);
+    const cookieHeader = `ens_session=${match[1]}`;
+
+    const sessionRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/session",
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
+
+    assert.strictEqual(sessionRes.statusCode, 200);
+    const body = JSON.parse(sessionRes.body);
+    assert.strictEqual(body.user.email, "operator@nexus.local");
+  });
+
+  await t.test("POST /api/auth/login is case-insensitive for email", async () => {
+    const { app } = await setupApp();
+
+    const loginRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "OPERATOR@NEXUS.LOCAL",
+        password: validPassword,
+      },
+    });
+
+    assert.strictEqual(loginRes.statusCode, 200);
+    const body = JSON.parse(loginRes.body);
+    assert.strictEqual(body.user.email, "operator@nexus.local");
+  });
 });
+

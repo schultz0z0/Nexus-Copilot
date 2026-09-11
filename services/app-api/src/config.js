@@ -23,7 +23,11 @@ export function loadConfig(env = process.env) {
     cookieName: "ens_session",
     sessionTtlDays: Number.parseInt(env.SESSION_TTL_DAYS ?? "30", 10),
     secureCookies: env.NODE_ENV === "production" && env.INSECURE_COOKIES !== "true",
-    corsOrigin: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(",").map((s) => s.trim()) : true,
+    corsOrigin: env.CORS_ORIGIN
+      ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
+      : env.NODE_ENV === "production"
+        ? false
+        : true,
     db: {
       connectionString: env.DATABASE_URL,
       host: env.PGHOST ?? "localhost",

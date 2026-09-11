@@ -8,8 +8,9 @@ import bcrypt from "bcryptjs";
  * @returns {Promise<string>}
  */
 export async function hashPassword(password) {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
+
 
 /**
  * Verifies a plain text password against a bcrypt hash.
@@ -70,16 +71,7 @@ export async function validateSession(db, token) {
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
 
-  const queryText = `
-    SELECT s.id AS session_id, s.user_id, s.expires_at,
-           p.email, p.full_name,
-           m.tenant_id, m.role
-    FROM iam.user_sessions s
-    JOIN iam.principals p ON s.user_id = p.id
-    LEFT JOIN iam.memberships m ON m.principal_id = p.id AND m.active = true
-    WHERE s.session_token_hash = $1
-      AND s.expires_at > transaction_timestamp()
-  `;
+  const queryText = `SELECT * FROM iam.resolve_session($1)`;
 
   const result = await db.query(queryText, [tokenHash]);
   if (!result.rows || result.rows.length === 0) {

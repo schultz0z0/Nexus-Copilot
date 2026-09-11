@@ -1,5 +1,8 @@
 import { verifyPassword, createSession, validateSession, revokeSession } from "./service.js";
 
+// Constant-time dummy hash for unknown user login attempts (prevents timing enumeration)
+const DUMMY_HASH = "$2a$12$e8Y7z7r0xL9fXyUoA1b2c.o1kP9rQ8sT7uV6wX5yZ4aB3cD2eF1gH";
+
 /**
  * Fastify plugin for authentication routes.
  *
@@ -22,18 +25,12 @@ export async function authRoutes(fastify, options) {
       return reply.code(400).send({ error: "Email and password are required" });
     }
 
-    const queryText = `
-      SELECT p.id, p.email, p.full_name, c.password_hash,
-             m.tenant_id, m.role
-      FROM iam.principals p
-      JOIN iam.user_credentials c ON c.user_id = p.id
-      LEFT JOIN iam.memberships m ON m.principal_id = p.id AND m.active = true
-      WHERE p.email = $1
-      LIMIT 1
-    `;
+    const normalizedEmail = email.trim().toLowerCase();
+    const queryText = `SELECT * FROM iam.authenticate_by_email($1)`;
 
-    const result = await db.query(queryText, [email.trim()]);
+    const result = await db.query(queryText, [normalizedEmail]);
     if (!result.rows || result.rows.length === 0) {
+      await verifyPassword(password, DUMMY_HASH);
       return reply.code(401).send({ error: "Invalid credentials" });
     }
 
@@ -83,8 +80,8 @@ export async function authRoutes(fastify, options) {
     return { ok: true };
   });
 
-  // GET /api/auth/me
-  fastify.get("/api/auth/me", async (request, reply) => {
+  // Handler for /api/auth/me and /api/auth/session alias
+  const handleSession = async (request, reply) => {
     const token = request.cookies?.[cookieName];
     if (!token) {
       return reply.code(401).send({ error: "Unauthorized" });
@@ -96,7 +93,11 @@ export async function authRoutes(fastify, options) {
     }
 
     return { user };
-  });
+  };
+
+  // GET /api/auth/me & GET /api/auth/session
+  fastify.get("/api/auth/me", handleSession);
+  fastify.get("/api/auth/session", handleSession);
 }
 
 export default authRoutes;

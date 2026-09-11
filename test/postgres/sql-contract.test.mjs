@@ -167,6 +167,10 @@ test('auth sessions migration creates user credentials, sessions and hardens cha
   assert.match(sql, /create policy chat_sessions_user_isolation on chat\.chat_sessions to nexus_app/);
   assert.match(sql, /create policy chat_messages_user_isolation on chat\.chat_messages to nexus_app/);
   assert.match(sql, /alter table chat\.chat_sessions force row level security/);
+  assert.match(sql, /create function iam\.authenticate_by_email\(p_email text\)/);
+  assert.match(sql, /create function iam\.resolve_session\(p_token_hash text\)/);
+  assert.match(sql, /grant execute on function iam\.authenticate_by_email\(text\) to nexus_app/);
+  assert.match(sql, /grant execute on function iam\.resolve_session\(text\) to nexus_app/);
 });
 
 test('new PostgreSQL migrations contain no Supabase identity or role dependency', () => {

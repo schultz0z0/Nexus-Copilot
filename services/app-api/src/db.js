@@ -5,9 +5,13 @@ const { Pool } = pg;
 export function createDatabase(dbConfig) {
   const pool = new Pool(
     dbConfig.connectionString
-      ? { connectionString: dbConfig.connectionString, max: dbConfig.max }
+      ? { ...dbConfig, connectionString: dbConfig.connectionString }
       : dbConfig
   );
+
+  pool.on("error", (err) => {
+    console.error("[db] Unexpected idle client error:", err);
+  });
 
   const query = (text, params) => pool.query(text, params);
 

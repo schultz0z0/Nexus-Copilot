@@ -130,3 +130,67 @@ ALTER TABLE chat.chat_session_summaries FORCE ROW LEVEL SECURITY;
 ALTER TABLE chat.chat_confidence_logs FORCE ROW LEVEL SECURITY;
 ALTER TABLE chat.chat_session_hermes_state FORCE ROW LEVEL SECURITY;
 ALTER TABLE chat.bridge_runs FORCE ROW LEVEL SECURITY;
+
+-- Authentication and Session Lookup Functions
+-- SECURITY DEFINER allows nexus_app to authenticate unauthenticated clients without violating RLS
+CREATE FUNCTION iam.authenticate_by_email(p_email text)
+RETURNS TABLE (
+  id uuid,
+  email text,
+  full_name text,
+  password_hash text,
+  algorithm text,
+  failed_login_attempts integer,
+  locked_until timestamptz,
+  tenant_id uuid,
+  role text
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, iam
+AS $$
+  SELECT p.id, p.email, p.full_name, c.password_hash, c.algorithm,
+         c.failed_login_attempts, c.locked_until,
+         m.tenant_id, m.role
+  FROM iam.principals p
+  JOIN iam.user_credentials c ON c.user_id = p.id
+  LEFT JOIN iam.memberships m ON m.principal_id = p.id AND m.active = true
+  WHERE lower(p.email) = lower(p_email)
+  ORDER BY m.created_at ASC
+  LIMIT 1;
+$$;
+
+CREATE FUNCTION iam.resolve_session(p_token_hash text)
+RETURNS TABLE (
+  session_id uuid,
+  user_id uuid,
+  expires_at timestamptz,
+  email text,
+  full_name text,
+  tenant_id uuid,
+  role text
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, iam
+AS $$
+  SELECT s.id AS session_id, s.user_id, s.expires_at,
+         p.email, p.full_name,
+         m.tenant_id, m.role
+  FROM iam.user_sessions s
+  JOIN iam.principals p ON s.user_id = p.id
+  LEFT JOIN iam.memberships m ON m.principal_id = p.id AND m.active = true
+  WHERE s.session_token_hash = p_token_hash
+    AND s.expires_at > transaction_timestamp()
+  ORDER BY m.created_at ASC
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION iam.authenticate_by_email(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION iam.resolve_session(text) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION iam.authenticate_by_email(text) TO nexus_app;
+GRANT EXECUTE ON FUNCTION iam.resolve_session(text) TO nexus_app;
+
