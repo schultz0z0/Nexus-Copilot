@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { decodeJwt } from "jose";
@@ -678,6 +678,8 @@ class RunStore {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
       "Content-Type": "application/json",
+      "Accept-Profile": "chat",
+      "Content-Profile": "chat",
     };
     this.runs = new Map(); // In-memory cache
     this.subscribers = new Map();
@@ -693,13 +695,27 @@ class RunStore {
       const rows = await response.json();
       for (const row of rows) {
         const run = row.state;
+        if (!run?.id) continue;
+        
         if (!terminalStatuses.has(run.status)) {
+          if (!Array.isArray(run.events)) run.events = [];
+          if (!Array.isArray(run.files)) run.files = [];
+          if (!Array.isArray(run.attachments)) run.attachments = [];
+          if (!run.memory_diagnostics) {
+            run.memory_diagnostics = createInitialMemoryDiagnostics({
+              tenantId: run.tenant_id ?? config.defaultTenantId,
+              userId: run.user_id ?? "unknown",
+              routingContractEnabled: isNexusMemoryRoutingContractEnabled(),
+            });
+          }
+          
           run.status = "interrupted";
           run.error_message = "Bridge reiniciou antes do run terminar.";
           run.updated_at = new Date().toISOString();
+          
+          this.runs.set(run.id, run);
+          await this.persist(run); // save interruption status back
         }
-        this.runs.set(run.id, run);
-        await this.persist(run); // save interruption status back
       }
     }
   }
