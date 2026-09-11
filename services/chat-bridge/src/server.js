@@ -672,46 +672,36 @@ const validateChatPayload = (payload) => {
 };
 
 class RunStore {
-  constructor({ dataDir }) {
-    this.dataDir = dataDir;
-    this.runs = new Map();
+  constructor({ supabaseUrl, serviceRoleKey }) {
+    this.supabaseUrl = String(supabaseUrl ?? "").replace(/\/$/, "");
+    this.headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+    };
+    this.runs = new Map(); // In-memory cache
     this.subscribers = new Map();
   }
 
   async init() {
-    await mkdir(this.runsDir, { recursive: true });
-    const files = await readdir(this.runsDir).catch(() => []);
-    await Promise.all(files.filter((file) => file.endsWith(".json")).map(async (file) => {
-      const raw = await readFile(path.join(this.runsDir, file), "utf8").catch(() => "");
-      if (!raw) return;
-      try {
-        const run = JSON.parse(raw);
-        if (!run?.id) return;
-        if (!Array.isArray(run.events)) run.events = [];
-        if (!Array.isArray(run.files)) run.files = [];
-        if (!Array.isArray(run.attachments)) run.attachments = [];
-        if (!run.memory_diagnostics) {
-          run.memory_diagnostics = createInitialMemoryDiagnostics({
-            tenantId: run.tenant_id ?? config.defaultTenantId,
-            userId: run.user_id ?? "unknown",
-            routingContractEnabled: isNexusMemoryRoutingContractEnabled(),
-          });
-        }
+    // Fetch all active runs from Postgres where status is not terminal
+    const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?select=state`, {
+      headers: this.headers
+    }).catch(() => null);
+
+    if (response?.ok) {
+      const rows = await response.json();
+      for (const row of rows) {
+        const run = row.state;
         if (!terminalStatuses.has(run.status)) {
           run.status = "interrupted";
           run.error_message = "Bridge reiniciou antes do run terminar.";
-          run.updated_at = nowIso();
+          run.updated_at = new Date().toISOString();
         }
         this.runs.set(run.id, run);
-        await this.persist(run);
-      } catch {
-        // ignore corrupted run snapshots
+        await this.persist(run); // save interruption status back
       }
-    }));
-  }
-
-  get runsDir() {
-    return path.join(this.dataDir, "runs");
+    }
   }
 
   get(id) {
@@ -719,12 +709,19 @@ class RunStore {
   }
 
   async persist(run) {
-    await mkdir(this.runsDir, { recursive: true });
-    await writeFile(path.join(this.runsDir, `${run.id}.json`), JSON.stringify(run, null, 2));
+    await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?on_conflict=id`, {
+      method: "POST",
+      headers: { ...this.headers, Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        id: run.id,
+        user_id: run.user_id,
+        state: run
+      })
+    });
   }
 
   async save(run) {
-    run.updated_at = nowIso();
+    run.updated_at = new Date().toISOString();
     this.runs.set(run.id, run);
     await this.persist(run);
     this.notify(run.id);
@@ -1678,7 +1675,10 @@ class HermesBridge {
   }
 }
 
-const store = new RunStore({ dataDir: config.dataDir });
+const store = new RunStore({ 
+  supabaseUrl: config.supabaseUrl, 
+  serviceRoleKey: config.supabaseServiceRoleKey 
+});
 const approvalRegistry = new HermesApprovalRegistry();
 const hermesStateRepository = config.supabaseUrl && config.supabaseServiceRoleKey
   ? createSupabaseHermesStateRepository({
