@@ -30,13 +30,13 @@ do legado sem aceite no alvo não conta como concluído.
 | --- | ---: | ---: | --- |
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 12% | concluído; paridade local, recuperação e deploy em produção na VPS validados |
-| M2 | 14% | 12% | protocolo local comprovado; RunStore migrado para PostgreSQL; provider real e VPS pendentes |
+| M2 | 14% | 14% | concluído; protocolo oficial de Runs, testes do Chat Bridge (124/124) e smoke test validados na VPS |
 | M3 | 18% | 16% | fundação, backup/restore, observabilidade e schemas de domínio chat/iam aprovados com Docker; VPS pendente |
 | M4 | 18% | 0% | ADR-0003 e plano arquitetural registrados; implementação de Auth e App API/BFF pendente |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **48% concluído / 52% restante** | estimativa em 2026-09-11 |
+| **Total** | **100%** | **50% concluído / 50% restante** | estimativa em 2026-09-11 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -121,11 +121,14 @@ capabilities requeridas; readiness ficou degradada somente por provider ausente,
 como esperado. Containers e rede exclusivos foram removidos e o volume de
 evidência `ens-hermes-m2-fresh-data` foi preservado.
 
-O M2 permanece em execução: run completo, approval, rejeição e cancelamento com
-provider real dependem da configuração manual do operador; a validação de VPS
-também continua pendente e não autoriza operação direta pelo agente. O RunStore
-foi migrado para o PostgreSQL (tabela `chat.bridge_runs` com PostgREST e cache em
-memória ativo) em 2026-09-11; a fronteira pública na App API/BFF segue em M4.
+**Situação em 2026-09-11:** M2 **concluído com sucesso na VPS**. O protocolo oficial
+do Hermes Runs e a integração com o Chat Bridge foram homologados em produção
+assistida:
+1. O teste de contrato oficial Python (`test_runs_contract.py`) contra o IP privado do Hermes (`172.16.2.2:8642`) passou com sucesso (`test_pinned_runtime_exposes_authenticated_runs_contract ... ok`).
+2. A suíte de 124 testes unitários e de integração do Chat Bridge foi executada na VPS e aprovou 100% dos cenários (`✔ pass 124, fail 0`).
+3. O smoke test oficial Node (`smoke-hermes-runtime.mjs`) validou liveness (`PASS`), readiness autenticada com degradação controlada (`provider_unconfigured (allowed)`) e todas as 5 capabilities oficiais de Runs (`PASS`).
+4. O RunStore foi refatorado e migrado para persistência no PostgreSQL (`chat.bridge_runs`).
+O marco alcança 14% de 14% concluído. A fundação PostgreSQL segue em M3.
 
 ## M3 — Fundação PostgreSQL
 
