@@ -36,6 +36,14 @@ services:
       ARTIFACT_ACCESS_TOKEN_TTL_SECONDS: ${ARTIFACT_ACCESS_TOKEN_TTL_SECONDS:-900}
       BRIDGE_ALLOWED_ORIGINS: "*"
       NODE_ENV: ${NODE_ENV:-production}
+      MARKETING_OPS_DELEGATION_ACTIVE_KID: ${MARKETING_OPS_DELEGATION_ACTIVE_KID:-v1}
+      MARKETING_OPS_DELEGATION_ACTIVE_KEY: ${MARKETING_OPS_DELEGATION_ACTIVE_KEY:-ens-chat-bridge-mops-delegation-key-32bytes}
+      MARKETING_OPS_DELEGATION_REFRESH_KEY: ${MARKETING_OPS_DELEGATION_REFRESH_KEY:-ens-chat-bridge-mops-refresh-key-32bytes}
+      PICTURE_INTERNAL_URL: ${PICTURE_INTERNAL_URL:-http://artifact-server:8095}
+      PICTURE_INTERNAL_KEY: ${PICTURE_INTERNAL_KEY:-ens-chat-bridge-picture-internal-key-32bytes}
+      PICTURE_DELEGATION_ACTIVE_KID: ${PICTURE_DELEGATION_ACTIVE_KID:-p1}
+      PICTURE_DELEGATION_ACTIVE_KEY: ${PICTURE_DELEGATION_ACTIVE_KEY:-ens-chat-bridge-picture-delegation-key-32b}
+      PICTURE_DELEGATION_REFRESH_KEY: ${PICTURE_DELEGATION_REFRESH_KEY:-ens-chat-bridge-picture-refresh-key-32b}
     networks:
       - app-internal
       - hermes-net
