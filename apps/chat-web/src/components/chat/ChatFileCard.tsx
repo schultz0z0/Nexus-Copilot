@@ -22,18 +22,7 @@ type ChatFileCardProps = {
   role: "user" | "assistant";
 };
 
-const normalizeSupabaseStorageUrl = (url: string) => {
-  try {
-    const parsed = new URL(url);
-    if (parsed.pathname.startsWith("/object/sign/")) {
-      parsed.pathname = `/storage/v1${parsed.pathname}`;
-      return parsed.toString();
-    }
-    return url;
-  } catch {
-    return url;
-  }
-};
+const normalizeFileUrl = (url: string) => url;
 
 const refreshFilePartUrl = (part: ChatMessageFilePart) => {
   if (part.artifactId) return refreshArtifactFileUrl(part);
@@ -47,7 +36,7 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
   const isImage = isSafeRenderableImage(activePart);
   const isVideo = isSafeRenderableVideo(activePart);
   const extension = getFileExtension(activePart.name || activePart.url);
-  const displayUrl = normalizeSupabaseStorageUrl(activePart.url);
+  const displayUrl = normalizeFileUrl(activePart.url);
 
   useEffect(() => {
     setActivePart(part);
@@ -57,7 +46,7 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
     const refreshedPart = await refreshFilePartUrl(activePart).catch(() => activePart);
     const nextPart = {
       ...refreshedPart,
-      url: normalizeSupabaseStorageUrl(refreshedPart.url),
+      url: normalizeFileUrl(refreshedPart.url),
     };
     setActivePart(nextPart);
     return nextPart;
@@ -72,7 +61,7 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
         if (cancelled) return;
         setActivePart({
           ...refreshedPart,
-          url: normalizeSupabaseStorageUrl(refreshedPart.url),
+          url: normalizeFileUrl(refreshedPart.url),
         });
       })
       .catch(() => undefined);
@@ -84,7 +73,7 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
 
   const getActivePart = async () => {
     const refreshedPart = await refreshActivePart();
-    const url = normalizeSupabaseStorageUrl(refreshedPart.url);
+    const url = normalizeFileUrl(refreshedPart.url);
     if (!isAllowedStreamFileUrl(url)) {
       throw new Error("unsafe_file_url");
     }

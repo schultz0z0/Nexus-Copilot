@@ -18,12 +18,12 @@ const DEFAULT_CHAT_ATTACHMENTS_BUCKET =
     | string
     | undefined) ?? "chat-attachments";
 const DEFAULT_GENERATED_IMAGES_BUCKET =
-  ((import.meta.env.VITE_SUPABASE_OUTPUTS_BUCKET || import.meta.env.NEXT_PUBLIC_SUPABASE_OUTPUTS_BUCKET) as
-    | string
-    | undefined) ?? "image-gen-outputs";
+  ((import.meta.env.VITE_OUTPUTS_BUCKET ||
+    import.meta.env.NEXT_PUBLIC_OUTPUTS_BUCKET ||
+    import.meta.env.VITE_CHAT_OUTPUTS_BUCKET) as string | undefined) ?? "image-gen-outputs";
 const DEFAULT_GENERATED_IMAGES_PREFIX =
-  ((import.meta.env.VITE_SUPABASE_GENERATED_IMAGES_PREFIX ||
-    import.meta.env.NEXT_PUBLIC_SUPABASE_GENERATED_IMAGES_PREFIX) as string | undefined) ??
+  ((import.meta.env.VITE_GENERATED_IMAGES_PREFIX ||
+    import.meta.env.NEXT_PUBLIC_GENERATED_IMAGES_PREFIX) as string | undefined) ??
   "hermes-chat-images";
 
 export const MAX_CHAT_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -88,7 +88,7 @@ const getAttachmentBucket = (bucket?: string) => resolveChatAttachmentBucket({ f
 
 const mapStorageError = (error: string) => {
   if (error.includes("Bucket not found")) {
-    return "Bucket de anexos do chat nao configurado no Supabase.";
+    return "Storage de anexos do chat nao configurado.";
   }
 
   return error;

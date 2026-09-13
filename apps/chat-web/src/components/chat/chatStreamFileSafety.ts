@@ -28,12 +28,21 @@ export const parseAllowedStreamFileHosts = (rawValue: string | undefined | null)
 export const getAllowedStreamFileHosts = () => {
   const hosts = new Set<string>();
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (supabaseUrl) {
+  const appApiUrl = import.meta.env.VITE_APP_API_URL as string | undefined;
+  if (appApiUrl) {
     try {
-      hosts.add(new URL(supabaseUrl).hostname.toLowerCase());
+      hosts.add(new URL(appApiUrl).hostname.toLowerCase());
     } catch {
-      // ignore invalid env in client helper
+      // ignore
+    }
+  }
+
+  const chatbotProxyUrl = import.meta.env.VITE_CHATBOT_PROXY_URL as string | undefined;
+  if (chatbotProxyUrl) {
+    try {
+      hosts.add(new URL(chatbotProxyUrl).hostname.toLowerCase());
+    } catch {
+      // ignore
     }
   }
 

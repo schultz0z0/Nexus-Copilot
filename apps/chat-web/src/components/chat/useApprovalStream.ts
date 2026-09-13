@@ -10,7 +10,7 @@ import type { ApprovalRequest } from "./ApprovalModal";
 interface UseApprovalStreamOptions {
   /** URL completa do chat-bridge (sem trailing slash). */
   bridgeBaseUrl: string;
-  /** Token de auth (Supabase access_token) - se aplicavel. */
+  /** Token de auth de sessão - se aplicavel. */
   getAccessToken?: () => Promise<string | null>;
   /** Callback quando request chega (pra toast, log, etc). */
   onRequest?: (req: ApprovalRequest) => void;
