@@ -9,7 +9,7 @@
 **Tech Stack:** Node.js 20+, Fastify 5, Docker Compose, Nginx, Traefik, Artifact Server CAS nativo, PostgreSQL 18.6.
 
 **Data:** 2026-09-13  
-**Estado:** Pronto para Revisão  
+**Estado:** Implementado & Validado (100% dos testes passando)  
 **Marco:** M5 (14% do programa)  
 **Referências:** [ADR-0003](../decisions/ADR-0003-auth-sessions-and-app-api.md), [Inventário Supabase](../migration/supabase-capability-inventory.md), [Plano M4](2026-09-11-m4-auth-bff-architecture-design.md)
 
