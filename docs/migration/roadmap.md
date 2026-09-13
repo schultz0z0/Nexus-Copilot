@@ -16,7 +16,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M2 — protocolo do agente | Concluído | protocolo oficial de Runs, persistência em PostgreSQL e testes do Bridge na VPS validados |
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
-| M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
+| M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
 | M6 — dados e cutover | Pendente | migração validada, reconciliação e troca de tráfego |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
@@ -33,10 +33,10 @@ do legado sem aceite no alvo não conta como concluído.
 | M2 | 14% | 14% | concluído; protocolo oficial de Runs, testes do Chat Bridge (124/124) e smoke test validados na VPS |
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
-| M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
+| M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **70% concluído / 30% restante** | estimativa em 2026-09-13 |
+| **Total** | **100%** | **84% concluído / 16% restante** | estimativa em 2026-09-13 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -211,6 +211,15 @@ API/BFF e migração gradual do frontend.
 - auditoria registra ações administrativas relevantes.
 
 ## M5 — Capacidades locais substitutas
+
+**Estado:** M5 **concluído com sucesso na VPS em 2026-09-13**. A stack de aplicação substituta dos serviços gerenciados (Supabase) e a operação de chat em produção foram homologadas:
+1. Stack Docker `ens-app` criada (`infra/app/compose.yaml` e `compose.production.yaml`) contendo 4 serviços orquestrados operando em estado ativo e saudável (`Up healthy`): `app-api` (BFF Fastify 5), `artifact-server` (CAS de anexos/avatares), `chat-bridge` (Runs/SSE Bridge gateway) e `chat-web` (React 18 + Nginx reverse proxy).
+2. Traefik configurado em modo `host` roteando HTTPS com TLSv1.3 e certificados válidos Let's Encrypt para a porta 8080 do `chat-web`.
+3. Smoke test integrado automatizado (`scripts/smoke-app-stack.mjs`) executado com sucesso na VPS validando conectividade e health dos 4 componentes (`PASS`).
+4. Homologação manual E2E de ponta a ponta no navegador confirmando ausência total de dependências ou chamadas para `supabase.co` e execução de conversa real com resposta em streaming do Hermes no perfil `ens`.
+5. Eliminação de legado: arquivo `@/lib/supabase` completamente removido do repositório, URLs de anexos/avatares migradas para a App API, expurgo do módulo `ValidatedWorks` e desacoplamento do `services/marketing-ops/src/config.ts`.
+
+O marco alcança 14% de 14% concluído. O progresso global da migração atinge 84%. A ativação do ecossistema Marketing Ops, schemas restantes e cutover de dados seguem em M6.
 
 **Objetivo:** substituir facilitadores do Supabase por componentes operáveis na
 VPS.

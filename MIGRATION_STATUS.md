@@ -177,6 +177,28 @@ Em 2026-09-12 e 2026-09-13, a camada de aplicação, autenticação, gerenciamen
 
 M4 está 100% concluído (18% de 18%). O progresso global da migração atinge 70%.
 
+## Capacidades locais substitutas — M5 concluído na VPS (2026-09-13)
+
+Em 2026-09-13, a stack de aplicação substituta dos serviços gerenciados (Supabase) e a operação de chat em produção foram implementadas, unificadas e homologadas na VPS de produção (`https://app.solucoes-nexus.tech`):
+- Stack Docker `ens-app` criada (`infra/app/compose.yaml` e `compose.production.yaml`) contendo 4 serviços orquestrados operando em estado ativo e saudável (`Up healthy`):
+  1. `ens-app-app-api-1`: BFF Fastify 5 nativo com sessões por cookies seguros `HttpOnly` e proxy seguro para serviços internos;
+  2. `ens-app-artifact-server-1`: CAS (Content-Addressable Storage) interno para anexos e avatares com URLs temporárias HMAC assinadas e expiração configurada;
+  3. `ens-app-chat-bridge-1`: Runs/SSE Bridge em modo gateway autenticado, conectado ao PostgreSQL e ao Hermes oficial;
+  4. `ens-app-chat-web-1`: Frontend React 18 sob Nginx reverse proxy unificado roteando chamadas `/api/` internamente na rede Docker `ens-app-internal`.
+- Traefik configurado em modo `host` roteando tráfego HTTPS com TLSv1.3 e certificados válidos Let's Encrypt para a porta 8080 do `chat-web`.
+- Smoke test integrado automatizado (`scripts/smoke-app-stack.mjs`) executado na VPS: todos os 4 serviços (App API, Chat Bridge, Artifact Server e Chat Web) passaram com 100% de sucesso (`PASS`).
+- Homologação manual E2E de ponta a ponta no navegador em ambiente real:
+  - Login administrativo nativo via cookie `HttpOnly` seguro;
+  - Zero requisições ou dependências para `supabase.co` na aba Network do navegador;
+  - Envio de mensagem de chat via SSE (`/api/chat/runs/.../events`) e resposta real em streaming do Hermes oficial no perfil `ens`: *"Olá, Raphael. Como posso te ajudar hoje?"*.
+- Limpeza e saneamento do codebase:
+  - Arquivo stub `@/lib/supabase` completamente deletado do repositório;
+  - URLs de download e upload de anexos e avatares migradas integralmente para a App API nativa;
+  - Módulo `ValidatedWorks` inteiramente removido do sistema a pedido do usuário;
+  - Desacoplamento de credenciais Supabase obrigatórias no serviço `services/marketing-ops/src/config.ts`.
+
+M5 está 100% concluído (14% de 14%). O progresso global da migração atinge 84%.
+
 
 ## Dívida de dependências herdada
 
