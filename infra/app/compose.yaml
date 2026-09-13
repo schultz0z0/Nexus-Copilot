@@ -110,7 +110,7 @@ networks:
   postgres-data:
     name: ${POSTGRES_DATA_NETWORK_NAME:-ens-postgres-data}
   hermes-net:
-    name: ${HERMES_NETWORK_NAME:-ens-hermes-net}
+    name: ${HERMES_NETWORK_NAME:-ens-hermes_default}
 
 secrets:
   postgres_app_password:

@@ -1,13 +1,20 @@
 services:
   artifact-server:
+    environment:
+      NODE_ENV: development
     ports:
       - "${ARTIFACT_PORT:-8095}:8095"
 
   chat-bridge:
+    environment:
+      NODE_ENV: development
+      BRIDGE_ALLOW_INSECURE_LOCAL_AUTH: "true"
     ports:
-      - "${BRIDGE_PORT:-8080}:8080"
+      - "${BRIDGE_PORT:-8082}:8080"
 
   app-api:
+    environment:
+      NODE_ENV: development
     ports:
       - "${APP_API_PORT:-3000}:3000"
 

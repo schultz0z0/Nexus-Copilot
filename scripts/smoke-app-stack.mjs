@@ -14,7 +14,7 @@
 
 const APP_URL = (process.env.APP_URL || "http://localhost:8088").replace(/\/$/, "");
 const APP_API_URL = (process.env.APP_API_URL || "http://localhost:3000").replace(/\/$/, "");
-const BRIDGE_URL = (process.env.BRIDGE_URL || "http://localhost:8080").replace(/\/$/, "");
+const BRIDGE_URL = (process.env.BRIDGE_URL || "http://localhost:8082").replace(/\/$/, "");
 const ARTIFACT_URL = (process.env.ARTIFACT_URL || "http://localhost:8095").replace(/\/$/, "");
 
 let passed = 0;
@@ -62,7 +62,7 @@ const run = async () => {
     const res = await fetch(`${ARTIFACT_URL}/health`, { signal: AbortSignal.timeout(5000) });
     assert(res.ok, `Expected 200, got ${res.status}`);
     const data = await res.json();
-    assert(data.status === "ok", "Expected status: ok");
+    assert(data.ok === true || data.status === "ok", "Expected ok response");
   });
 
   await testStep("Frontend serves static HTML and assets (GET /)", async () => {

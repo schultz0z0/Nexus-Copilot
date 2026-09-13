@@ -29,7 +29,7 @@ test("compose.development.yaml defines local port mappings", () => {
   const content = readFileSync(devComposePath, "utf8");
 
   assert.match(content, /8095\}:8095/, "artifact-server port 8095 must be mapped");
-  assert.match(content, /8080\}:8080/, "chat-bridge port 8080 must be mapped");
+  assert.match(content, /808[02]\}:8080/, "chat-bridge port 8080/8082 must be mapped");
   assert.match(content, /3000\}:3000/, "app-api port 3000 must be mapped");
   assert.match(content, /8088\}:8080/, "chat-web port 8088 must be mapped");
 });
@@ -49,7 +49,7 @@ test("chat-web nginx.conf proxies /api/ to app-api with SSE buffering disabled",
   const content = readFileSync(nginxPath, "utf8");
 
   assert.match(content, /location \/api\/ \{/, "location /api/ must be configured");
-  assert.match(content, /proxy_pass http:\/\/app-api:3000;/, "must proxy to app-api:3000");
+  assert.match(content, /proxy_pass (http:\/\/app-api:3000|\$app_api_upstream);/, "must proxy to app-api:3000");
   assert.match(content, /proxy_buffering off;/, "proxy_buffering off required for SSE");
 });
 

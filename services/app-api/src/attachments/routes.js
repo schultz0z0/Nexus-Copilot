@@ -107,7 +107,8 @@ export async function attachmentRoutes(fastify, options) {
     }
 
     const accessLink = await linkRes.json();
-    const relativeUrl = `/api/artifacts/${artifact.id}/content?token=${accessLink.token}`;
+    const token = accessLink.token || (accessLink.url ? new URL(accessLink.url).searchParams.get("token") : "") || "";
+    const relativeUrl = `/api/artifacts/${artifact.id}/content?token=${token}`;
 
     return reply.code(201).send({
       attachment: {
@@ -149,11 +150,12 @@ export async function attachmentRoutes(fastify, options) {
     }
 
     const accessLink = await linkRes.json();
+    const token = accessLink.token || (accessLink.url ? new URL(accessLink.url).searchParams.get("token") : "") || "";
     return {
       artifact_id: id,
-      url: `/api/artifacts/${id}/content?token=${accessLink.token}`,
+      url: `/api/artifacts/${id}/content?token=${token}`,
       direct_url: accessLink.url,
-      token: accessLink.token,
+      token,
       expires_at: accessLink.expires_at,
     };
   });
@@ -286,7 +288,8 @@ export async function attachmentRoutes(fastify, options) {
     }
 
     const accessLink = await linkRes.json();
-    const avatarUrl = `/api/artifacts/${artifact.id}/content?token=${accessLink.token}`;
+    const token = accessLink.token || (accessLink.url ? new URL(accessLink.url).searchParams.get("token") : "") || "";
+    const avatarUrl = `/api/artifacts/${artifact.id}/content?token=${token}`;
 
     await updateUserAvatar(db, targetUserId, avatarUrl);
     return { avatar_url: avatarUrl };

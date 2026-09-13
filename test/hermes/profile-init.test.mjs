@@ -98,7 +98,11 @@ function execute(harness) {
 }
 
 function recordedCalls(harness) {
-  return readFileSync(harness.calls, 'utf8').trim().split(/\r?\n/);
+  return readFileSync(harness.calls, 'utf8').trim().split(/\r?\n/).map((line) => line.replaceAll('\\', '/'));
+}
+
+function normalizeExpected(calls) {
+  return calls.map((line) => line.replaceAll('\\', '/'));
 }
 
 test('initializer has the safe idempotent command contract', () => {
@@ -122,7 +126,7 @@ test(
     const harness = createHarness();
     const result = execute(harness);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(recordedCalls(harness), [
+    assert.deepEqual(recordedCalls(harness), normalizeExpected([
       'profile info ens',
       `profile install ${harness.env.HERMES_DISTRIBUTION_DIR} --name ens --yes`,
       '-p default config set _config_version 12',
@@ -132,7 +136,7 @@ test(
       '-p default gateway stop',
       'profile use ens',
       'profile info ens',
-    ]);
+    ]));
   },
 );
 
@@ -143,7 +147,7 @@ test(
     const harness = createHarness({ profileExists: true });
     const result = execute(harness);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(recordedCalls(harness), [
+    assert.deepEqual(recordedCalls(harness), normalizeExpected([
       'profile info ens',
       'profile update ens --yes',
       '-p default config set _config_version 12',
@@ -153,7 +157,7 @@ test(
       '-p default gateway stop',
       'profile use ens',
       'profile info ens',
-    ]);
+    ]));
   },
 );
 
@@ -164,7 +168,7 @@ test(
     const harness = createHarness({ rootConfigExists: false });
     const result = execute(harness);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(recordedCalls(harness), [
+    assert.deepEqual(recordedCalls(harness), normalizeExpected([
       'profile info ens',
       `profile install ${harness.env.HERMES_DISTRIBUTION_DIR} --name ens --yes`,
       '-p default config set _config_version 12',
@@ -174,7 +178,7 @@ test(
       '-p default gateway stop',
       'profile use ens',
       'profile info ens',
-    ]);
+    ]));
   },
 );
 
@@ -200,10 +204,10 @@ test(
     const harness = createHarness({ failAction: 'profile install' });
     const result = execute(harness);
     assert.notEqual(result.status, 0);
-    assert.deepEqual(recordedCalls(harness), [
+    assert.deepEqual(recordedCalls(harness), normalizeExpected([
       'profile info ens',
       `profile install ${harness.env.HERMES_DISTRIBUTION_DIR} --name ens --yes`,
-    ]);
+    ]));
   },
 );
 

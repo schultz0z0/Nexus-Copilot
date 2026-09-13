@@ -46,6 +46,10 @@ export async function createApp(options = {}) {
     return { status: "ok", service: "app-api" };
   });
 
+  app.get("/api/health", async () => {
+    return { status: "ok", service: "app-api" };
+  });
+
   await app.register(authRoutes, { db, config });
   await app.register(chatRoutes, { db, config });
   await app.register(adminRoutes, { db, config });

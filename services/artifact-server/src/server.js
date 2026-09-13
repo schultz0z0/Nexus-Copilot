@@ -323,7 +323,7 @@ const handleAccessLink = async ({ req, res, config, id, corsHeaders }) => {
   });
   const url = `${config.publicBaseUrl}/v1/artifacts/${id}/content?token=${encodeURIComponent(token)}`;
 
-  jsonResponse(res, 200, { url, expires_at: expiresAt }, corsHeaders);
+  jsonResponse(res, 200, { url, token, expires_at: expiresAt }, corsHeaders);
 };
 
 const contentDisposition = (filename) => {
