@@ -31,14 +31,18 @@ test('0006 creates the canonical Marketing Ops tables without parallel IAM autho
   assert.doesNotMatch(sql, /drop\s+(?:table|schema|type)/);
 });
 
-test('canonical Marketing Ops migrations keep security, integrity and indexes separate', () => {
+test('0007 applies forced tenant RLS through canonical app context', () => {
   const security = migration('0007_marketing_ops_security.sql');
-  const integrity = migration('0008_marketing_ops_integrity.sql');
-  const indexes = migration('0009_marketing_ops_indexes.sql');
-
   assert.match(security, /force row level security/);
-  assert.match(security, /app\.tenant_id/);
-  assert.match(integrity, /append.only|immutable/);
-  assert.match(indexes, /create index/);
+  assert.match(security, /app_private\.request_tenant_id\(\)/);
 });
 
+test('0008 keeps immutable records append-only', () => {
+  const integrity = migration('0008_marketing_ops_integrity.sql');
+  assert.match(integrity, /append.only|immutable/);
+});
+
+test('0009 creates operational indexes', () => {
+  const indexes = migration('0009_marketing_ops_indexes.sql');
+  assert.match(indexes, /create index/);
+});

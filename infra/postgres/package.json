@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "migrate": "node src/migrate.mjs",
-    "test": "node --test test/migration-files.test.mjs test/migration-runner.test.mjs",
+    "test": "node --test test/migration-files.test.mjs test/migration-runner.test.mjs test/marketing-ops-migrations.test.mjs",
     "test:integration": "node --test test/*.integration.test.mjs",
     "test:backup": "node --test test/backup.integration.test.mjs"
   },

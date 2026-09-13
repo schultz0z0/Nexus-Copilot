@@ -31,8 +31,9 @@ describe('canonical Marketing Ops migration contract', () => {
 
   it('uses canonical app context and nexus roles instead of Supabase primitives', async () => {
     const security = await sql('0007_marketing_ops_security.sql');
-    expect(security).toContain("current_setting('app.tenant_id', true)");
-    expect(security).toContain("current_setting('app.user_id', true)");
+    expect(security).toContain('app_private.request_tenant_id()');
+    expect(security).toContain('app_private.request_user_id()');
+    expect(security).toContain("current_setting('app.actor_role', true)");
     expect(security).toContain('to nexus_app');
     expect(security).not.toMatch(/auth\.uid\s*\(/);
     expect(security).not.toMatch(/\b(?:anon|authenticated|service_role)\b/);
@@ -58,4 +59,3 @@ describe('canonical Marketing Ops migration contract', () => {
     ]) expect(indexes).toContain(`create index ${index}`);
   });
 });
-
