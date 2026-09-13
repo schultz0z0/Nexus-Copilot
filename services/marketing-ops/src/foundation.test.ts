@@ -570,8 +570,8 @@ describe('runtime foundation', () => {
 });
 
 describe('production Compose contract', () => {
-  it('gates Marketing Ops on composite readiness and keeps dependencies private', () => {
-    const compose = parse(readFileSync(new URL('../../../docker-compose.yml', import.meta.url), 'utf8')) as {
+  it('gates Marketing Ops on core readiness and keeps dependencies private', () => {
+    const compose = parse(readFileSync(new URL('../../../infra/app/compose.yaml', import.meta.url), 'utf8')) as {
       services: Record<string, {
         build?: { args?: Record<string, string> };
         environment?: Record<string, string>;
@@ -580,8 +580,8 @@ describe('production Compose contract', () => {
         stop_grace_period?: string;
       }>;
     };
-    const production = parse(readFileSync(new URL('../../../docker-compose.prod.yml', import.meta.url), 'utf8')) as {
-      services: Record<string, { labels?: string[] }>;
+    const production = parse(readFileSync(new URL('../../../infra/app/compose.production.yaml', import.meta.url), 'utf8')) as {
+      services: Record<string, { labels?: Record<string, string> }>;
     };
     const marketingOps = compose.services['marketing-ops'];
 
@@ -589,31 +589,24 @@ describe('production Compose contract', () => {
     expect(marketingOps?.healthcheck?.test?.join(' ')).not.toContain('/health');
     expect(marketingOps?.stop_grace_period).toBe('30s');
     expect(marketingOps?.depends_on).toMatchObject({
-      'artifact-server': { condition: 'service_healthy' },
-      'rag-mcp': { condition: 'service_healthy' }
+      'artifact-server': { condition: 'service_healthy' }
     });
+    expect(marketingOps?.depends_on).not.toHaveProperty('rag-mcp');
     expect(marketingOps?.environment).toMatchObject({
-      MARKETING_OPS_ARTIFACT_URL: '${NEXUS_ARTIFACT_INTERNAL_URL:-http://artifact-server:8095}',
-      MARKETING_OPS_ARTIFACT_TIMEOUT_MS: '${NEXUS_MARKETING_OPS_ARTIFACT_TIMEOUT_MS:-5000}',
-      MARKETING_OPS_RAG_URL: '${NEXUS_MARKETING_OPS_RAG_URL:-http://rag-mcp:8000/mcp}',
-      MARKETING_OPS_RAG_TIMEOUT_MS: '${NEXUS_MARKETING_OPS_RAG_TIMEOUT_MS:-5000}',
+      MARKETING_OPS_ARTIFACT_URL: 'http://artifact-server:8095',
+      MARKETING_OPS_RAG_URL: '${MARKETING_OPS_RAG_URL:-http://rag-mcp:8000/mcp}',
       MARKETING_OPS_TENANT_TIME_ZONE:
-        '${NEXUS_MARKETING_OPS_TENANT_TIME_ZONE:-America/Sao_Paulo}',
-      MARKETING_OPS_FEATURE_APPROVALS: '${NEXUS_MARKETING_OPS_FEATURE_APPROVALS:-false}'
+        '${MARKETING_OPS_TENANT_TIME_ZONE:-America/Sao_Paulo}',
+      MARKETING_OPS_FEATURE_APPROVALS: '${MARKETING_OPS_FEATURE_APPROVALS:-false}'
     });
-    expect(compose.services['app-frontend']?.build?.args).toMatchObject({
-      VITE_MARKETING_OPS_APPROVALS: '${NEXUS_MARKETING_OPS_FRONTEND_APPROVALS:-false}'
+    expect(compose.services['chat-web']?.build?.args).toMatchObject({
+      VITE_MARKETING_OPS_APPROVALS: '${MARKETING_OPS_FRONTEND_APPROVALS:-false}'
     });
     const frontendDockerfile = readFileSync(
       new URL('../../../apps/chat-web/Dockerfile', import.meta.url), 'utf8'
     );
     expect(frontendDockerfile).toContain('ARG VITE_MARKETING_OPS_APPROVALS');
     expect(frontendDockerfile).toContain('VITE_MARKETING_OPS_APPROVALS=$VITE_MARKETING_OPS_APPROVALS');
-    expect(production.services['marketing-ops']?.labels).toEqual(expect.arrayContaining([
-      expect.stringContaining('loadbalancer.healthcheck.path=/ready'),
-      expect.stringContaining('loadbalancer.healthcheck.interval=30s'),
-      expect.stringContaining('loadbalancer.healthcheck.timeout=5s')
-    ]));
-    expect(production.services['rag-mcp']?.labels).toContain('traefik.enable=false');
+    expect(production.services['marketing-ops']?.labels).toEqual({ 'traefik.enable': 'false' });
   });
 });
