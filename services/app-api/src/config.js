@@ -29,6 +29,13 @@ export function loadConfig(env = process.env) {
         ? false
         : true,
     chatBridgeUrl: env.CHAT_BRIDGE_URL ?? "http://localhost:8080",
+    artifact: {
+      internalUrl: (env.ARTIFACT_INTERNAL_URL ?? "http://localhost:8095").replace(/\/$/, ""),
+      internalKey: env.ARTIFACT_INTERNAL_KEY ?? "",
+      accessTokenTtlSeconds: Number.parseInt(env.ARTIFACT_ACCESS_TOKEN_TTL_SECONDS ?? "900", 10),
+      publicBaseUrl: env.ARTIFACT_PUBLIC_BASE_URL ?? "",
+      maxUploadBytes: Number.parseInt(env.ARTIFACT_MAX_UPLOAD_BYTES ?? "5368709120", 10),
+    },
     db: {
       connectionString: env.DATABASE_URL,
       host: env.PGHOST ?? "localhost",

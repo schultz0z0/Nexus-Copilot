@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   full_name?: string | null;
+  avatar_url?: string | null;
   tenant_id?: string | null;
   role?: string | null;
 }
@@ -203,6 +204,27 @@ export const api = {
         request<{ ok: boolean }>(`/api/admin/users/${encodeURIComponent(id)}`, {
           method: "DELETE",
         }),
+
+      uploadAvatar: async (userId: string, file: File): Promise<{ avatar_url: string }> => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const baseUrl = getBaseUrl();
+        const response = await fetch(`${baseUrl}/api/admin/users/${encodeURIComponent(userId)}/avatar`, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new ApiError(response.status, errorData.error || "Failed to upload avatar");
+        }
+        return response.json();
+      },
+
+      deleteAvatar: (userId: string): Promise<{ ok: boolean; avatar_url: null }> =>
+        request<{ ok: boolean; avatar_url: null }>(`/api/admin/users/${encodeURIComponent(userId)}/avatar`, {
+          method: "DELETE",
+        }),
     },
   },
 
@@ -294,6 +316,82 @@ export const api = {
       const params = cursor !== undefined ? `?cursor=${encodeURIComponent(cursor)}` : "";
       return `${baseUrl}/api/chat/runs/${encodeURIComponent(id)}/events${params}`;
     },
+  },
+
+  users: {
+    uploadAvatar: async (file: File): Promise<{ avatar_url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/users/me/avatar`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.error || "Failed to upload avatar");
+      }
+      return response.json();
+    },
+
+    deleteAvatar: (): Promise<{ ok: boolean; avatar_url: null }> =>
+      request<{ ok: boolean; avatar_url: null }>("/api/users/me/avatar", {
+        method: "DELETE",
+      }),
+  },
+
+  attachments: {
+    upload: async (
+      file: File,
+      sessionId?: string
+    ): Promise<{
+      attachment: {
+        id: string;
+        filename: string;
+        content_type: string;
+        byte_size: number;
+        sha256: string;
+        url: string;
+        direct_url?: string;
+        token?: string;
+        expires_at?: string;
+      };
+    }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (sessionId) {
+        formData.append("session_id", sessionId);
+      }
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/attachments`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.error || "Failed to upload attachment");
+      }
+      return response.json();
+    },
+
+    refreshAccessLink: (
+      id: string
+    ): Promise<{
+      artifact_id: string;
+      url: string;
+      token: string;
+      expires_at: string;
+    }> =>
+      request<{
+        artifact_id: string;
+        url: string;
+        token: string;
+        expires_at: string;
+      }>(`/api/attachments/${encodeURIComponent(id)}/access-link`, {
+        method: "POST",
+      }),
   },
 };
 

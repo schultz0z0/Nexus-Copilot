@@ -478,6 +478,7 @@ test("Fastify Auth Routes & Server", async (t) => {
       id: userId,
       email: "operator@nexus.local",
       full_name: "Nexus Operator",
+      avatar_url: null,
       tenant_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
       role: "manager",
     });

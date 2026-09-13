@@ -1,12 +1,14 @@
 import Fastify from "fastify";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
+import fastifyMultipart from "@fastify/multipart";
 import { pathToFileURL } from "node:url";
 import { loadConfig } from "./config.js";
 import { createDatabase } from "./db.js";
 import { authRoutes } from "./auth/routes.js";
 import { chatRoutes } from "./chat/routes.js";
 import { adminRoutes } from "./admin/routes.js";
+import { attachmentRoutes } from "./attachments/routes.js";
 
 /**
  * Creates and configures the Fastify App API application.
@@ -34,6 +36,12 @@ export async function createApp(options = {}) {
     credentials: true,
   });
 
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: config.artifact?.maxUploadBytes ?? 5368709120,
+    },
+  });
+
   app.get("/health", async () => {
     return { status: "ok", service: "app-api" };
   });
@@ -41,6 +49,7 @@ export async function createApp(options = {}) {
   await app.register(authRoutes, { db, config });
   await app.register(chatRoutes, { db, config });
   await app.register(adminRoutes, { db, config });
+  await app.register(attachmentRoutes, { db, config });
 
   if (db?.close) {
     app.addHook("onClose", async () => {

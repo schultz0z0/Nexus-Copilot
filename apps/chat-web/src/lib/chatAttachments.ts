@@ -11,7 +11,7 @@ import {
   isChatAttachmentSupportedInCurrentStage,
   normalizeChatAttachmentMimeType,
 } from "@/lib/chatAttachmentPolicy";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 const DEFAULT_CHAT_ATTACHMENTS_BUCKET =
   ((import.meta.env.VITE_CHAT_ATTACHMENTS_BUCKET || import.meta.env.NEXT_PUBLIC_CHAT_ATTACHMENTS_BUCKET) as
@@ -188,38 +188,22 @@ export const shouldRefreshSignedUrl = (
   return expiresAt - now <= refreshWindowMs;
 };
 
-const createSignedAttachmentUrl = async (path: string, bucket?: string) => {
-  const activeBucket = getAttachmentBucket(bucket);
-  const { data, error } = await supabase.storage
-    .from(activeBucket)
-    .createSignedUrl(path, SIGNED_URL_EXPIRES_IN_SECONDS);
-
-  if (error || !data?.signedUrl) {
-    throw new Error(mapStorageError(error?.message ?? "Nao foi possivel gerar a URL assinada do anexo."));
-  }
-
-  return {
-    signedUrl: data.signedUrl,
-    signedUrlExpiresAt: buildSignedUrlExpiresAt({}),
-  };
-};
-
 export const refreshChatAttachmentUrl = async (part: ChatMessageFilePart, bucket?: string) => {
-  if (!part.storagePath || !shouldRefreshSignedUrl(part.signedUrlExpiresAt)) {
+  const artifactId = part.artifactId || part.storagePath;
+  if (!artifactId || !shouldRefreshSignedUrl(part.signedUrlExpiresAt)) {
     return part;
   }
 
-  const activeBucket = resolveChatAttachmentBucket({
-    storageBucket: bucket ?? part.storageBucket,
-    storagePath: part.storagePath,
-  });
-  const { signedUrl, signedUrlExpiresAt } = await createSignedAttachmentUrl(part.storagePath, activeBucket);
-  return {
-    ...part,
-    url: signedUrl,
-    signedUrlExpiresAt,
-    storageBucket: activeBucket,
-  };
+  try {
+    const refreshed = await api.attachments.refreshAccessLink(artifactId);
+    return {
+      ...part,
+      url: refreshed.url,
+      signedUrlExpiresAt: refreshed.expires_at,
+    };
+  } catch {
+    return part;
+  }
 };
 
 export const shouldHideTextImagePreview = ({
@@ -234,7 +218,7 @@ export const shouldHideTextImagePreview = ({
   try {
     const parsed = new URL(textUrl);
     const normalizedPath = parsed.pathname.replace(/^\/storage\/v1/, "");
-    if (normalizedPath.startsWith("/v1/artifacts/")) return true;
+    if (normalizedPath.startsWith("/v1/artifacts/") || normalizedPath.startsWith("/api/artifacts/")) return true;
     const generatedPrefix = DEFAULT_GENERATED_IMAGES_PREFIX.trim().replace(/^\/+|\/+$/g, "");
     return (
       normalizedPath.startsWith(`/object/sign/${DEFAULT_GENERATED_IMAGES_BUCKET}/${generatedPrefix}/`) ||
@@ -255,7 +239,6 @@ export const uploadChatAttachments = async ({
     return { storedParts: [] };
   }
 
-  const activeBucket = getAttachmentBucket(bucket);
   const storedParts: ChatMessageFilePart[] = [];
 
   for (const attachment of attachments) {
@@ -269,38 +252,21 @@ export const uploadChatAttachments = async ({
       getFileExtension(attachment.file.name),
     );
 
-    const storagePath = buildChatAttachmentPath({
-      userId,
-      sessionId,
-      fileName: attachment.file.name,
+    const { attachment: uploaded } = await api.attachments.upload(attachment.file, sessionId);
+
+    const storedPart = createFilePart({
+      kind: attachment.kind,
+      name: attachment.file.name,
+      url: uploaded.url,
+      mimeType: normalizedMimeType || uploaded.content_type || undefined,
+      artifactId: uploaded.id,
+      artifactSize: uploaded.byte_size,
+      artifactSha256: uploaded.sha256,
+      storagePath: uploaded.id,
+      signedUrlExpiresAt: uploaded.expires_at,
     });
 
-    const { error: uploadError } = await supabase.storage.from(activeBucket).upload(storagePath, attachment.file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
-
-    if (uploadError) {
-      throw new Error(mapStorageError(uploadError.message));
-    }
-
-    try {
-      const { signedUrl, signedUrlExpiresAt } = await createSignedAttachmentUrl(storagePath, activeBucket);
-      const storedPart = createFilePart({
-        kind: attachment.kind,
-        name: attachment.file.name,
-        url: signedUrl,
-        mimeType: normalizedMimeType || undefined,
-        storagePath,
-        storageBucket: activeBucket,
-        signedUrlExpiresAt,
-      });
-
-      storedParts.push(storedPart);
-    } catch (error) {
-      await supabase.storage.from(activeBucket).remove([storagePath]);
-      throw error;
-    }
+    storedParts.push(storedPart);
   }
 
   return {

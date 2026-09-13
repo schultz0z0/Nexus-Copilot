@@ -79,10 +79,19 @@ export async function validateSession(db, token) {
   }
 
   const row = result.rows[0];
+  let avatarUrl = null;
+  try {
+    const pResult = await db.query(`SELECT avatar_url FROM iam.principals WHERE id = $1`, [row.user_id]);
+    avatarUrl = pResult.rows?.[0]?.avatar_url ?? null;
+  } catch {
+    // fallback if table/column does not exist in mock
+  }
+
   return {
     id: row.user_id,
     email: row.email,
     full_name: row.full_name,
+    avatar_url: avatarUrl,
     tenant_id: row.tenant_id ?? null,
     role: row.role ?? null,
   };
@@ -386,4 +395,20 @@ export async function resetAdminUserPassword(db, userId, newPassword) {
 export async function deleteAdminUser(db, tenantId, userId) {
   await db.query("DELETE FROM iam.principals WHERE id = $1", [userId]);
   return { ok: true };
+}
+
+/**
+ * Updates a user's avatar URL in iam.principals.
+ *
+ * @param {object} db
+ * @param {string} userId
+ * @param {string|null} avatarUrl
+ * @returns {Promise<{ avatar_url: string|null }>}
+ */
+export async function updateUserAvatar(db, userId, avatarUrl) {
+  await db.query(
+    "UPDATE iam.principals SET avatar_url = $1, updated_at = transaction_timestamp() WHERE id = $2",
+    [avatarUrl ?? null, userId]
+  );
+  return { avatar_url: avatarUrl ?? null };
 }

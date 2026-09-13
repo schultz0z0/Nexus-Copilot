@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buildChatAttachmentMarkdown,
@@ -109,5 +109,35 @@ describe("chatAttachments", () => {
         hasStructuredImagePart: true,
       }),
     ).toBe(true);
+  });
+
+  it("uploadChatAttachments envia arquivos via api.attachments e retorna partes estruturadas", async () => {
+    const { uploadChatAttachments } = await import("./chatAttachments");
+    const { api } = await import("./api");
+
+    const spy = vi.spyOn(api.attachments, "upload").mockResolvedValueOnce({
+      attachment: {
+        id: "art-123",
+        filename: "doc.pdf",
+        content_type: "application/pdf",
+        byte_size: 1024,
+        sha256: "sha-pdf",
+        url: "/api/artifacts/art-123/content?token=tkn",
+        expires_at: "2026-09-13T06:00:00.000Z",
+      },
+    });
+
+    const file = new File(["bytes"], "doc.pdf", { type: "application/pdf" });
+    const result = await uploadChatAttachments({
+      attachments: [{ file, kind: "file" }],
+      sessionId: "session-1",
+      userId: "user-1",
+    });
+
+    expect(spy).toHaveBeenCalledWith(file, "session-1");
+    expect(result.storedParts).toHaveLength(1);
+    expect(result.storedParts[0].artifactId).toBe("art-123");
+    expect(result.storedParts[0].url).toBe("/api/artifacts/art-123/content?token=tkn");
+    spy.mockRestore();
   });
 });
