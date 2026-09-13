@@ -117,11 +117,19 @@ export class HermesRunsClient {
       throw new HermesRunsCapabilityError("Hermes capabilities response is not valid JSON.");
     }
 
-    if (!Array.isArray(payload?.features)) {
+    let available;
+    if (Array.isArray(payload?.features)) {
+      available = new Set(payload.features);
+    } else if (payload?.features && typeof payload.features === "object") {
+      available = new Set(
+        Object.entries(payload.features)
+          .filter(([, enabled]) => Boolean(enabled))
+          .map(([feature]) => feature),
+      );
+    } else {
       throw new HermesRunsCapabilityError("Hermes capabilities response has no feature list.");
     }
 
-    const available = new Set(payload.features);
     const missingFeatures = REQUIRED_RUN_FEATURES.filter((feature) => !available.has(feature));
     if (missingFeatures.length > 0) {
       throw new HermesRunsCapabilityError(

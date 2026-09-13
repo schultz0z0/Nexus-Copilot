@@ -38,6 +38,19 @@ test("HermesRunsClient accepts the pinned Runs capability contract", async () =>
   assert.equal(new Headers(calls[0].init.headers).get("x-user-id"), "user-1");
 });
 
+test("HermesRunsClient accepts object dictionary format for features from Hermes API server", async () => {
+  const featureMap = Object.fromEntries(
+    [...REQUIRED_RUN_FEATURES, "run_steer"].map((f) => [f, true]),
+  );
+  const client = new HermesRunsClient({
+    baseUrl: "http://hermes:8642/",
+    apiKey: "test-key",
+    fetchImpl: async () => json({ features: featureMap }),
+  });
+
+  await assert.doesNotReject(() => client.assertCapabilities());
+});
+
 test("HermesRunsClient fails closed when a required capability is missing", async () => {
   const available = REQUIRED_RUN_FEATURES.filter((feature) => feature !== "run_stop");
   const client = new HermesRunsClient({
