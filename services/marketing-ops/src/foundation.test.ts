@@ -58,6 +58,23 @@ describe('runtime foundation', () => {
     })).toThrow(/MARKETING_OPS_RAG_URL/);
   });
 
+  it('allows production configuration without Supabase credentials', () => {
+    const config = loadConfig({
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgresql://postgres:strong-password@db:5432/postgres',
+      MARKETING_OPS_INTERNAL_KEY: 'production-internal-key-at-least-32-bytes',
+      MARKETING_OPS_DELEGATION_ACTIVE_KID: 'v1',
+      MARKETING_OPS_DELEGATION_ACTIVE_KEY: 'production-delegation-key-at-least-32-bytes',
+      MARKETING_OPS_DELEGATION_REFRESH_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/refresh',
+      MARKETING_OPS_ARTIFACT_URL: 'http://artifact-server:8095',
+      MARKETING_OPS_ARTIFACT_INTERNAL_KEY: 'production-artifact-key-at-least-32-bytes',
+      MARKETING_OPS_RAG_URL: 'http://rag-mcp:8000/mcp'
+    });
+    expect(config.supabaseUrl).toBe('');
+    expect(config.supabaseAnonKey).toBe('');
+    expect(config.nodeEnv).toBe('production');
+  });
+
   it('rejects underscore-style Compose placeholder secrets in production', () => {
     expect(() => loadConfig({
       NODE_ENV: 'production',

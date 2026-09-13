@@ -5,14 +5,17 @@ const userSchema = z.object({ id: z.string().uuid(), email: z.string().email().n
 export interface SupabaseUser { id: string; email: string | null }
 
 export interface SupabaseAuthDependencies {
-  supabaseUrl: string;
-  anonKey: string;
+  supabaseUrl?: string;
+  anonKey?: string;
   fetch?: typeof globalThis.fetch;
 }
 
 export async function verifySupabaseBearer(token: string, deps: SupabaseAuthDependencies): Promise<SupabaseUser> {
   const normalized = token.trim();
   if (!normalized) throw appError('unauthorized', 401, 'Bearer token is required');
+  if (!deps.supabaseUrl || !deps.anonKey) {
+    throw appError('auth_unconfigured', 503, 'Authentication service is not configured');
+  }
   let response: Response;
   try {
     response = await (deps.fetch ?? globalThis.fetch)(`${deps.supabaseUrl.replace(/\/$/, '')}/auth/v1/user`, {

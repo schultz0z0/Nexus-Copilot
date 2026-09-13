@@ -21,6 +21,10 @@ describe('trusted actor boundary', () => {
     expect(user).toEqual({ id: '11111111-1111-4111-8111-111111111111', email: 'member@local.test' });
   });
 
+  it('rejects when Supabase auth is not configured', async () => {
+    await expect(verifySupabaseBearer('some-token', {})).rejects.toMatchObject({ code: 'auth_unconfigured' });
+  });
+
   it('resolves role and tenant from active membership, not client data', async () => {
     const actor = await resolveActor(pool, '11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     expect(actor).toMatchObject({ role: 'member', tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' });
