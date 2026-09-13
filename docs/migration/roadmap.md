@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-11
+**Atualizado em:** 2026-09-13
 
 ## Regra de progressão
 
@@ -12,10 +12,10 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | Marco | Estado | Resultado principal |
 | --- | --- | --- |
 | M0 — baseline e memória do projeto | Concluído | monorepo inicial, restrições e documentação canônica |
-| M1 — Hermes oficial | Em execução; paridade e recuperação local aprovadas | runtime/profile e restore comprovados; VPS e rollback do core pendentes |
-| M2 — protocolo do agente | Em execução; checkpoint C local aprovado | contrato Bridge/Runtime comprovado sem provider; aceite real com provider e VPS pendentes |
-| M3 — fundação PostgreSQL | Em execução; fundação, recuperação e observabilidade locais aprovadas | schema, migrações, RLS, backup Restic, restore drill e observabilidade comprovados; VPS e domínios pendentes |
-| M4 — Auth e App API/BFF | Pendente | identidade/tenant e frontend sem acesso direto ao legado |
+| M1 — Hermes oficial | Concluído | runtime/profile, restore e deploy VPS comprovados sob supervisão s6 |
+| M2 — protocolo do agente | Concluído | protocolo oficial de Runs, persistência em PostgreSQL e testes do Bridge na VPS validados |
+| M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
+| M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Pendente | storage, funções, jobs, realtime e integrações locais |
 | M6 — dados e cutover | Pendente | migração validada, reconciliação e troca de tráfego |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
@@ -31,12 +31,12 @@ do legado sem aceite no alvo não conta como concluído.
 | M0 | 8% | 8% | concluído |
 | M1 | 12% | 12% | concluído; paridade local, recuperação e deploy em produção na VPS validados |
 | M2 | 14% | 14% | concluído; protocolo oficial de Runs, testes do Chat Bridge (124/124) e smoke test validados na VPS |
-| M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (23/23) validados na VPS |
-| M4 | 18% | 0% | ADR-0003 e plano arquitetural registrados; implementação de Auth e App API/BFF pendente |
+| M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
+| M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 0% | substitutos ainda não migrados e aceitos |
 | M6 | 10% | 0% | dados e cutover ainda não executados |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **52% concluído / 48% restante** | estimativa em 2026-09-11 |
+| **Total** | **100%** | **70% concluído / 30% restante** | estimativa em 2026-09-13 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -175,6 +175,25 @@ revisões humanas incrementais versionadas em `docs/migration/supabase-ledger/re
 [2026-09-10-postgresql-recovery-observability-ledger-review-implementation.md](../plans/2026-09-10-postgresql-recovery-observability-ledger-review-implementation.md).
 
 ## M4 — Auth e App API/BFF
+
+**Estado:** M4 **concluído com sucesso na VPS em 2026-09-13**. A camada de aplicação,
+identidade, controle de acesso e BFF foi homologada em produção:
+1. Migration `0005_auth_sessions.sql` aplicada no PostgreSQL de produção sob advisory lock, adicionando tabelas `iam.user_credentials`, `iam.user_sessions`, funções de segurança `iam.authenticate_by_email` e `iam.resolve_session` e hardening de RLS.
+2. Tenant principal (`prometeus`, display name: `Prometeus Marketing`) e primeiro usuário administrador provisionados com hash bcrypt seguro (12 rounds) de forma atômica no banco.
+3. Papel `nexus_app` validado conectando na rede interna do PostgreSQL (`172.16.6.2:5432`) utilizando o secret `/etc/ens/secrets/postgres/app`.
+4. Serviço App API (`services/app-api`) implementado com Fastify 5, sessões por cookies `HttpOnly`/`SameSite=Lax`, rotas de auth (`/api/auth/*`), chat (`/api/chat/*`) e administração protegida por RBAC (`/api/admin/users/*`).
+5. Suíte de testes da App API executada na VPS: 74/74 testes aprovados (`✔ pass 74, fail 0`).
+6. Suíte de testes do frontend `chat-web`: 164/164 testes aprovados (40 arquivos), tela `UserManagement.tsx` 100% migrada das Edge Functions do Supabase para a API nativa.
+7. Homologação integrada E2E executada com sucesso no runtime de produção da VPS (`test_app_api_e2e`):
+   - Negação de senha incorreta (`401 Unauthorized`);
+   - Login com credenciais válidas (`200 OK` + emissão do cookie seguro `ens_session`);
+   - Resolução de sessão autenticada (`200 OK` com dados do admin e tenant);
+   - Negação anônima de endpoint administrativo (`401 Unauthorized`);
+   - Acesso autorizado a `/api/admin/users` retornando listagem do tenant;
+   - Encerramento de sessão via `POST /api/auth/logout` (`200 OK`);
+   - Revogação imediata comprovada pós-logout (`401 Unauthorized`).
+
+O marco alcança 18% de 18% concluído. O progresso global da migração atinge 70%. As capacidades locais substitutas seguem em M5.
 
 **Objetivo:** centralizar identidade, tenant, autorização e contratos públicos.
 

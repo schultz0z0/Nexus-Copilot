@@ -162,6 +162,22 @@ Em 2026-09-10 e 2026-09-11, a fundação PostgreSQL e os schemas de domínio for
 
 M3 está 100% concluído (18% de 18%). O progresso global da migração atinge 52%.
 
+## Auth e App API/BFF — M4 concluído na VPS (2026-09-13)
+
+Em 2026-09-12 e 2026-09-13, a camada de aplicação, autenticação, gerenciamento de sessões e administração foi implementada, testada e homologada na VPS de produção:
+- Migration `0005_auth_sessions.sql` aplicada no PostgreSQL de produção com sucesso (`iam.user_credentials`, `iam.user_sessions`, funções seguras `iam.authenticate_by_email` e `iam.resolve_session`, e hardening de RLS);
+- Tenant principal (`prometeus`, display name: `Prometeus Marketing`) e primeiro usuário administrador provisionados com hash bcrypt seguro (12 rounds) de forma transacional e sem exposição de senhas;
+- Role `nexus_app` validada com acesso de menor privilégio na rede interna Docker (`172.16.6.2:5432`) utilizando o secret `/etc/ens/secrets/postgres/app`;
+- App API Fastify 5 (`services/app-api`) implementada com autenticação baseada em cookie `HttpOnly` seguro (`SameSite=Lax`), injeção de contexto PostgreSQL (`SET LOCAL app.user_id`, `SET LOCAL app.tenant_id`) e rotas RBAC de administração (`/api/admin/users/*`);
+- Tela `UserManagement.tsx` em `apps/chat-web` 100% desacoplada das Edge Functions legadas do Supabase, migrada para os endpoints nativos da App API;
+- Suíte completa de 74 testes da App API aprovada na VPS (`✔ pass 74, fail 0`);
+- Suíte de 24 testes contratuais de PostgreSQL aprovada na VPS (`✔ pass 24, fail 0`);
+- Suíte de 164 testes do frontend aprovada (`164 passed across 40 test files`);
+- Homologação E2E integrada em produção (`test_app_api_e2e`) executada e aprovada com 100% de sucesso contra o banco real, validando login negativo/positivo, emissão e parsing de cookie de sessão, consulta autorizada RBAC de admin, negação anônima, logout e invalidação imediata de sessão.
+
+M4 está 100% concluído (18% de 18%). O progresso global da migração atinge 70%.
+
+
 ## Dívida de dependências herdada
 
 - Frontend: 2 vulnerabilidades moderadas e 2 altas reportadas por `npm ci`.
