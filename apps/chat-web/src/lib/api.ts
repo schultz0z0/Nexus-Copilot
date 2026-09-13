@@ -6,6 +6,19 @@ export interface User {
   role?: string | null;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url?: string | null;
+  role: string;
+  active: boolean;
+  hermes_enabled: boolean;
+  hermes_base_url: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ChatSession {
   id: string;
   user_id: string;
@@ -138,6 +151,59 @@ export const api = {
       request<{ user: User }>("/api/auth/session", {
         method: "GET",
       }),
+
+    changePassword: (currentPassword: string, newPassword: string): Promise<{ ok: boolean }> =>
+      request<{ ok: boolean }>("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+  },
+
+  admin: {
+    users: {
+      list: (): Promise<{ users: AdminUser[] }> =>
+        request<{ users: AdminUser[] }>("/api/admin/users", {
+          method: "GET",
+        }),
+
+      create: (payload: {
+        email: string;
+        password: string;
+        full_name?: string;
+        role?: string;
+      }): Promise<{ user: AdminUser }> =>
+        request<{ user: AdminUser }>("/api/admin/users", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }),
+
+      update: (
+        id: string,
+        payload: {
+          full_name?: string;
+          role?: string;
+          active?: boolean;
+          avatar_url?: string | null;
+          hermes_enabled?: boolean;
+          hermes_base_url?: string | null;
+        }
+      ): Promise<{ user: AdminUser }> =>
+        request<{ user: AdminUser }>(`/api/admin/users/${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+
+      resetPassword: (id: string, password: string): Promise<{ ok: boolean }> =>
+        request<{ ok: boolean }>(`/api/admin/users/${encodeURIComponent(id)}/reset-password`, {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        }),
+
+      delete: (id: string): Promise<{ ok: boolean }> =>
+        request<{ ok: boolean }>(`/api/admin/users/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        }),
+    },
   },
 
   chat: {

@@ -22,6 +22,7 @@ data/
 **/mcp-tokens/
 
 # Tool and editor state
+.agents/
 .worktrees/
 .venv/
 __pycache__/

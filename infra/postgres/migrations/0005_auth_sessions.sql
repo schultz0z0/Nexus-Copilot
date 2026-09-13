@@ -36,9 +36,21 @@ CREATE TRIGGER user_sessions_updated_at_trigger
 BEFORE UPDATE ON iam.user_sessions
 FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
 
+ALTER TABLE iam.principals ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE iam.principals ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE iam.principals ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT transaction_timestamp();
+ALTER TABLE iam.user_chat_integrations ADD COLUMN IF NOT EXISTS hermes_base_url text;
+
+DROP TRIGGER IF EXISTS principals_updated_at_trigger ON iam.principals;
+CREATE TRIGGER principals_updated_at_trigger
+BEFORE UPDATE ON iam.principals
+FOR EACH ROW EXECUTE FUNCTION infra.set_current_timestamp_updated_at();
+
 -- Grants to nexus_app
 GRANT SELECT, INSERT, UPDATE, DELETE ON iam.user_credentials TO nexus_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON iam.user_sessions TO nexus_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON iam.principals TO nexus_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON iam.memberships TO nexus_app;
 
 -- RLS for Credentials and Sessions
 ALTER TABLE iam.user_credentials ENABLE ROW LEVEL SECURITY;
@@ -49,6 +61,14 @@ ALTER TABLE iam.user_sessions FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY nexus_app_all ON iam.user_credentials TO nexus_app USING (true) WITH CHECK (true);
 CREATE POLICY nexus_app_all ON iam.user_sessions TO nexus_app USING (true) WITH CHECK (true);
+CREATE POLICY nexus_app_all ON iam.principals TO nexus_app USING (true) WITH CHECK (true);
+CREATE POLICY nexus_app_all ON iam.memberships TO nexus_app USING (true) WITH CHECK (true);
+
+CREATE POLICY nexus_owner_all ON iam.tenants TO nexus_owner USING (true) WITH CHECK (true);
+CREATE POLICY nexus_owner_all ON iam.principals TO nexus_owner USING (true) WITH CHECK (true);
+CREATE POLICY nexus_owner_all ON iam.memberships TO nexus_owner USING (true) WITH CHECK (true);
+CREATE POLICY nexus_owner_all ON iam.user_credentials TO nexus_owner USING (true) WITH CHECK (true);
+CREATE POLICY nexus_owner_all ON iam.user_sessions TO nexus_owner USING (true) WITH CHECK (true);
 
 -- Hardening of Chat Domain RLS Policies
 DROP POLICY IF EXISTS nexus_app_all ON chat.chat_sessions;

@@ -1,4 +1,4 @@
-import { verifyPassword, createSession, validateSession, revokeSession } from "./service.js";
+import { verifyPassword, createSession, validateSession, revokeSession, changeUserPassword } from "./service.js";
 
 // Constant-time dummy hash for unknown user login attempts (prevents timing enumeration)
 const DUMMY_HASH = "$2a$12$e8Y7z7r0xL9fXyUoA1b2c.o1kP9rQ8sT7uV6wX5yZ4aB3cD2eF1gH";
@@ -94,6 +94,48 @@ export async function authRoutes(fastify, options) {
 
     return { user };
   };
+
+  // POST /api/auth/change-password
+  fastify.post("/api/auth/change-password", async (request, reply) => {
+    let token = request.cookies?.[cookieName];
+    if (!token && request.headers.authorization) {
+      const match = request.headers.authorization.match(/^Bearer\s+(.+)$/i);
+      if (match) {
+        token = match[1].trim();
+      }
+    }
+
+    if (!token) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+
+    const user = await validateSession(db, token);
+    if (!user) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+
+    const currentPassword = request.body?.currentPassword ?? request.body?.current_password;
+    const newPassword = request.body?.newPassword ?? request.body?.new_password;
+
+    if (!currentPassword || !newPassword) {
+      return reply.code(400).send({ error: "Current password and new password are required" });
+    }
+
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      return reply.code(400).send({ error: "New password must be at least 8 characters long" });
+    }
+
+    try {
+      await changeUserPassword(db, user.id, currentPassword, newPassword);
+      return { ok: true };
+    } catch (err) {
+      if (err.message === "Invalid current password") {
+        return reply.code(400).send({ error: "Invalid current password" });
+      }
+      request.log?.error(err);
+      return reply.code(500).send({ error: "Failed to change password" });
+    }
+  });
 
   // GET /api/auth/me & GET /api/auth/session
   fastify.get("/api/auth/me", handleSession);

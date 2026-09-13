@@ -686,6 +686,7 @@ class RunStore {
   }
 
   async init() {
+    if (!this.supabaseUrl) return;
     // Fetch all active runs from Postgres where status is not terminal
     const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?select=state&state->>status=not.in.(completed,failed,cancelled,canceled,expired,interrupted)`, {
       headers: this.headers
@@ -728,6 +729,9 @@ class RunStore {
     if (this.runs.has(id)) {
       return this.runs.get(id);
     }
+    if (!this.supabaseUrl) {
+      return null;
+    }
     const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?id=eq.${id}&select=state`, {
       headers: this.headers
     });
@@ -745,6 +749,7 @@ class RunStore {
   }
 
   async persist(run) {
+    if (!this.supabaseUrl) return;
     const response = await fetch(`${this.supabaseUrl}/rest/v1/bridge_runs?on_conflict=id`, {
       method: "POST",
       headers: { ...this.headers, Prefer: "resolution=merge-duplicates" },

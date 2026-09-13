@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppRole, getRoleLabel, isAdminRole, normalizeProfileRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -145,35 +146,19 @@ export default function UserManagement() {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("full_name");
-
-      if (error) throw error;
-
-      const profileRows = data || [];
-      const { data: integrationRows, error: integrationError } = await supabase
-        .from("user_chat_integrations")
-        .select("user_id, hermes_enabled, hermes_base_url");
-
-      if (integrationError) throw integrationError;
-
-      const integrationMap = new Map(
-        (integrationRows || []).map((row) => [
-          row.user_id,
-          {
-            hermes_enabled: row.hermes_enabled,
-            hermes_base_url: row.hermes_base_url,
-          },
-        ]),
-      );
-
+      const res = await api.admin.users.list();
       setProfiles(
-        profileRows.map((profile) => ({
-          ...profile,
-          ...(integrationMap.get(profile.id) ?? { hermes_enabled: false, hermes_base_url: null }),
-        })),
+        (res.users || []).map((u) => ({
+          id: u.id,
+          full_name: u.full_name || "",
+          email: u.email,
+          role: u.role,
+          avatar_url: u.avatar_url || undefined,
+          hermes_enabled: u.hermes_enabled,
+          hermes_base_url: u.hermes_base_url,
+          created_at: u.created_at,
+          updated_at: u.updated_at,
+        }))
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -251,35 +236,23 @@ export default function UserManagement() {
         }
       }
 
-      const { error } = await supabase.rpc('admin_update_profile', {
-        target_user_id: selectedUserForEdit.id,
-        new_full_name: editName,
-        new_avatar_url: avatarUrl,
-        new_role: editRole,
+      const { user: updatedUser } = await api.admin.users.update(selectedUserForEdit.id, {
+        full_name: editName,
+        avatar_url: avatarUrl,
+        role: editRole,
+        hermes_enabled: editHermesEnabled,
+        hermes_base_url: editHermesEnabled ? normalizedHermesBaseUrl : null,
       });
-
-      if (error) throw error;
-
-      const { error: integrationError, data: integrationRow } = await supabase.rpc(
-        "admin_upsert_user_chat_integration",
-        {
-          target_user_id: selectedUserForEdit.id,
-          new_hermes_enabled: editHermesEnabled,
-          new_hermes_base_url: editHermesEnabled ? normalizedHermesBaseUrl : null,
-        },
-      );
-
-      if (integrationError) throw integrationError;
 
       setProfiles((prev) => prev.map((p) => (
         p.id === selectedUserForEdit.id
           ? {
               ...p,
-              full_name: editName,
-              avatar_url: avatarUrl || undefined,
-              role: editRole,
-              hermes_enabled: integrationRow?.hermes_enabled ?? editHermesEnabled,
-              hermes_base_url: integrationRow?.hermes_base_url ?? (editHermesEnabled ? normalizedHermesBaseUrl : null),
+              full_name: updatedUser.full_name || editName,
+              avatar_url: updatedUser.avatar_url || avatarUrl || undefined,
+              role: updatedUser.role || editRole,
+              hermes_enabled: updatedUser.hermes_enabled ?? editHermesEnabled,
+              hermes_base_url: updatedUser.hermes_base_url ?? (editHermesEnabled ? normalizedHermesBaseUrl : null),
             }
           : p
       )));
@@ -294,11 +267,7 @@ export default function UserManagement() {
       fetchProfiles();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err || "");
-      if (msg.includes("function admin_update_profile") || msg.includes("function admin_upsert_user_chat_integration")) {
-        toast.error("Funções RPC administrativas ausentes. Execute as migrations do Supabase antes de usar o painel.");
-      } else {
-        toast.error("Erro ao atualizar usuário: " + msg);
-      }
+      toast.error("Erro ao atualizar usuário: " + msg);
     } finally {
       setEditLoading(false);
     }
@@ -325,16 +294,12 @@ export default function UserManagement() {
 
     try {
       setCreateLoading(true);
-      const { error } = await supabase.functions.invoke("admin-create-user", {
-        body: {
-          email: newEmail,
-          password: newPassword,
-          full_name: newName,
-          role: newRole,
-        },
+      await api.admin.users.create({
+        email: newEmail,
+        password: newPassword,
+        full_name: newName,
+        role: newRole,
       });
-
-      if (error) throw error;
 
       toast.success("Usuário criado com sucesso!");
       setIsCreateOpen(false);
@@ -344,9 +309,8 @@ export default function UserManagement() {
       setNewRole("member");
       fetchProfiles();
     } catch (err: unknown) {
-      console.error("Erro detalhado ao criar usuário:", err);
-      const fallback = err instanceof Error ? err.message : JSON.stringify(err);
-      const msg = await getFunctionErrorMessage(err, fallback);
+      console.error("Erro ao criar usuário:", err);
+      const msg = err instanceof Error ? err.message : String(err);
       toast.error("Erro ao criar usuário: " + msg);
     } finally {
       setCreateLoading(false);
@@ -363,23 +327,14 @@ export default function UserManagement() {
 
     try {
       setResetLoading(true);
-
-      const { error } = await supabase.functions.invoke("admin-reset-password", {
-        body: {
-          user_id: selectedUser.id,
-          password: resetPassword,
-        },
-      });
-
-      if (error) throw error;
+      await api.admin.users.resetPassword(selectedUser.id, resetPassword);
 
       toast.success(`Senha de ${selectedUser.full_name} redefinida com sucesso!`);
       setIsResetOpen(false);
       setSelectedUser(null);
       setResetPassword("");
     } catch (err: unknown) {
-      const fallback = err instanceof Error ? err.message : String(err);
-      const msg = await getFunctionErrorMessage(err, fallback);
+      const msg = err instanceof Error ? err.message : String(err);
       toast.error("Erro ao redefinir senha: " + msg);
     } finally {
       setResetLoading(false);
@@ -391,23 +346,14 @@ export default function UserManagement() {
 
     try {
       setDeleteLoading(true);
-
-      const { error } = await supabase.functions.invoke("admin-delete-user", {
-        body: {
-          user_id: userToDelete.id,
-        },
-      });
-
-      if (error) throw error;
+      await api.admin.users.delete(userToDelete.id);
 
       toast.success(`Usuário ${userToDelete.full_name} removido com sucesso!`);
-      
-      setProfiles(profiles.filter(p => p.id !== userToDelete.id));
+      setProfiles((prev) => prev.filter((p) => p.id !== userToDelete.id));
       setIsDeleteOpen(false);
       setUserToDelete(null);
     } catch (err: unknown) {
-      const fallback = err instanceof Error ? err.message : String(err);
-      const msg = await getFunctionErrorMessage(err, fallback);
+      const msg = err instanceof Error ? err.message : String(err);
       toast.error("Erro ao deletar usuário: " + msg);
     } finally {
       setDeleteLoading(false);
