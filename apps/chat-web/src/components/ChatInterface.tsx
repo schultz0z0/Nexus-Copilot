@@ -593,12 +593,12 @@ export const ChatInterface = ({
   const resolveChatbotProxyBaseUrl = () => {
     const raw = chatbotProxyBaseUrl?.trim();
     if (!raw) {
-      throw new Error("VITE_CHATBOT_PROXY_URL nao configurada. Defina a URL da bridge.");
+      return "";
     }
     try {
-      return new URL(raw).toString().replace(/\/$/, "");
+      return new URL(raw, window.location.origin).toString().replace(/\/$/, "");
     } catch {
-      throw new Error("VITE_CHATBOT_PROXY_URL invalida.");
+      return "";
     }
   };
 
