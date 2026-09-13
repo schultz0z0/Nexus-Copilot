@@ -11,6 +11,7 @@
     "test:hermes": "node --test test/hermes/*.test.mjs",
     "test:postgres:contract": "node --test test/postgres/*.test.mjs",
     "test:postgres:ops": "node --test test/postgres/ops-contract.test.mjs",
+    "test:app:contract": "node --test test/app/*.test.mjs",
     "test:postgres": "npm run test:postgres:contract && npm --prefix infra/postgres test",
     "test:postgres:integration": "npm --prefix infra/postgres run test:integration",
     "test:supabase-ledger": "python -m unittest discover -s tools/supabase-ledger/tests -p \"test_*.py\"",

@@ -1,0 +1,117 @@
+name: ens-app
+
+services:
+  artifact-server:
+    build:
+      context: ../../services/artifact-server
+    restart: unless-stopped
+    environment:
+      PORT: "8095"
+      ARTIFACT_INTERNAL_KEY: ${ARTIFACT_INTERNAL_KEY:?ARTIFACT_INTERNAL_KEY must be set}
+      ARTIFACT_ACCESS_TOKEN_SECRET: ${ARTIFACT_ACCESS_TOKEN_SECRET:?ARTIFACT_ACCESS_TOKEN_SECRET must be set}
+      ARTIFACT_DATA_DIR: /app/data
+      NODE_ENV: ${NODE_ENV:-production}
+    networks:
+      - app-internal
+    volumes:
+      - artifact-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8095/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  chat-bridge:
+    build:
+      context: ../../services/chat-bridge
+    restart: unless-stopped
+    environment:
+      BRIDGE_PORT: "8080"
+      BRIDGE_AUTH_MODE: gateway
+      HERMES_API_BASE_URL: ${HERMES_API_BASE_URL:-http://hermes:8642}
+      HERMES_API_KEY: ${HERMES_API_KEY:-}
+      ARTIFACT_INTERNAL_URL: http://artifact-server:8095
+      ARTIFACT_INTERNAL_KEY: ${ARTIFACT_INTERNAL_KEY:?ARTIFACT_INTERNAL_KEY must be set}
+      ARTIFACT_ACCESS_TOKEN_TTL_SECONDS: ${ARTIFACT_ACCESS_TOKEN_TTL_SECONDS:-900}
+      BRIDGE_ALLOWED_ORIGINS: "*"
+      NODE_ENV: ${NODE_ENV:-production}
+    networks:
+      - app-internal
+      - hermes-net
+    volumes:
+      - bridge-data:/app/data
+      - hermes-data:/opt/data:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  app-api:
+    build:
+      context: ../../services/app-api
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      NODE_ENV: ${NODE_ENV:-production}
+      PGHOST: ${PGHOST:-postgres}
+      PGPORT: ${PGPORT:-5432}
+      PGDATABASE: ${PGDATABASE:-nexus}
+      PGUSER: ${PGUSER:-nexus_app}
+      PGPASSWORD_FILE: /run/secrets/postgres_app_password
+      COOKIE_SECRET: ${APP_COOKIE_SECRET:-}
+      CHAT_BRIDGE_URL: http://chat-bridge:8080
+      ARTIFACT_INTERNAL_URL: http://artifact-server:8095
+      ARTIFACT_INTERNAL_KEY: ${ARTIFACT_INTERNAL_KEY:?ARTIFACT_INTERNAL_KEY must be set}
+      ARTIFACT_ACCESS_TOKEN_TTL_SECONDS: ${ARTIFACT_ACCESS_TOKEN_TTL_SECONDS:-900}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    networks:
+      - app-internal
+      - postgres-data
+    secrets:
+      - postgres_app_password
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  chat-web:
+    build:
+      context: ../../apps/chat-web
+    restart: unless-stopped
+    depends_on:
+      app-api:
+        condition: service_healthy
+    networks:
+      - app-internal
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  artifact-data:
+    name: ${ARTIFACT_DATA_VOLUME_NAME:-ens-artifact-data}
+  bridge-data:
+    name: ${BRIDGE_DATA_VOLUME_NAME:-ens-bridge-data}
+  hermes-data:
+    name: ${HERMES_DATA_VOLUME_NAME:-ens-hermes-data}
+
+networks:
+  app-internal:
+    name: ${APP_INTERNAL_NETWORK_NAME:-ens-app-internal}
+  postgres-data:
+    name: ${POSTGRES_DATA_NETWORK_NAME:-ens-postgres-data}
+  hermes-net:
+    name: ${HERMES_NETWORK_NAME:-ens-hermes-net}
+
+secrets:
+  postgres_app_password:
+    file: ${POSTGRES_APP_PASSWORD_FILE:-../postgres/secrets/postgres_app_password}

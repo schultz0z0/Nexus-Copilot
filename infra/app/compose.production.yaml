@@ -1,0 +1,26 @@
+services:
+  chat-web:
+    networks:
+      - app-internal
+      - traefik-public
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.ens-app.rule: Host(`${NEXUS_PUBLIC_APP_HOST:-app.solucoes-nexus.tech}`)
+      traefik.http.routers.ens-app.entrypoints: ${NEXUS_TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.ens-app.tls: "true"
+      traefik.http.routers.ens-app.tls.certresolver: ${NEXUS_TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      traefik.http.routers.ens-app.service: ens-app
+      traefik.http.services.ens-app.loadbalancer.server.port: "8080"
+
+networks:
+  postgres-data:
+    external: true
+  hermes-net:
+    external: true
+  traefik-public:
+    name: ${TRAEFIK_NETWORK_NAME:-traefik-public}
+    external: true
+
+volumes:
+  hermes-data:
+    external: true
