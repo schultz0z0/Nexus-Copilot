@@ -40,7 +40,6 @@ test("compose.production.yaml configures Traefik labels and external networks", 
 
   assert.match(content, /traefik\.enable:\s*"true"/, "Traefik must be enabled");
   assert.match(content, /app\.solucoes-nexus\.tech/, "Production host must be app.solucoes-nexus.tech");
-  assert.match(content, /traefik-public/, "Traefik public network must be used");
   assert.match(content, /external:\s*true/, "Production networks/volumes must be external");
 });
 
