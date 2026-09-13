@@ -2,8 +2,8 @@ import type { NextFunction, Request, Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { resolveActor, type Actor } from '../auth/actor.js';
-import type { SupabaseUser } from '../auth/supabaseAuth.js';
 import { AppError, appError } from '../errors.js';
+import type { BffActorClaims } from '../auth/bffAssertion.js';
 
 declare global {
   namespace Express { interface Request { actor?: Actor } }
@@ -17,7 +17,7 @@ export const asyncRoute = (handler: AsyncRoute) => (request: Request, response: 
 export function privateResponseMiddleware(_request: Request, response: Response, next: NextFunction) {
   response.setHeader('Cache-Control', 'private, no-store');
   response.setHeader('Pragma', 'no-cache');
-  response.vary('Authorization');
+  response.vary('X-ENS-Actor-Assertion');
   next();
 }
 
@@ -27,7 +27,7 @@ export function corsMiddleware(origins: string[]) {
     if (origin && !origins.includes(origin)) return next(appError('origin_forbidden', 403, 'Origin is not allowed'));
     if (origin) response.setHeader('Access-Control-Allow-Origin', origin);
     response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type,Idempotency-Key,If-Match,X-Correlation-Id,X-Nexus-Filename,X-Nexus-Asset-Id,X-Tenant-Id');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type,Idempotency-Key,If-Match,X-Correlation-Id,X-Nexus-Filename,X-Nexus-Asset-Id');
     response.setHeader('Access-Control-Max-Age', '600');
     response.vary('Origin');
     if (request.method === 'OPTIONS') return response.status(204).end();
@@ -35,17 +35,26 @@ export function corsMiddleware(origins: string[]) {
   };
 }
 
-export function authMiddleware(pool: Pool, verifyToken: (token: string) => Promise<SupabaseUser>) {
+export function authMiddleware(
+  pool: Pool,
+  verifyAssertion: (token: string, method: string, path: string, correlationId: string) => Promise<BffActorClaims>
+) {
   return asyncRoute(async (request, _response, next) => {
-    const match = request.header('authorization')?.match(/^Bearer\s+(.+)$/i);
-    if (!match?.[1]) throw appError('unauthorized', 401, 'Bearer token is required');
-    let user: SupabaseUser;
-    try { user = await verifyToken(match[1]); }
+    const token = request.header('x-ens-actor-assertion')?.trim();
+    if (!token) throw appError('unauthorized', 401, 'BFF actor assertion is required');
+    let claims: BffActorClaims;
+    const path = request.originalUrl.split('?', 1)[0]!;
+    try { claims = await verifyAssertion(token, request.method, path, request.correlationId); }
     catch (error) {
       if (error instanceof AppError) throw error;
-      throw appError('unauthorized', 401, 'Bearer token is invalid');
+      throw appError('unauthorized', 401, 'BFF actor assertion is invalid');
     }
-    request.actor = await resolveActor(pool, user.id, request.header('x-tenant-id')?.trim());
+    if (request.correlationId && claims.correlationId !== request.correlationId) {
+      throw appError('unauthorized', 401, 'BFF actor assertion is invalid');
+    }
+    const actor = await resolveActor(pool, claims.userId, claims.tenantId);
+    if (actor.role !== claims.role) throw appError('unauthorized', 401, 'BFF actor assertion is stale');
+    request.actor = actor;
     next();
   });
 }

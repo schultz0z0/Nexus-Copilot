@@ -4,16 +4,17 @@ import { campaignDeepLink, parseMarketingOpsDeepLink } from './deepLinks';
 import { marketingOpsFlags } from './flags';
 
 describe('Marketing Ops frontend contracts', () => {
-  it('gets a fresh access token and propagates correlation ids per call', async () => {
-    const getAccessToken = vi.fn().mockResolvedValueOnce('token-1').mockResolvedValueOnce('token-2');
+  it('uses the same-origin BFF session and propagates correlation ids per call', async () => {
     const fetch = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ data: [] }), { status: 200, headers: { 'X-Correlation-Id': 'corr-1' } }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ data: [] }), { status: 200, headers: { 'X-Correlation-Id': 'corr-2' } }));
-    const client = createMarketingOpsClient({ baseUrl: 'https://ops.local', getAccessToken, fetch });
+    const client = createMarketingOpsClient({ baseUrl: '/api/marketing', fetch });
     expect((await client.listCampaigns()).correlationId).toBe('corr-1');
     expect((await client.listCampaigns()).correlationId).toBe('corr-2');
-    expect(getAccessToken).toHaveBeenCalledTimes(2);
-    expect((fetch.mock.calls[1]?.[1]?.headers as Headers).get('Authorization')).toBe('Bearer token-2');
+    expect(fetch.mock.calls[1]?.[0]).toBe('/api/marketing/campaigns');
+    expect(fetch.mock.calls[1]?.[1]?.credentials).toBe('same-origin');
+    expect((fetch.mock.calls[1]?.[1]?.headers as Headers).has('Authorization')).toBe(false);
+    expect((fetch.mock.calls[1]?.[1]?.headers as Headers).has('X-Tenant-Id')).toBe(false);
   });
 
   it('serializes campaign filters and preserves cursor pagination', async () => {
@@ -33,7 +34,7 @@ describe('Marketing Ops frontend contracts', () => {
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'tenant_forbidden', message: 'Denied', correlationId: 'corr-x' } }), { status: 403 }));
     const client = createMarketingOpsClient({ baseUrl: 'https://ops.local', getAccessToken: async () => 'token', fetch, tenantId: 'ens' });
     await expect(client.listCampaigns()).rejects.toBeInstanceOf(MarketingOpsApiError);
-    expect((fetch.mock.calls[0]?.[1]?.headers as Headers).get('X-Tenant-Id')).toBe('ens');
+    expect((fetch.mock.calls[0]?.[1]?.headers as Headers).get('X-Tenant-Id')).toBeNull();
   });
 
   it('keeps local values and exposes currentVersion on a version conflict', async () => {

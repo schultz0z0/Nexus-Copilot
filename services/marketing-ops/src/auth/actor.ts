@@ -14,15 +14,8 @@ export async function resolveActor(pool: Pool, userId: string, requestedTenantId
   const result = await pool.query<{
     user_id: string; tenant_id: string; tenant_slug: string; role: ActorRole;
   }>(`
-    select membership.user_id, membership.tenant_id, tenant.slug as tenant_slug, membership.role::text as role
-    from marketing_ops.memberships as membership
-    join marketing_ops.tenants as tenant on tenant.id = membership.tenant_id
-    where membership.user_id = $1
-      and membership.active
-      and tenant.active
-      and ($2::text is null or membership.tenant_id::text = $2::text or tenant.slug = lower($2::text))
-    order by tenant.slug
-    limit 2
+    select actor.user_id, actor.tenant_id, actor.tenant_slug, actor.role
+      from marketing_ops_private.resolve_actor($1::uuid, $2::text) as actor
   `, [userId, requestedTenantId ?? null]);
   if (result.rows.length === 0) {
     throw appError(requestedTenantId ? 'tenant_forbidden' : 'membership_required', 403, 'No active membership grants access');

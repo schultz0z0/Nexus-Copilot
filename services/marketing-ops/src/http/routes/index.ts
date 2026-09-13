@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { Pool } from 'pg';
-import type { SupabaseUser } from '../../auth/supabaseAuth.js';
 import { authMiddleware, corsMiddleware, privateResponseMiddleware } from '../middleware.js';
+import type { BffActorClaims } from '../../auth/bffAssertion.js';
 import { registerAudit } from './audit.js';
 import { registerCampaigns } from './campaigns.js';
 import { registerCapabilities } from './capabilities.js';
@@ -25,7 +25,7 @@ export interface ApiRouterDependencies {
   pool: Pool;
   corsOrigins: string[];
   features: { read: boolean; write: boolean; approvals?: boolean };
-  verifyToken: (token: string) => Promise<SupabaseUser>;
+  verifyAssertion: (token: string, method: string, path: string, correlationId: string) => Promise<BffActorClaims>;
   artifactClient: ArtifactClient;
   ragCourseClient: RagCourseClient;
   keyring?: DelegationKeyring;
@@ -39,7 +39,7 @@ export function createApiRouter(deps: ApiRouterDependencies): Router {
   router.use(corsMiddleware(deps.corsOrigins));
   registerCapabilities(router, deps.features);
   router.use('/v1', privateResponseMiddleware);
-  router.use('/v1', authMiddleware(deps.pool, deps.verifyToken));
+  router.use('/v1', authMiddleware(deps.pool, deps.verifyAssertion));
   registerCampaigns(router, deps.pool, deps.ragCourseClient, deps.features);
   registerParticipants(router, deps.pool, deps.features);
   registerMaterials(router, deps.pool, deps.artifactClient, deps.features);

@@ -1,4 +1,8 @@
 services:
+  marketing-ops:
+    labels:
+      traefik.enable: "false"
+
   chat-web:
     labels:
       traefik.enable: "true"

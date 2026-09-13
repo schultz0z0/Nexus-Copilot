@@ -3,7 +3,7 @@ import { loadConfig } from './config.js';
 import { createPool } from './db/pool.js';
 import { createApp } from './http/createApp.js';
 import { createApiRouter } from './http/routes/index.js';
-import { verifySupabaseBearer } from './auth/supabaseAuth.js';
+import { verifyBffAssertion } from './auth/bffAssertion.js';
 import { createLogger } from './observability/logger.js';
 import { createMetrics } from './observability/metrics.js';
 import { createReadinessProbe } from './observability/readiness.js';
@@ -34,10 +34,9 @@ const router = createApiRouter({
   metrics,
   keyring: config.delegation,
   refreshDelegation: createDelegationRefresher(config.delegationRefresh),
-  verifyToken: (token) => verifySupabaseBearer(token, {
-    supabaseUrl: config.supabaseUrl,
-    anonKey: config.supabaseAnonKey
-  })
+  verifyAssertion: (token, method, path) => verifyBffAssertion(
+    token, method, path, config.bffAssertion
+  )
 });
 const app = createApp({
   logger,

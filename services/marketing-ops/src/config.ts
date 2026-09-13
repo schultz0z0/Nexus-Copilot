@@ -1,14 +1,22 @@
 import { z } from 'zod';
+import { readFileSync } from 'node:fs';
 import { assertIanaTimeZone, DEFAULT_TENANT_TIME_ZONE } from './domain/scheduling.js';
 
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
   databaseUrl: string;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
   corsOrigins: string[];
   internalKey: string;
+  bffAssertion: {
+    activeKid: string;
+    activeKey: string;
+    previousKid?: string;
+    previousKey?: string;
+    issuer: string;
+    audience: string;
+    maxTtlSeconds: number;
+  };
   tenantTimeZone: string;
   delegation: {
     activeKid: string;
@@ -51,26 +59,35 @@ function requiredProductionValue(env: NodeJS.ProcessEnv, name: string, fallback:
   return value;
 }
 
-function optionalProductionValue(env: NodeJS.ProcessEnv, name: string, fallback: string, production: boolean): string {
-  const value = env[name]?.trim();
-  if (!value) {
-    return fallback;
-  }
-  if (production && (placeholderPattern.test(value) || value.includes('change-me'))) {
-    throw new Error(`${name} contains a placeholder`);
-  }
-  return value;
-}
-
 function booleanValue(value: string | undefined): boolean {
   return value?.trim().toLowerCase() === 'true';
+}
+
+function secretValue(env: NodeJS.ProcessEnv, name: string): string | undefined {
+  const file = env[`${name}_FILE`]?.trim();
+  if (file) {
+    try { return readFileSync(file, 'utf8').trim(); }
+    catch { return undefined; }
+  }
+  return env[name]?.trim();
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
   const nodeEnv = z.enum(['development', 'test', 'production']).parse(env.NODE_ENV ?? 'development');
   const production = nodeEnv === 'production';
-  const databaseUrl = requiredProductionValue(env, 'DATABASE_URL', 'postgresql://postgres:postgres@127.0.0.1:55322/postgres', production);
-  const supabaseUrl = optionalProductionValue(env, 'NEXUS_APP_SUPABASE_URL', production ? '' : 'http://127.0.0.1:55321', production);
+  const directDatabaseUrl = env.DATABASE_URL?.trim();
+  const databasePassword = secretValue(env, 'PGPASSWORD');
+  let databaseUrl = directDatabaseUrl;
+  if (!databaseUrl && (env.PGHOST || databasePassword)) {
+    if (!databasePassword) throw new Error('PGPASSWORD_FILE is required when DATABASE_URL is not set');
+    const user = env.PGUSER?.trim() || 'nexus_app';
+    const host = env.PGHOST?.trim() || 'localhost';
+    const port = env.PGPORT?.trim() || '5432';
+    const database = env.PGDATABASE?.trim() || 'nexus';
+    databaseUrl = `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(databasePassword)}@${host}:${port}/${encodeURIComponent(database)}`;
+  }
+  databaseUrl = databaseUrl
+    ?? requiredProductionValue(env, 'DATABASE_URL', 'postgresql://postgres:postgres@127.0.0.1:55322/postgres', production);
   const internalKey = requiredProductionValue(env, 'MARKETING_OPS_INTERNAL_KEY', 'local-test-internal-key-at-least-32-bytes', production);
   const delegationRefreshUrl = requiredProductionValue(
     env,
@@ -96,7 +113,16 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     'http://127.0.0.1:8000/mcp',
     production
   );
-  const supabaseAnonKey = optionalProductionValue(env, 'NEXUS_APP_SUPABASE_ANON_KEY', production ? '' : 'local-test-anon-key', production);
+  const bffActiveKey = secretValue(env, 'MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY')
+    ?? (production ? '' : 'local-test-bff-assertion-key-at-least-32-bytes');
+  if (!bffActiveKey || (production && (placeholderPattern.test(bffActiveKey) || bffActiveKey.includes('change-me')))) {
+    throw new Error('MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY is required and must not be a placeholder');
+  }
+  const bffPreviousKid = env.MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KID?.trim();
+  const bffPreviousKey = secretValue(env, 'MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KEY');
+  if (Boolean(bffPreviousKid) !== Boolean(bffPreviousKey)) {
+    throw new Error('previous BFF assertion kid and key must be configured together');
+  }
   const previousKid = env.MARKETING_OPS_DELEGATION_PREVIOUS_KID?.trim();
   const previousKey = env.MARKETING_OPS_DELEGATION_PREVIOUS_KEY?.trim();
   if (Boolean(previousKid) !== Boolean(previousKey)) {
@@ -119,11 +145,20 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     nodeEnv,
     port: z.coerce.number().int().min(1).max(65535).parse(env.MARKETING_OPS_PORT ?? 8091),
     databaseUrl,
-    supabaseUrl,
-    supabaseAnonKey,
     corsOrigins: (env.MARKETING_OPS_CORS_ORIGINS ?? 'http://127.0.0.1:8088,http://localhost:5173')
       .split(',').map((value) => value.trim()).filter(Boolean),
     internalKey,
+    bffAssertion: {
+      activeKid: env.MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID?.trim() || 'bff-local-v1',
+      activeKey: bffActiveKey,
+      ...(bffPreviousKid && bffPreviousKey
+        ? { previousKid: bffPreviousKid, previousKey: bffPreviousKey }
+        : {}),
+      issuer: env.MARKETING_OPS_BFF_ASSERTION_ISSUER?.trim() || 'ens-app-api',
+      audience: env.MARKETING_OPS_BFF_ASSERTION_AUDIENCE?.trim() || 'ens-marketing-ops',
+      maxTtlSeconds: z.coerce.number().int().min(1).max(30)
+        .parse(env.MARKETING_OPS_BFF_ASSERTION_MAX_TTL_SECONDS ?? 30)
+    },
     tenantTimeZone: assertIanaTimeZone(
       env.MARKETING_OPS_TENANT_TIME_ZONE?.trim() || DEFAULT_TENANT_TIME_ZONE
     ),

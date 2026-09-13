@@ -261,7 +261,7 @@ const CAMPAIGN_AUTHORITY_SQL = `
   left join marketing_ops.campaign_members as participant
     on participant.campaign_id = campaign.id
     and participant.tenant_id = campaign.tenant_id
-    and participant.user_id = auth.uid()
+    and participant.user_id = app_private.request_user_id()
   where campaign.id = $1
 `;
 

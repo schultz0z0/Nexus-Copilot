@@ -25,7 +25,6 @@ export default defineConfig({
       VITE_SUPABASE_ANON_KEY: 'picture-e2e-anon-key',
       VITE_CHATBOT_PROXY_URL: 'http://127.0.0.1:18081',
       NEXT_PUBLIC_CHATBOT_PROXY_URL: 'http://127.0.0.1:18081',
-      VITE_MARKETING_OPS_URL: 'http://127.0.0.1:19091',
       VITE_MARKETING_OPS_ENABLED: 'true',
       VITE_MARKETING_OPS_READ: 'true',
       VITE_MARKETING_OPS_WRITE: 'true',

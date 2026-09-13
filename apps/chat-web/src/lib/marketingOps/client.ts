@@ -76,7 +76,9 @@ export class MarketingOpsApiError extends Error {
 
 export interface MarketingOpsClientOptions {
   baseUrl: string;
-  getAccessToken: () => Promise<string | null>;
+  /** @deprecated ignored; browser identity is the HttpOnly App API session */
+  getAccessToken?: () => Promise<string | null>;
+  /** @deprecated ignored; tenant identity is resolved by the App API */
   tenantId?: string;
   fetch?: typeof globalThis.fetch;
 }
@@ -99,16 +101,13 @@ function mutationHeaders(idempotencyKey: string, version?: number): HeadersInit 
 export function createMarketingOpsClient(options: MarketingOpsClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
   const request = async <T>(path: string, init: RequestInit = {}): Promise<MarketingOpsResult<T>> => {
-    const token = await options.getAccessToken();
-    if (!token) throw new MarketingOpsApiError('unauthorized', 401, 'Authentication is required', null);
-
     const headers = new Headers(init.headers);
-    headers.set('Authorization', `Bearer ${token}`);
     headers.set('Accept', 'application/json');
     if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-    if (options.tenantId) headers.set('X-Tenant-Id', options.tenantId);
-
-    const response = await (options.fetch ?? globalThis.fetch)(`${baseUrl}${path}`, { ...init, headers });
+    const publicPath = baseUrl.endsWith('/api/marketing') ? path.replace(/^\/v1(?=\/|$)/, '') : path;
+    const response = await (options.fetch ?? globalThis.fetch)(`${baseUrl}${publicPath}`, {
+      ...init, headers, credentials: 'same-origin'
+    });
     const payload = await response.json().catch(() => ({})) as {
       data?: T;
       page?: MarketingOpsPage;

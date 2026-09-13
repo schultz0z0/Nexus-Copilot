@@ -235,7 +235,7 @@ const ITEM_AUTHORITY_SQL = `
   left join marketing_ops.campaign_members as participant
     on participant.tenant_id = item.tenant_id
     and participant.campaign_id = item.campaign_id
-    and participant.user_id = auth.uid()
+    and participant.user_id = app_private.request_user_id()
   where item.id = $1
 `;
 

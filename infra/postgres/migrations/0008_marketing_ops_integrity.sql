@@ -210,10 +210,116 @@ CREATE UNIQUE INDEX campaign_members_one_primary_owner_idx
   ON marketing_ops.campaign_members (campaign_id)
   WHERE member_role = 'owner' AND is_primary;
 
+CREATE UNIQUE INDEX approval_decisions_one_terminal_per_request_idx
+  ON marketing_ops.approval_decisions (tenant_id, request_id);
+
+CREATE FUNCTION marketing_ops_private.expire_approval_requests_batch(
+  requested_now timestamptz,
+  requested_limit integer,
+  requested_tenant_id uuid DEFAULT NULL,
+  requested_request_id uuid DEFAULT NULL
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, marketing_ops
+AS $$
+DECLARE
+  candidate record;
+  effective_now timestamptz := LEAST(COALESCE(requested_now, transaction_timestamp()), transaction_timestamp());
+  effective_limit integer := GREATEST(1, LEAST(COALESCE(requested_limit, 100), 100));
+  batch_correlation_id uuid := gen_random_uuid();
+  expired_count integer := 0;
+BEGIN
+  FOR candidate IN
+    SELECT request.id, request.tenant_id, request.campaign_id, request.kind,
+           request.requested_by, request.action_package_id
+      FROM marketing_ops.approval_requests AS request
+     WHERE request.status = 'pending'
+       AND request.expires_at <= effective_now
+       AND (requested_tenant_id IS NULL OR request.tenant_id = requested_tenant_id)
+       AND (requested_request_id IS NULL OR request.id = requested_request_id)
+     ORDER BY request.expires_at, request.id
+     LIMIT effective_limit
+     FOR UPDATE SKIP LOCKED
+  LOOP
+    INSERT INTO marketing_ops.approval_decisions (
+      tenant_id, request_id, decision, decided_by, decider_role,
+      decision_origin, comment, eligibility_snapshot, correlation_id
+    ) VALUES (
+      candidate.tenant_id, candidate.id, 'expired', NULL, NULL,
+      'system', 'Expirada automaticamente.',
+      jsonb_build_object('origin', 'approval_expiry_worker', 'expiredAt', effective_now),
+      batch_correlation_id
+    ) ON CONFLICT (tenant_id, request_id) DO NOTHING;
+
+    IF NOT FOUND THEN
+      CONTINUE;
+    END IF;
+
+    UPDATE marketing_ops.approval_requests
+       SET status = 'expired', version = version + 1
+     WHERE id = candidate.id AND tenant_id = candidate.tenant_id AND status = 'pending';
+
+    IF candidate.action_package_id IS NOT NULL THEN
+      UPDATE marketing_ops.action_packages
+         SET status = 'expired', invalidated_at = effective_now,
+             invalidation_reason = 'approval_expired', version = version + 1
+       WHERE id = candidate.action_package_id
+         AND tenant_id = candidate.tenant_id
+         AND status = 'pending_approval';
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'approval % references a non-expirable action package', candidate.id
+          USING ERRCODE = '23514';
+      END IF;
+    END IF;
+
+    INSERT INTO marketing_ops.audit_events (
+      tenant_id, actor_user_id, actor_role, actor_type, origin, entity_type,
+      entity_id, action, before_state, after_state, correlation_id, operator_origin
+    ) VALUES (
+      candidate.tenant_id, NULL, NULL, 'service', 'internal', 'approval_request',
+      candidate.id, 'approval.expired', '{"status":"pending"}'::jsonb,
+      '{"status":"expired","origin":"approval_expiry_worker"}'::jsonb,
+      batch_correlation_id, 'approval_expiry_worker'
+    );
+
+    INSERT INTO marketing_ops.domain_events (
+      tenant_id, aggregate_type, aggregate_id, event_type, event_version,
+      payload, correlation_id
+    ) VALUES (
+      candidate.tenant_id, 'approval_request', candidate.id,
+      'marketing_ops.approval.expired.v1', 1,
+      jsonb_build_object('requestId', candidate.id, 'campaignId', candidate.campaign_id,
+        'kind', candidate.kind, 'status', 'expired', 'origin', 'approval_expiry_worker'),
+      batch_correlation_id
+    );
+
+    INSERT INTO marketing_ops.in_app_notifications (
+      tenant_id, user_id, event_key, notification_type, campaign_id,
+      approval_request_id, label, payload, occurred_at
+    ) VALUES (
+      candidate.tenant_id, candidate.requested_by,
+      'approval-status:' || candidate.id::text || ':expired',
+      'approval_status', candidate.campaign_id, candidate.id,
+      'Solicitação de aprovação atualizada',
+      jsonb_build_object('campaignId', candidate.campaign_id,
+        'approvalRequestId', candidate.id, 'status', 'expired'), effective_now
+    ) ON CONFLICT (tenant_id, user_id, event_key) DO NOTHING;
+
+    expired_count := expired_count + 1;
+  END LOOP;
+
+  RETURN expired_count;
+END
+$$;
+
+REVOKE ALL ON FUNCTION marketing_ops_private.expire_approval_requests_batch(timestamptz, integer, uuid, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION marketing_ops_private.expire_approval_requests_batch(timestamptz, integer, uuid, uuid) TO nexus_app;
+
 REVOKE ALL ON FUNCTION marketing_ops_private.reject_append_only_change() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.enforce_action_package_integrity() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.enforce_campaign_transition() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.enforce_item_transition() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.enforce_approval_transition() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.enforce_dependency_graph() FROM PUBLIC;
-

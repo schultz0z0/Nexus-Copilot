@@ -9,6 +9,7 @@ import { authRoutes } from "./auth/routes.js";
 import { chatRoutes } from "./chat/routes.js";
 import { adminRoutes } from "./admin/routes.js";
 import { attachmentRoutes } from "./attachments/routes.js";
+import { marketingRoutes } from "./marketing/routes.js";
 
 /**
  * Creates and configures the Fastify App API application.
@@ -54,6 +55,9 @@ export async function createApp(options = {}) {
   await app.register(chatRoutes, { db, config });
   await app.register(adminRoutes, { db, config });
   await app.register(attachmentRoutes, { db, config });
+  if (config.marketingOps) {
+    await app.register(marketingRoutes, { db, config, fetch: options.fetch });
+  }
 
   if (db?.close) {
     app.addHook("onClose", async () => {

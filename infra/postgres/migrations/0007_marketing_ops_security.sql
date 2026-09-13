@@ -41,15 +41,47 @@ AS $$
   )
 $$;
 
+CREATE FUNCTION marketing_ops_private.resolve_actor(
+  requested_user_id uuid,
+  requested_tenant_selector text DEFAULT NULL
+)
+RETURNS TABLE (user_id uuid, tenant_id uuid, tenant_slug text, role text)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, iam
+AS $$
+  SELECT membership.principal_id,
+         membership.tenant_id,
+         tenant.slug,
+         membership.role
+    FROM iam.memberships AS membership
+    JOIN iam.tenants AS tenant ON tenant.id = membership.tenant_id
+    JOIN iam.principals AS principal ON principal.id = membership.principal_id
+   WHERE membership.principal_id = requested_user_id
+     AND membership.active
+     AND principal.disabled_at IS NULL
+     AND membership.role IN ('member', 'manager', 'admin')
+     AND (
+       requested_tenant_selector IS NULL
+       OR membership.tenant_id::text = requested_tenant_selector
+       OR tenant.slug = lower(requested_tenant_selector)
+     )
+   ORDER BY tenant.slug
+   LIMIT 2
+$$;
+
 REVOKE ALL ON FUNCTION app_private.request_actor_role() FROM PUBLIC;
 REVOKE ALL ON FUNCTION app_private.request_actor_type() FROM PUBLIC;
 REVOKE ALL ON FUNCTION marketing_ops_private.has_active_membership(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION marketing_ops_private.resolve_actor(uuid, text) FROM PUBLIC;
 
 GRANT USAGE ON SCHEMA marketing_ops TO nexus_app;
 GRANT USAGE ON SCHEMA marketing_ops_private TO nexus_app;
 GRANT EXECUTE ON FUNCTION app_private.request_actor_role() TO nexus_app;
 GRANT EXECUTE ON FUNCTION app_private.request_actor_type() TO nexus_app;
 GRANT EXECUTE ON FUNCTION marketing_ops_private.has_active_membership(uuid) TO nexus_app;
+GRANT EXECUTE ON FUNCTION marketing_ops_private.resolve_actor(uuid, text) TO nexus_app;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   marketing_ops.campaigns,
@@ -108,6 +140,37 @@ ALTER TABLE marketing_ops.delegation_uses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketing_ops.delegation_uses FORCE ROW LEVEL SECURITY;
 ALTER TABLE marketing_ops.in_app_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketing_ops.in_app_notifications FORCE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE
+  protected_table regclass;
+BEGIN
+  FOREACH protected_table IN ARRAY ARRAY[
+    'marketing_ops.campaigns'::regclass,
+    'marketing_ops.campaign_members'::regclass,
+    'marketing_ops.campaign_materials'::regclass,
+    'marketing_ops.campaign_items'::regclass,
+    'marketing_ops.item_dependencies'::regclass,
+    'marketing_ops.content_assets'::regclass,
+    'marketing_ops.content_versions'::regclass,
+    'marketing_ops.item_artifacts'::regclass,
+    'marketing_ops.approval_requests'::regclass,
+    'marketing_ops.approval_decisions'::regclass,
+    'marketing_ops.action_packages'::regclass,
+    'marketing_ops.audit_events'::regclass,
+    'marketing_ops.domain_events'::regclass,
+    'marketing_ops.idempotency_records'::regclass,
+    'marketing_ops.delegation_uses'::regclass,
+    'marketing_ops.in_app_notifications'::regclass
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE POLICY nexus_owner_all ON %s FOR ALL TO nexus_owner USING (true) WITH CHECK (true)',
+      protected_table
+    );
+  END LOOP;
+END
+$$;
 
 CREATE FUNCTION marketing_ops_private.row_visible(row_tenant_id uuid)
 RETURNS boolean

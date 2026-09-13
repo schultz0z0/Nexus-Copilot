@@ -58,7 +58,7 @@ describe('runtime foundation', () => {
     })).toThrow(/MARKETING_OPS_RAG_URL/);
   });
 
-  it('allows production configuration without Supabase credentials', () => {
+  it('allows production configuration with a dedicated BFF assertion key', () => {
     const config = loadConfig({
       NODE_ENV: 'production',
       DATABASE_URL: 'postgresql://postgres:strong-password@db:5432/postgres',
@@ -68,10 +68,10 @@ describe('runtime foundation', () => {
       MARKETING_OPS_DELEGATION_REFRESH_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/refresh',
       MARKETING_OPS_ARTIFACT_URL: 'http://artifact-server:8095',
       MARKETING_OPS_ARTIFACT_INTERNAL_KEY: 'production-artifact-key-at-least-32-bytes',
-      MARKETING_OPS_RAG_URL: 'http://rag-mcp:8000/mcp'
+      MARKETING_OPS_RAG_URL: 'http://rag-mcp:8000/mcp',
+      MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY: 'production-bff-assertion-key-at-least-32-bytes'
     });
-    expect(config.supabaseUrl).toBe('');
-    expect(config.supabaseAnonKey).toBe('');
+    expect(config.bffAssertion.activeKey).toBe('production-bff-assertion-key-at-least-32-bytes');
     expect(config.nodeEnv).toBe('production');
   });
 
@@ -94,10 +94,10 @@ describe('runtime foundation', () => {
     expect(config.features).toEqual({ read: false, write: false, approvals: false });
   });
 
-  it('uses the repository local Supabase port block outside Windows exclusions', () => {
+  it('uses the repository local PostgreSQL port and BFF-only auth defaults', () => {
     const config = loadConfig({ NODE_ENV: 'test' });
     expect(config.databaseUrl).toBe('postgresql://postgres:postgres@127.0.0.1:55322/postgres');
-    expect(config.supabaseUrl).toBe('http://127.0.0.1:55321');
+    expect(config.bffAssertion.activeKid).toBe('bff-local-v1');
   });
 
   it('honors explicit local Docker SSL disable without weakening remote TLS', () => {
@@ -333,6 +333,21 @@ describe('runtime foundation', () => {
     expect(serialized).toContain('artifact');
     expect(serialized).not.toContain('artifact-server:8095');
     expect(serialized).not.toContain('rag-mcp:8000');
+  });
+
+  it('keeps core readiness available when only optional RAG is down', async () => {
+    const readiness = createReadinessProbe({
+      checkDatabase: vi.fn().mockResolvedValue(undefined),
+      artifact: { endpoint: 'http://artifact-server:8095', timeoutMs: 1000 },
+      rag: { endpoint: 'http://rag-mcp:8000/mcp', timeoutMs: 1000 },
+      fetchImpl: vi.fn(async (input: string | URL | Request) =>
+        new Response(null, { status: String(input).includes('rag-mcp') ? 503 : 200 })),
+      metrics: createMetrics(), logger: createLogger(() => undefined)
+    });
+    await expect(readiness()).resolves.toEqual({
+      ready: true,
+      checks: { database: true, artifact: true, rag: false }
+    });
   });
 
   it('returns and propagates a correlation id', async () => {

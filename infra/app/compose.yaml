@@ -76,11 +76,15 @@ services:
       ARTIFACT_INTERNAL_KEY: ${ARTIFACT_INTERNAL_KEY:?ARTIFACT_INTERNAL_KEY must be set}
       ARTIFACT_ACCESS_TOKEN_TTL_SECONDS: ${ARTIFACT_ACCESS_TOKEN_TTL_SECONDS:-900}
       CORS_ORIGIN: ${CORS_ORIGIN:-}
+      MARKETING_OPS_INTERNAL_URL: http://marketing-ops:8091
+      MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID: ${MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID:-bff-v1}
+      MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY_FILE: /run/secrets/marketing_ops_bff_assertion_key
     networks:
       - app-internal
       - postgres-data
     secrets:
       - postgres_app_password
+      - marketing_ops_bff_assertion_key
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
       interval: 10s
@@ -88,9 +92,58 @@ services:
       retries: 3
       start_period: 5s
 
+  marketing-ops:
+    build:
+      context: ../../services/marketing-ops
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MARKETING_OPS_PORT: "8091"
+      PGHOST: ${PGHOST:-postgres}
+      PGPORT: ${PGPORT:-5432}
+      PGDATABASE: ${PGDATABASE:-nexus}
+      PGUSER: ${PGUSER:-nexus_app}
+      PGPASSWORD_FILE: /run/secrets/postgres_app_password
+      MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID: ${MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID:-bff-v1}
+      MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY_FILE: /run/secrets/marketing_ops_bff_assertion_key
+      MARKETING_OPS_INTERNAL_KEY: ${MARKETING_OPS_DELEGATION_REFRESH_KEY:-}
+      MARKETING_OPS_DELEGATION_ACTIVE_KID: ${MARKETING_OPS_DELEGATION_ACTIVE_KID:-v1}
+      MARKETING_OPS_DELEGATION_ACTIVE_KEY: ${MARKETING_OPS_DELEGATION_ACTIVE_KEY:-}
+      MARKETING_OPS_DELEGATION_REFRESH_URL: http://chat-bridge:8080/internal/marketing-ops/delegations/refresh
+      MARKETING_OPS_ARTIFACT_URL: http://artifact-server:8095
+      MARKETING_OPS_ARTIFACT_INTERNAL_KEY: ${ARTIFACT_INTERNAL_KEY:?ARTIFACT_INTERNAL_KEY must be set}
+      MARKETING_OPS_RAG_URL: ${MARKETING_OPS_RAG_URL:-http://rag-mcp:8000/mcp}
+      MARKETING_OPS_FEATURE_READ: ${MARKETING_OPS_FEATURE_READ:-false}
+      MARKETING_OPS_FEATURE_WRITE: ${MARKETING_OPS_FEATURE_WRITE:-false}
+      MARKETING_OPS_FEATURE_APPROVALS: ${MARKETING_OPS_FEATURE_APPROVALS:-false}
+      MARKETING_OPS_TENANT_TIME_ZONE: ${MARKETING_OPS_TENANT_TIME_ZONE:-America/Sao_Paulo}
+    depends_on:
+      artifact-server:
+        condition: service_healthy
+    networks:
+      - app-internal
+      - postgres-data
+      - hermes-net
+    secrets:
+      - postgres_app_password
+      - marketing_ops_bff_assertion_key
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8091/ready').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    stop_grace_period: 30s
+
   chat-web:
     build:
       context: ../../apps/chat-web
+      args:
+        VITE_MARKETING_OPS_ENABLED: ${MARKETING_OPS_FRONTEND_ENABLED:-false}
+        VITE_MARKETING_OPS_READ: ${MARKETING_OPS_FRONTEND_READ:-false}
+        VITE_MARKETING_OPS_WRITE: ${MARKETING_OPS_FRONTEND_WRITE:-false}
+        VITE_MARKETING_OPS_APPROVALS: ${MARKETING_OPS_FRONTEND_APPROVALS:-false}
+        VITE_MARKETING_OPS_KILL_SWITCH: ${MARKETING_OPS_FRONTEND_KILL_SWITCH:-false}
     restart: unless-stopped
     depends_on:
       app-api:
@@ -123,3 +176,5 @@ networks:
 secrets:
   postgres_app_password:
     file: ${POSTGRES_APP_PASSWORD_FILE:-../postgres/secrets/postgres_app_password}
+  marketing_ops_bff_assertion_key:
+    file: ${MARKETING_OPS_BFF_ASSERTION_KEY_FILE:-./secrets/marketing_ops_bff_assertion_key}

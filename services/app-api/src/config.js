@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { validateAssertionConfig } from "./marketing/assertion.js";
 
 export function loadConfig(env = process.env) {
   const readSecret = (path) => {
@@ -15,6 +16,26 @@ export function loadConfig(env = process.env) {
     ? readSecret(env.PGPASSWORD_FILE)
     : env.PGPASSWORD;
 
+  const assertionActiveKey = env.MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY_FILE
+    ? readSecret(env.MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY_FILE)
+    : env.MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY;
+  const assertionPreviousKey = env.MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KEY_FILE
+    ? readSecret(env.MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KEY_FILE)
+    : env.MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KEY;
+  const assertion = validateAssertionConfig({
+    activeKid: env.MARKETING_OPS_BFF_ASSERTION_ACTIVE_KID ?? "bff-local-v1",
+    activeKey: assertionActiveKey ?? "local-test-bff-assertion-key-at-least-32-bytes",
+    previousKid: env.MARKETING_OPS_BFF_ASSERTION_PREVIOUS_KID,
+    previousKey: assertionPreviousKey,
+    issuer: env.MARKETING_OPS_BFF_ASSERTION_ISSUER ?? "ens-app-api",
+    audience: env.MARKETING_OPS_BFF_ASSERTION_AUDIENCE ?? "ens-marketing-ops",
+    maxTtlSeconds: Number.parseInt(env.MARKETING_OPS_BFF_ASSERTION_MAX_TTL_SECONDS ?? "30", 10),
+  });
+
+  if (env.NODE_ENV === "production" && !assertionActiveKey) {
+    throw new Error("MARKETING_OPS_BFF_ASSERTION_ACTIVE_KEY_FILE is required in production");
+  }
+
   return {
     port: Number.parseInt(env.PORT ?? "3000", 10),
     host: env.HOST ?? "0.0.0.0",
@@ -29,6 +50,12 @@ export function loadConfig(env = process.env) {
         ? false
         : true,
     chatBridgeUrl: env.CHAT_BRIDGE_URL ?? "http://localhost:8080",
+    marketingOps: {
+      internalUrl: (env.MARKETING_OPS_INTERNAL_URL ?? "http://localhost:8091").replace(/\/$/, ""),
+      timeoutMs: Number.parseInt(env.MARKETING_OPS_PROXY_TIMEOUT_MS ?? "15000", 10),
+      maxBodyBytes: Number.parseInt(env.MARKETING_OPS_PROXY_MAX_BODY_BYTES ?? "26214400", 10),
+      assertion,
+    },
     artifact: {
       internalUrl: (env.ARTIFACT_INTERNAL_URL ?? "http://localhost:8095").replace(/\/$/, ""),
       internalKey: env.ARTIFACT_INTERNAL_KEY ?? "",

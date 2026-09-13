@@ -69,20 +69,19 @@ function apiRouter(
       endpoint: 'http://127.0.0.1:8000/mcp',
       timeoutMs: 1_000
     }),
-    verifyToken: async (token) => {
+    verifyAssertion: async (token, _method, _path, correlationId) => {
       const users = {
         'valid-member': {
-          id: '11111111-1111-4111-8111-111111111111',
-          email: 'member@local.test'
+          userId: '11111111-1111-4111-8111-111111111111', role: 'member' as const
         },
         'valid-manager': {
-          id: '22222222-2222-4222-8222-222222222222',
-          email: 'manager@local.test'
+          userId: '22222222-2222-4222-8222-222222222222', role: 'manager' as const
         }
       } as const;
       const user = users[token as keyof typeof users];
       if (!user) throw Object.assign(new Error('bad token'), { code: 'unauthorized', status: 401 });
-      return user;
+      return { ...user, tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        correlationId, jti: randomUUID() };
     }
   });
 }

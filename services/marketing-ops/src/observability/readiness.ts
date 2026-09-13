@@ -64,7 +64,9 @@ export function createReadinessProbe(options: ReadinessProbeOptions): () => Prom
       probeHttp('artifact', options.artifact),
       probeHttp('rag', options.rag)
     ]);
-    const ready = database && artifact && rag;
+    // RAG enriches course-reference search but is not a dependency of the
+    // campaign, calendar or approval core.
+    const ready = database && artifact;
     const result = ready ? 'ready' : 'not_ready';
     const durationSeconds = Number(process.hrtime.bigint() - startedAt) / 1_000_000_000;
     options.metrics.increment('marketing_ops_readiness_total', { result });

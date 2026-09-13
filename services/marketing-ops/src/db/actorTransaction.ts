@@ -10,11 +10,12 @@ export async function withActorTransaction<T>(
   const client = await pool.connect();
   try {
     await client.query('begin');
-    await client.query("select set_config('request.jwt.claim.sub', $1, true)", [actor.userId]);
-    await client.query("select set_config('request.jwt.claim.role', 'authenticated', true)");
-    await client.query("select set_config('marketing_ops.tenant_id', $1, true)", [actor.tenantId]);
-    await client.query("select set_config('marketing_ops.correlation_id', $1, true)", [correlationId]);
-    await client.query('set local role authenticated');
+    await client.query("select set_config('app.user_id', $1, true)", [actor.userId]);
+    await client.query("select set_config('app.tenant_id', $1, true)", [actor.tenantId]);
+    await client.query("select set_config('app.actor_role', $1, true)", [actor.role]);
+    await client.query("select set_config('app.actor_type', 'user', true)");
+    await client.query("select set_config('app.origin', 'rest', true)");
+    await client.query("select set_config('app.correlation_id', $1, true)", [correlationId]);
     const result = await work(client);
     await client.query('commit');
     return result;

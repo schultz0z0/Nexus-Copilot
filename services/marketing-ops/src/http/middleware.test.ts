@@ -22,7 +22,7 @@ describe('REST middleware contracts', () => {
 
     expect(response.headers['cache-control']).toBe('private, no-store');
     expect(response.headers['pragma']).toBe('no-cache');
-    expect(response.headers['vary']).toContain('Authorization');
+    expect(response.headers['vary']).toContain('X-ENS-Actor-Assertion');
     expect(response.headers['vary']).toContain('Origin');
   });
 
@@ -52,11 +52,11 @@ describe('REST middleware contracts', () => {
 
     const response = await request(app)
       .get('/private')
-      .set('Authorization', 'Bearer unexpected-failure');
+      .set('X-ENS-Actor-Assertion', 'unexpected-failure');
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
-      error: { code: 'unauthorized', message: 'Bearer token is invalid' }
+      error: { code: 'unauthorized', message: 'BFF actor assertion is invalid' }
     });
     expect(JSON.stringify(response.body)).not.toContain('provider secret response');
   });
