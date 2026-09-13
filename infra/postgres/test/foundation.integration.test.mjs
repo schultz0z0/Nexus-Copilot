@@ -19,7 +19,7 @@ describe(
   'PostgreSQL foundation against the Docker runtime',
   { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
   () => {
-    const harness = new PostgresComposeHarness();
+    const harness = new PostgresComposeHarness({ port: 55450 });
     let bootstrap;
     let app;
     let migrator;
@@ -63,10 +63,10 @@ describe(
     });
 
     test('applies all migrations to an empty database and skips them on the second run', () => {
-      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004","0005"\]/);
+      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004","0005","0006","0007","0008","0009"\]/);
       const secondOutput = harness.migrate().stdout;
       assert.match(secondOutput, /"applied":\[\]/);
-      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004","0005"\]/);
+      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004","0005","0006","0007","0008","0009"\]/);
     });
 
     test('creates non-owner application roles and owner-controlled RLS tables', async () => {
@@ -155,11 +155,16 @@ describe(
           'app_private.tenant_canary:tenant_canary_select:SELECT',
           'app_private.tenant_canary:tenant_canary_update:UPDATE',
           'iam.memberships:memberships_select_current_tenant:SELECT',
+          'iam.memberships:nexus_owner_all:ALL',
+          'iam.principals:nexus_owner_all:ALL',
           'iam.principals:principals_select_current:SELECT',
+          'iam.tenants:nexus_owner_all:ALL',
           'iam.tenants:tenants_select_current:SELECT',
           'iam.user_chat_integrations:nexus_app_all:ALL',
           'iam.user_credentials:nexus_app_all:ALL',
+          'iam.user_credentials:nexus_owner_all:ALL',
           'iam.user_sessions:nexus_app_all:ALL',
+          'iam.user_sessions:nexus_owner_all:ALL',
         ],
       );
 

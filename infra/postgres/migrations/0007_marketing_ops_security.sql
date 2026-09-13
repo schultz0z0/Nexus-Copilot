@@ -1,3 +1,9 @@
+-- 0005 temporarily granted broad application policies while the native App API
+-- was introduced. Restore the tenant/user-scoped policies from 0003 before
+-- Marketing Ops starts resolving actors through canonical IAM.
+DROP POLICY IF EXISTS nexus_app_all ON iam.principals;
+DROP POLICY IF EXISTS nexus_app_all ON iam.memberships;
+
 CREATE FUNCTION app_private.request_actor_role()
 RETURNS text
 LANGUAGE sql
@@ -234,4 +240,3 @@ CREATE POLICY in_app_notifications_tenant_update ON marketing_ops.in_app_notific
 CREATE POLICY in_app_notifications_tenant_delete ON marketing_ops.in_app_notifications
   FOR DELETE TO nexus_app
   USING (marketing_ops_private.row_visible(tenant_id) AND user_id = app_private.request_user_id());
-
