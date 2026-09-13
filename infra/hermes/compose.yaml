@@ -6,7 +6,7 @@ x-hermes-image: &hermes-image
 x-hermes-environment: &hermes-environment
   HERMES_HOME: /opt/data
   HERMES_PROFILE_NAME: ${HERMES_PROFILE_NAME:-ens}
-  NEXUS_MARKETING_OPS_MCP_URL: ${NEXUS_MARKETING_OPS_MCP_URL:-http://marketing-ops:3001/mcp}
+  NEXUS_MARKETING_OPS_MCP_URL: ${NEXUS_MARKETING_OPS_MCP_URL:-http://marketing-ops:8091/mcp}
 
 services:
   hermes-profile-init:
