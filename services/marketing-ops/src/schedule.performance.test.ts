@@ -9,6 +9,10 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const actor: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
   tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -19,20 +23,32 @@ const fixtureCount = 10_000;
 const sampleSize = 20;
 const limitMs = 500;
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 describe('production schedule performance gate', () => {
   it('keeps a filtered first page within 500 ms p95 at 10,000 items', async () => {
     const fixturePrefix = `phase3-perf-${randomUUID()}`;
+    let campaignId: string | undefined;
     try {
-      const inserted = await pool.query(`
+      const campaign = await adminPool.query<{ id: string }>(`
+        insert into marketing_ops.campaigns (tenant_id, name, created_by, updated_by)
+        values ($1, $2, $3, $3)
+        returning id
+      `, [actor.tenantId, fixturePrefix, actor.userId]);
+      campaignId = campaign.rows[0]!.id;
+      await adminPool.query(`
+        insert into marketing_ops.campaign_members (
+          tenant_id, campaign_id, user_id, member_role, is_primary, created_by
+        ) values ($1, $2, $3, 'owner', true, $3)
+      `, [actor.tenantId, campaignId, actor.userId]);
+      const inserted = await adminPool.query(`
         insert into marketing_ops.campaign_items (
           tenant_id, campaign_id, kind, title, assignee_user_id, priority,
           channel, starts_at, due_at, created_by, updated_by
         )
         select
           $1::uuid,
-          'c1111111-1111-4111-8111-111111111111'::uuid,
+          $5::uuid,
           case when series % 2 = 0 then 'email' else 'task' end::marketing_ops.item_kind,
           $3 || '-' || lpad(series::text, 5, '0'),
           $2::uuid,
@@ -43,14 +59,14 @@ describe('production schedule performance gate', () => {
           $2::uuid,
           $2::uuid
         from generate_series(1, $4::integer) as series
-      `, [actor.tenantId, actor.userId, fixturePrefix, fixtureCount]);
+      `, [actor.tenantId, actor.userId, fixturePrefix, fixtureCount, campaignId]);
       expect(inserted.rowCount).toBe(fixtureCount);
-      await pool.query('analyze marketing_ops.campaign_items');
+      await adminPool.query('analyze marketing_ops.campaign_items');
 
       const input = {
         from: '2026-08-01T00:00:00.000Z',
         to: '2026-10-01T00:00:00.000Z',
-        campaignId: 'c1111111-1111-4111-8111-111111111111',
+        campaignId,
         kind: 'email' as const,
         channel: 'email' as const,
         assigneeId: actor.userId,
@@ -78,16 +94,18 @@ describe('production schedule performance gate', () => {
       );
       expect(p95).toBeLessThanOrEqual(limitMs);
     } finally {
-      await pool.query(
-        'delete from marketing_ops.campaign_items where tenant_id = $1 and title like $2',
-        [actor.tenantId, `${fixturePrefix}%`]
-      );
-      const remaining = await pool.query<{ count: number }>(
+      if (campaignId) {
+        await adminPool.query(
+          'delete from marketing_ops.campaigns where tenant_id = $1 and id = $2',
+          [actor.tenantId, campaignId]
+        );
+      }
+      const remaining = await adminPool.query<{ count: number }>(
         'select count(*)::integer as count from marketing_ops.campaign_items where tenant_id = $1 and title like $2',
         [actor.tenantId, `${fixturePrefix}%`]
       );
       expect(remaining.rows[0]?.count).toBe(0);
-      await pool.query('vacuum analyze marketing_ops.campaign_items');
+      await adminPool.query('vacuum analyze marketing_ops.campaign_items');
     }
   }, 120_000);
 });

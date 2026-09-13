@@ -91,6 +91,7 @@ async function loadPair(
       on campaign.tenant_id = item.tenant_id
       and campaign.id = item.campaign_id
     where item.id = any($1::uuid[])
+      and marketing_ops_private.can_access_campaign_item(item.id)
   `, [[itemId, dependsOnItemId]]);
   const dependent = result.rows.find((row) => row.id === itemId);
   const predecessor = result.rows.find((row) => row.id === dependsOnItemId);
@@ -107,9 +108,6 @@ async function loadPair(
   if (dependent.campaign_status === 'archived') {
     throw appError('campaign_archived', 409, 'Archived campaign is read-only');
   }
-  if (!dependent.allowed || !predecessor.allowed) {
-    throw appError('forbidden', 403, 'Campaign does not grant dependency authority');
-  }
   if (dependent.status === 'completed' || dependent.status === 'cancelled') {
     throw appError('item_terminal', 409, 'Terminal production item is read-only');
   }
@@ -122,6 +120,9 @@ async function loadPair(
       409,
       'A new dependency requires a nonterminal predecessor'
     );
+  }
+  if (!dependent.allowed || !predecessor.allowed) {
+    throw appError('forbidden', 403, 'Campaign does not grant dependency authority');
   }
   return { dependent, predecessor };
 }

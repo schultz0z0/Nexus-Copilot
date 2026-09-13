@@ -9,6 +9,10 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL
     ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL
+    ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const actor: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
   tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -19,21 +23,16 @@ const fixtureCount = 5_000;
 const sampleSize = 20;
 const limitMs = 500;
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 describe('campaign list performance gate', () => {
   it('keeps the first page within the 500 ms p95 SLO at 5,000 campaigns', async () => {
     const fixturePrefix = `phase2-perf-${randomUUID()}`;
     try {
-      const inserted = await pool.query(`
+      const inserted = await adminPool.query(`
         with inserted_campaigns as (
           insert into marketing_ops.campaigns (
-            tenant_id,
-            name,
-            created_by,
-            updated_by,
-            created_at,
-            updated_at
+            tenant_id, name, created_by, updated_by, created_at, updated_at
           )
           select
             $1::uuid,
@@ -46,19 +45,15 @@ describe('campaign list performance gate', () => {
           returning tenant_id, id
         )
         insert into marketing_ops.campaign_members (
-          tenant_id,
-          campaign_id,
-          user_id,
-          member_role,
-          is_primary,
-          created_by
+          tenant_id, campaign_id, user_id, member_role, is_primary, created_by
         )
         select tenant_id, id, $2::uuid, 'owner', true, $2::uuid
         from inserted_campaigns
+        returning campaign_id
       `, [actor.tenantId, actor.userId, fixturePrefix, fixtureCount]);
       expect(inserted.rowCount).toBe(fixtureCount);
-      await pool.query('analyze marketing_ops.campaigns');
-      await pool.query('analyze marketing_ops.campaign_members');
+      await adminPool.query('analyze marketing_ops.campaigns');
+      await adminPool.query('analyze marketing_ops.campaign_members');
 
       for (let warmup = 0; warmup < 5; warmup += 1) {
         await listCampaigns({
@@ -89,17 +84,17 @@ describe('campaign list performance gate', () => {
       );
       expect(p95).toBeLessThanOrEqual(limitMs);
     } finally {
-      await pool.query(
+      await adminPool.query(
         'delete from marketing_ops.campaigns where tenant_id = $1 and name like $2',
         [actor.tenantId, `${fixturePrefix}%`]
       );
-      const remaining = await pool.query<{ count: number }>(
+      const remaining = await adminPool.query<{ count: number }>(
         'select count(*)::integer as count from marketing_ops.campaigns where tenant_id = $1 and name like $2',
         [actor.tenantId, `${fixturePrefix}%`]
       );
       expect(remaining.rows[0]?.count).toBe(0);
-      await pool.query('vacuum analyze marketing_ops.campaigns');
-      await pool.query('vacuum analyze marketing_ops.campaign_members');
+      await adminPool.query('vacuum analyze marketing_ops.campaigns');
+      await adminPool.query('vacuum analyze marketing_ops.campaign_members');
     }
   }, 120_000);
 });

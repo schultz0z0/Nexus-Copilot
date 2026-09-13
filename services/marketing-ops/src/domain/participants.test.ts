@@ -17,6 +17,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    process.env.MARKETING_OPS_TEST_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const memberId = '11111111-1111-4111-8111-111111111111';
 const managerId = '22222222-2222-4222-8222-222222222222';
 const adminId = '33333333-3333-4333-8333-333333333333';
@@ -35,7 +40,7 @@ const context = (currentActor: Actor) => ({
   origin: 'rest' as const
 });
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 describe('participant input contracts', () => {
   it('validates participant input and primary-owner consistency', () => {
@@ -74,7 +79,7 @@ describe('campaign participants', () => {
     });
     expect(added.campaignVersion).toBe(2);
     expect(replayed).toEqual(added);
-    const primaryOwners = await pool.query<{ user_id: string }>(`
+    const primaryOwners = await adminPool.query<{ user_id: string }>(`
       select user_id
       from marketing_ops.campaign_members
       where campaign_id = $1 and member_role = 'owner' and is_primary

@@ -19,6 +19,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    process.env.MARKETING_OPS_TEST_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 
 const member: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
@@ -39,7 +44,7 @@ const otherTenant: Actor = {
   role: 'member'
 };
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 const context = (actor: Actor = member) => ({
   pool,
@@ -142,7 +147,7 @@ describe('item dependency commands', () => {
     expect(removedReplay).toEqual(removed);
     expect(await listItemDependencies(context(), dependent.id)).toEqual([]);
 
-    const evidence = await pool.query<{
+    const evidence = await adminPool.query<{
       dependency_count: number;
       audit_count: number;
       event_count: number;

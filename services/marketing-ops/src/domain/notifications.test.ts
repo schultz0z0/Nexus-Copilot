@@ -5,6 +5,7 @@ import type { Actor } from '../auth/actor.js';
 import { archiveCampaign, createCampaignDraft } from './campaigns.js';
 import { createProductionItem } from './items.js';
 import {
+  type InAppNotification,
   listInAppNotifications,
   markInAppNotificationsRead,
   projectInAppNotifications
@@ -48,6 +49,20 @@ async function createNotificationCampaign(actor: Actor = member) {
     name: `Notifications ${randomUUID()}`,
     idempotencyKey: randomUUID()
   });
+}
+
+async function listAllNotifications(actor: Actor = member) {
+  const notifications: InAppNotification[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await listInAppNotifications(context(actor), {
+      limit: 100,
+      ...(cursor ? { cursor } : {})
+    });
+    notifications.push(...page.data);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return notifications;
 }
 
 describe('in-app notification projection', () => {
@@ -95,8 +110,8 @@ describe('in-app notification projection', () => {
     const now = new Date('2026-08-01T12:00:00.000Z');
     const first = await projectInAppNotifications(context(), now);
     await projectInAppNotifications(context(), now);
-    const page = await listInAppNotifications(context(), { limit: 100 });
-    const relevant = page.data.filter((notification) =>
+    const notifications = await listAllNotifications();
+    const relevant = notifications.filter((notification) =>
       notification.itemId === dueSoon.id || notification.itemId === overdue.id
     );
 

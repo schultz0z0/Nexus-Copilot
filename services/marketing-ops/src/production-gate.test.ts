@@ -10,6 +10,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL
     ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL
+    ?? process.env.MARKETING_OPS_TEST_DATABASE_URL
+    ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const activeKey = 'active-local-delegation-key-at-least-32-bytes';
 const keyring = {
   activeKid: 'v2', activeKey,
@@ -40,7 +45,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await client.close();
   await server.close();
-  await pool.end();
+  await Promise.all([pool.end(), adminPool.end()]);
 });
 
 async function delegation(
@@ -119,7 +124,7 @@ describe('Phase 4 production gate', () => {
         }
       ]
     );
-    const before = await pool.query(
+    const before = await adminPool.query(
       'select count(*)::int as count from marketing_ops.campaigns where name = $1',
       [campaignName]
     );
@@ -260,7 +265,7 @@ describe('Phase 4 production gate', () => {
     expect(replay.payload.data.completed.every((entry: { idempotency_hit: boolean }) => entry.idempotency_hit))
       .toBe(true);
 
-    const count = await pool.query(`
+    const count = await adminPool.query(`
       select
         (select count(*)::int from marketing_ops.campaigns where name = $1) as campaigns,
         (select count(*)::int from marketing_ops.campaign_items where campaign_id = $2) as items

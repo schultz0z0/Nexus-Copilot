@@ -99,8 +99,11 @@ async function listParticipantsInClient(
     from marketing_ops_private.list_campaign_participants($1)
   `, [campaignId]);
   if (result.rows.length === 0) {
-    const campaign = await client.query('select id from marketing_ops.campaigns where id = $1', [campaignId]);
-    if (!campaign.rows[0]) throw appError('not_found', 404, 'Campaign not found');
+    const access = await client.query<{ allowed: boolean }>(
+      'select marketing_ops_private.can_access_campaign($1) as allowed',
+      [campaignId]
+    );
+    if (access.rows[0]?.allowed !== true) throw appError('not_found', 404, 'Campaign not found');
   }
   return result.rows;
 }

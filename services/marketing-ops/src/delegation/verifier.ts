@@ -2,6 +2,7 @@ import { decodeProtectedHeader, errors as joseErrors, jwtVerify } from 'jose';
 import type { Pool } from 'pg';
 import { AppError, appError } from '../errors.js';
 import { resolveActor, type Actor } from '../auth/actor.js';
+import { withActorTransaction } from '../db/actorTransaction.js';
 import { delegationClaimsSchema, type DelegationKeyring } from './claims.js';
 
 export interface DelegatedActor extends Actor {
@@ -22,13 +23,15 @@ export async function consumeDelegationUse(
   actor: DelegatedActor,
   operation: MutationUse
 ): Promise<void> {
-  const used = await pool.query(`
-    insert into marketing_ops.delegation_uses
-      (jti, tenant_id, actor_id, operation, idempotency_key, request_hash, expires_at)
-    values ($1, $2, $3, $4, $5, $6, to_timestamp($7))
-    on conflict do nothing returning jti
-  `, [actor.jti, actor.tenantId, actor.userId, operation.name, operation.idempotencyKey, operation.requestHash, actor.expiresAt]);
-  if (used.rowCount === 0) throw appError('delegation_replay', 409, 'Delegation was already consumed');
+  await withActorTransaction(pool, actor, actor.correlationId, async (client) => {
+    const used = await client.query(`
+      insert into marketing_ops.delegation_uses
+        (jti, tenant_id, actor_id, operation, idempotency_key, request_hash, expires_at)
+      values ($1, $2, $3, $4, $5, $6, to_timestamp($7))
+      on conflict (jti) do nothing returning jti
+    `, [actor.jti, actor.tenantId, actor.userId, operation.name, operation.idempotencyKey, operation.requestHash, actor.expiresAt]);
+    if (used.rowCount === 0) throw appError('delegation_replay', 409, 'Delegation was already consumed');
+  });
 }
 
 export async function verifyDelegation(

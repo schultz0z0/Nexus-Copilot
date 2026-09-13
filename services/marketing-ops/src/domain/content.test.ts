@@ -15,6 +15,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    process.env.MARKETING_OPS_TEST_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const member: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
   tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -28,7 +33,7 @@ const otherTenant: Actor = {
   role: 'member'
 };
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 const context = (actor: Actor = member) => ({
   pool,
@@ -106,7 +111,7 @@ describe('content assets and immutable versions', () => {
     });
     expect(versions.map((version) => version.versionNumber)).toEqual([2, 1]);
 
-    const audit = await pool.query<{ serialized: string }>(`
+    const audit = await adminPool.query<{ serialized: string }>(`
       select coalesce(jsonb_agg(after_state)::text, '[]') as serialized
       from marketing_ops.audit_events
       where entity_id = $1
@@ -131,12 +136,12 @@ describe('content assets and immutable versions', () => {
       idempotencyKey: randomUUID()
     });
 
-    await expect(pool.query(`
+    await expect(adminPool.query(`
       update marketing_ops.content_versions
       set body = 'mutado'
       where asset_id = $1 and version_number = 1
     `, [asset.id])).rejects.toMatchObject({ code: '55000' });
-    await expect(pool.query(`
+    await expect(adminPool.query(`
       delete from marketing_ops.content_versions
       where asset_id = $1 and version_number = 1
     `, [asset.id])).rejects.toMatchObject({ code: '55000' });

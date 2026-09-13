@@ -90,6 +90,9 @@ describe('Marketing Ops REST v1', () => {
   it('keeps every public REST operation in the OpenAPI contract', () => {
     const document = parse(readFileSync(new URL('../openapi/marketing-ops.v1.yaml', import.meta.url), 'utf8')) as { paths: Record<string, unknown> };
     expect(Object.keys(document.paths).sort()).toEqual([
+      '/approval-requests', '/approval-requests/editorial',
+      '/approval-requests/operational', '/approval-requests/{requestId}',
+      '/approval-requests/{requestId}/cancel', '/approval-requests/{requestId}/decisions',
       '/audit-events', '/campaigns',
       '/campaign-items', '/campaign-items/batch', '/campaign-items/{itemId}',
       '/campaign-items/{itemId}/artifacts',
@@ -316,30 +319,28 @@ describe('Marketing Ops REST v1', () => {
 
   it('requires authentication and an idempotency key', async () => {
     expect((await request(app()).post('/v1/campaigns').send({ name: 'No auth' })).status).toBe(401);
-    const missingKey = await request(app()).post('/v1/campaigns').set('Authorization', 'Bearer valid-member').send({ name: 'No key' });
+    const missingKey = await request(app()).post('/v1/campaigns')
+      .set('X-ENS-Actor-Assertion', 'valid-member').send({ name: 'No key' });
     expect(missingKey.status).toBe(400);
     expect(missingKey.body.error.code).toBe('idempotency_key_required');
   });
 
   it('creates, lists and returns ETag for the same domain record', async () => {
     const created = await request(app()).post('/v1/campaigns')
-      .set('Authorization', 'Bearer valid-member')
-      .set('X-Tenant-Id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
+      .set('X-ENS-Actor-Assertion', 'valid-member')
       .set('Idempotency-Key', randomUUID())
       .send({ name: 'REST campaign' });
     expect(created.status).toBe(201);
     expect(created.headers.etag).toBe('"1"');
     const listed = await request(app()).get('/v1/campaigns?limit=10&status=draft')
-      .set('Authorization', 'Bearer valid-member')
-      .set('X-Tenant-Id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+      .set('X-ENS-Actor-Assertion', 'valid-member');
     expect(listed.status).toBe(200);
     expect(listed.body.data.some((campaign: { id: string }) => campaign.id === created.body.data.id)).toBe(true);
   });
 
   it('creates a complete draft and transitions it with aggregate ETags', async () => {
     const headers = {
-      Authorization: 'Bearer valid-member',
-      'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      'X-ENS-Actor-Assertion': 'valid-member'
     };
     const created = await request(app()).post('/v1/campaigns')
       .set(headers)
@@ -378,8 +379,7 @@ describe('Marketing Ops REST v1', () => {
 
   it('creates, queries, edits and transitions a production item through canonical REST', async () => {
     const headers = {
-      Authorization: 'Bearer valid-member',
-      'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      'X-ENS-Actor-Assertion': 'valid-member'
     };
     const campaign = await request(app()).post('/v1/campaigns')
       .set(headers)
@@ -439,8 +439,7 @@ describe('Marketing Ops REST v1', () => {
 
   it('executes a manager batch and reads owned in-app notifications through REST', async () => {
     const headers = {
-      Authorization: 'Bearer valid-manager',
-      'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      'X-ENS-Actor-Assertion': 'valid-manager'
     };
     const campaign = await request(app()).post('/v1/campaigns')
       .set(headers)
@@ -493,8 +492,7 @@ describe('Marketing Ops REST v1', () => {
 
     const forbidden = await request(app()).post('/v1/campaign-items/batch')
       .set({
-        Authorization: 'Bearer valid-member',
-        'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+        'X-ENS-Actor-Assertion': 'valid-member'
       })
       .set('Idempotency-Key', randomUUID())
       .send({
@@ -507,8 +505,7 @@ describe('Marketing Ops REST v1', () => {
 
   it('exposes dependency, immutable content and artifact resources through REST', async () => {
     const headers = {
-      Authorization: 'Bearer valid-member',
-      'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      'X-ENS-Actor-Assertion': 'valid-member'
     };
     const artifactId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
     const artifactClient = new ArtifactClient({
@@ -652,8 +649,7 @@ describe('Marketing Ops REST v1', () => {
 
   it('filters by course, status, owner and period with cursor pagination', async () => {
     const headers = {
-      Authorization: 'Bearer valid-member',
-      'X-Tenant-Id': 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+      'X-ENS-Actor-Assertion': 'valid-member'
     };
     const first = await request(app()).post('/v1/campaigns').set(headers)
       .set('Idempotency-Key', randomUUID()).send({ name: 'Course campaign one', courseSlug: 'course-one' });
@@ -684,15 +680,15 @@ describe('Marketing Ops REST v1', () => {
 
   it('maps stale If-Match to a version conflict', async () => {
     const created = await request(app()).post('/v1/campaigns')
-      .set('Authorization', 'Bearer valid-member').set('Idempotency-Key', randomUUID())
-      .set('X-Tenant-Id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa').send({ name: 'ETag campaign' });
+      .set('X-ENS-Actor-Assertion', 'valid-member').set('Idempotency-Key', randomUUID())
+      .send({ name: 'ETag campaign' });
     const updated = await request(app()).patch(`/v1/campaigns/${created.body.data.id}`)
-      .set('Authorization', 'Bearer valid-member').set('Idempotency-Key', randomUUID()).set('If-Match', '"1"')
-      .set('X-Tenant-Id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa').send({ name: 'Version two' });
+      .set('X-ENS-Actor-Assertion', 'valid-member').set('Idempotency-Key', randomUUID()).set('If-Match', '"1"')
+      .send({ name: 'Version two' });
     expect(updated.status).toBe(200);
     const stale = await request(app()).patch(`/v1/campaigns/${created.body.data.id}`)
-      .set('Authorization', 'Bearer valid-member').set('Idempotency-Key', randomUUID()).set('If-Match', '"1"')
-      .set('X-Tenant-Id', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa').send({ name: 'Stale' });
+      .set('X-ENS-Actor-Assertion', 'valid-member').set('Idempotency-Key', randomUUID()).set('If-Match', '"1"')
+      .send({ name: 'Stale' });
     expect(stale.status).toBe(409);
     expect(stale.body.error.code).toBe('version_conflict');
   });
@@ -701,7 +697,7 @@ describe('Marketing Ops REST v1', () => {
     const forbiddenOrigin = await request(app()).get('/v1/capabilities').set('Origin', 'https://evil.local');
     expect(forbiddenOrigin.status).toBe(403);
     const disabled = await request(app({ read: true, write: false })).post('/v1/campaigns')
-      .set('Authorization', 'Bearer valid-member').set('Idempotency-Key', randomUUID()).send({ name: 'Disabled' });
+      .set('X-ENS-Actor-Assertion', 'valid-member').set('Idempotency-Key', randomUUID()).send({ name: 'Disabled' });
     expect(disabled.status).toBe(503);
     expect(disabled.body.error.code).toBe('feature_disabled');
   });
@@ -710,9 +706,10 @@ describe('Marketing Ops REST v1', () => {
     const response = await request(app()).options('/v1/campaigns')
       .set('Origin', 'http://frontend.local')
       .set('Access-Control-Request-Method', 'POST')
-      .set('Access-Control-Request-Headers', 'authorization,content-type,idempotency-key,x-tenant-id');
+      .set('Access-Control-Request-Headers', 'content-type,idempotency-key');
     expect(response.status).toBe(204);
     expect(response.headers['access-control-allow-methods']).toContain('POST');
-    expect(response.headers['access-control-allow-headers']).toContain('Authorization');
+    expect(response.headers['access-control-allow-headers']).not.toContain('Authorization');
+    expect(response.headers['access-control-allow-headers']).not.toContain('X-ENS-Actor-Assertion');
   });
 });

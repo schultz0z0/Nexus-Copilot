@@ -54,3 +54,49 @@ test('0010 records idempotent migration runs without product-data authority', ()
   assert.match(control, /marketing_ops_staging_rows/);
   assert.doesNotMatch(control, /grant .*nexus_app/);
 });
+
+test('0011 aligns campaign briefing with the nullable text domain contract', () => {
+  const compatibility = migration('0011_marketing_ops_campaign_contract.sql');
+  assert.match(compatibility, /alter column briefing type text/);
+  assert.match(compatibility, /alter column briefing drop not null/);
+  assert.match(compatibility, /campaigns_briefing_length/);
+});
+
+test('0012 installs the canonical domain helper API without legacy auth claims', () => {
+  const helpers = migration('0012_marketing_ops_domain_helpers.sql');
+  for (const name of [
+    'can_edit_campaign', 'can_edit_campaign_item', 'can_edit_content_asset',
+    'list_campaign_participants', 'list_campaign_participant_candidates',
+    'list_production_schedule', 'list_campaign_timeline', 'create_content_version'
+  ]) {
+    assert.match(helpers, new RegExp(`function marketing_ops_private\\.${name}`));
+  }
+  assert.match(helpers, /app_private\.request_user_id\(\)/);
+  assert.match(helpers, /app_private\.request_tenant_id\(\)/);
+  assert.doesNotMatch(helpers, /auth\.uid|request\.jwt|authenticated|service_role/);
+});
+
+test('0013 preserves structured legacy item content as JSONB', () => {
+  const compatibility = migration('0013_marketing_ops_item_content_contract.sql');
+  assert.match(compatibility, /alter column content type jsonb/);
+  assert.match(compatibility, /jsonb_typeof\(content\) = 'object'/);
+});
+
+test('0014 enforces assignee tenancy and stable dependency error contracts', () => {
+  const integrity = migration('0014_marketing_ops_assignment_integrity.sql');
+  assert.match(integrity, /campaign_items_assignee_authorized/);
+  assert.match(integrity, /item_dependencies_same_campaign/);
+  assert.match(integrity, /item_dependencies_acyclic/);
+  assert.match(integrity, /iam\.memberships/);
+});
+
+test('0015 represents delegated Hermes users in the audit actor type', () => {
+  const compatibility = migration('0015_marketing_ops_delegated_actor.sql');
+  assert.match(compatibility, /alter type marketing_ops\.actor_type add value 'delegated_user'/);
+});
+
+test('0016 allows an idempotent plan retry only with a fresh delegation JTI', () => {
+  const compatibility = migration('0016_marketing_ops_delegation_retry.sql');
+  assert.match(compatibility, /drop constraint delegation_uses_tenant_id_actor_id_operation_idempotency_ke_key/);
+  assert.doesNotMatch(compatibility, /drop constraint delegation_uses_pkey/);
+});

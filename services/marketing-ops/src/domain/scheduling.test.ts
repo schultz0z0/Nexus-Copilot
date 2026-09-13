@@ -19,6 +19,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    process.env.MARKETING_OPS_TEST_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 const actor: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
   tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -31,7 +36,7 @@ const manager: Actor = {
   role: 'manager'
 };
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 const context = (contextActor: Actor = actor) => ({
   pool,
@@ -211,7 +216,7 @@ describe('canonical production schedule query', () => {
       title: 'Undated',
       idempotencyKey: randomUUID()
     });
-    await pool.query(`
+    await adminPool.query(`
       insert into marketing_ops.item_dependencies (
         tenant_id, campaign_id, item_id, depends_on_item_id, created_by
       ) values ($1, $2, $3, $4, $5)

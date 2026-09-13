@@ -15,6 +15,11 @@ const pool = new pg.Pool({
   connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ??
     'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
 });
+const adminPool = new pg.Pool({
+  connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ??
+    process.env.MARKETING_OPS_TEST_DATABASE_URL ??
+    'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+});
 
 const member: Actor = {
   userId: '11111111-1111-4111-8111-111111111111',
@@ -35,7 +40,7 @@ const otherTenant: Actor = {
   role: 'member'
 };
 
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 const context = (actor: Actor = member) => ({
   pool,
@@ -104,7 +109,7 @@ describe('production item CRUD', () => {
     expect(replay.id).toBe(created.id);
     expect(read).toEqual(created);
 
-    const evidence = await pool.query<{
+    const evidence = await adminPool.query<{
       items: number; audits: number; events: number; serialized_audit: string;
     }>(`
       select
@@ -314,7 +319,7 @@ describe('production item state machine', () => {
     );
     expect(replay).toEqual(first);
 
-    const evidence = await pool.query(`
+    const evidence = await adminPool.query(`
       select
         (select count(*)::int from marketing_ops.audit_events
           where entity_id = $1 and action = 'campaign_item.status_changed') as audits,

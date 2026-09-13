@@ -2,16 +2,20 @@ import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { expireApprovalRequestsBatch } from '../dist/domain/approvalExpiryWorker.js';
 
-const databaseUrl = process.env.MARKETING_OPS_TEST_DATABASE_URL ??
-  process.env.NEXUS_SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error('A Marketing Ops database URL is required');
+const databaseUrl = process.env.MARKETING_OPS_TEST_DATABASE_URL;
+const adminDatabaseUrl = process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL;
+if (!databaseUrl || !adminDatabaseUrl) {
+  throw new Error('MARKETING_OPS_TEST_DATABASE_URL and MARKETING_OPS_TEST_ADMIN_DATABASE_URL are required');
+}
 
 const pool = new pg.Pool({ connectionString: databaseUrl, max: 2 });
+const adminPool = new pg.Pool({ connectionString: adminDatabaseUrl, max: 2 });
 const requestId = randomUUID();
 const packageId = randomUUID();
+let campaignId;
 
 async function cleanup() {
-  const client = await pool.connect();
+  const client = await adminPool.connect();
   try {
     await client.query('begin');
     await client.query('set local session_replication_role = replica');
@@ -21,6 +25,10 @@ async function cleanup() {
     await client.query('delete from marketing_ops.approval_decisions where request_id = $1', [requestId]);
     await client.query('delete from marketing_ops.approval_requests where id = $1', [requestId]);
     await client.query('delete from marketing_ops.action_packages where id = $1', [packageId]);
+    if (campaignId) {
+      await client.query('delete from marketing_ops.campaign_members where campaign_id = $1', [campaignId]);
+      await client.query('delete from marketing_ops.campaigns where id = $1', [campaignId]);
+    }
     await client.query('commit');
   } catch (error) {
     await client.query('rollback').catch(() => undefined);
@@ -31,21 +39,30 @@ async function cleanup() {
 }
 
 try {
-  const fixture = await pool.query(`
-    select membership.tenant_id, membership.user_id, campaign.id as campaign_id
-    from marketing_ops.memberships as membership
-    join marketing_ops.campaigns as campaign on campaign.tenant_id = membership.tenant_id
-    where membership.active and membership.role in ('manager', 'admin')
-    order by membership.created_at, campaign.created_at
+  const fixture = await adminPool.query(`
+    select tenant_id, principal_id as user_id
+    from iam.memberships
+    where active and role in ('manager', 'admin')
+    order by created_at, principal_id
     limit 1
   `);
   const actor = fixture.rows[0];
-  if (!actor) throw new Error('Expiry smoke requires one active manager/admin campaign fixture');
+  if (!actor) throw new Error('Expiry smoke requires one active manager/admin membership fixture');
 
-  const client = await pool.connect();
+  const client = await adminPool.connect();
   try {
     await client.query('begin');
-    await client.query('set local session_replication_role = replica');
+    const campaign = await client.query(`
+      insert into marketing_ops.campaigns (tenant_id, name, created_by, updated_by)
+      values ($1, $2, $3, $3)
+      returning id
+    `, [actor.tenant_id, `Expiry ${randomUUID()}`, actor.user_id]);
+    campaignId = campaign.rows[0].id;
+    await client.query(`
+      insert into marketing_ops.campaign_members (
+        tenant_id, campaign_id, user_id, member_role, is_primary, created_by
+      ) values ($1, $2, $3, 'owner', true, $3)
+    `, [actor.tenant_id, campaignId, actor.user_id]);
     await client.query(`
       insert into marketing_ops.action_packages (
         id, tenant_id, campaign_id, created_by, action_type, channel,
@@ -54,7 +71,7 @@ try {
       ) values ($1, $2, $3, $4, 'phase5.expiry-smoke', 'internal', '{}', 'UTC',
         '{}', '{"smoke":true}', $5, now() - interval '1 minute',
         now() - interval '2 minutes', now() - interval '2 minutes')
-    `, [packageId, actor.tenant_id, actor.campaign_id, actor.user_id, 'b'.repeat(64)]);
+    `, [packageId, actor.tenant_id, campaignId, actor.user_id, 'b'.repeat(64)]);
     await client.query(`
       insert into marketing_ops.approval_requests (
         id, tenant_id, campaign_id, kind, requested_by, reason, risk_level,
@@ -62,7 +79,7 @@ try {
       ) values ($1, $2, $3, 'operational', $4, 'phase5 expiry worker smoke',
         'medium', $5, $6, now() - interval '1 minute',
         now() - interval '2 minutes', now() - interval '2 minutes')
-    `, [requestId, actor.tenant_id, actor.campaign_id, actor.user_id, packageId, 'b'.repeat(64)]);
+    `, [requestId, actor.tenant_id, campaignId, actor.user_id, packageId, 'b'.repeat(64)]);
     await client.query('commit');
   } catch (error) {
     await client.query('rollback').catch(() => undefined);
@@ -76,9 +93,11 @@ try {
     requestId,
     limit: 1
   });
-  if (result.expired !== 1) throw new Error(`Expected one expired request, received ${result.expired}`);
+  if (result.expired !== 1) {
+    throw new Error(`Expected one expired request, received ${result.expired}`);
+  }
 
-  const evidence = await pool.query(`
+  const evidence = await adminPool.query(`
     select request.status, package.status as package_status,
       decision.decision_origin, decision.decided_by, decision.decider_role,
       audit.actor_type, audit.origin,
@@ -104,12 +123,12 @@ try {
   console.log('approval_expiry_worker_smoke expired=1 origin=system audit=service event=1 notification=1');
 } finally {
   await cleanup().catch((error) => console.error('expiry smoke cleanup failed', error));
-  const remaining = await pool.query(`
+  const remaining = await adminPool.query(`
     select
       (select count(*)::integer from marketing_ops.approval_requests where id = $1) +
       (select count(*)::integer from marketing_ops.action_packages where id = $2) +
       (select count(*)::integer from marketing_ops.approval_decisions where request_id = $1) as count
   `, [requestId, packageId]);
   console.log(`approval_expiry_worker_cleanup remaining=${remaining.rows[0]?.count ?? -1}`);
-  await pool.end();
+  await Promise.all([pool.end(), adminPool.end()]);
 }

@@ -9,9 +9,10 @@ import { createMarketingOpsMcpServer } from './mcp/createServer.js';
 import { marketingOpsPlanActionsSchema } from './plans/contracts.js';
 
 const pool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres' });
+const adminPool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ?? process.env.MARKETING_OPS_TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres' });
 const activeKey = 'active-local-delegation-key-at-least-32-bytes';
 const keyring = { activeKid: 'v2', activeKey, previousKid: 'v1', previousKey: 'previous-local-delegation-key-32-bytes', issuer: 'nexus-chat-bridge', audience: 'nexus-marketing-ops', maxTtlSeconds: 120 };
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 async function token(
   overrides: Record<string, unknown> = {},
@@ -250,7 +251,7 @@ describe('delegation and MCP', () => {
     });
     expect(prepared.isError).not.toBe(true);
     const preparedPayload = toolPayload(prepared);
-    const before = await pool.query('select count(*)::int as count from marketing_ops.campaigns where name = $1', [campaignName]);
+    const before = await adminPool.query('select count(*)::int as count from marketing_ops.campaigns where name = $1', [campaignName]);
     expect(before.rows[0].count).toBe(0);
 
     const sameTurn = await client.callTool({
@@ -284,7 +285,7 @@ describe('delegation and MCP', () => {
     expect(executedPayload.data).toMatchObject({ status: 'completed' });
     expect(executedPayload.data.completed).toHaveLength(2);
 
-    const persisted = await pool.query(`
+    const persisted = await adminPool.query(`
       select c.id, count(i.id)::int as items
       from marketing_ops.campaigns c
       left join marketing_ops.campaign_items i on i.campaign_id = c.id
@@ -304,10 +305,16 @@ describe('delegation and MCP', () => {
       arguments: { delegation_token: retryToken, plan_token: preparedPayload.plan_token }
     });
     const retryPayload = toolPayload(retry);
+    expect(retryPayload.error).toBeUndefined();
     expect(retryPayload.data).toMatchObject({ status: 'completed' });
-    expect(retryPayload.data.completed.map((entry: { data: { id: string } }) => entry.data.id))
-      .toEqual(executedPayload.data.completed.map((entry: { data: { id: string } }) => entry.data.id));
-    const afterRetry = await pool.query(`
+    expect(retryPayload.data.completed).toEqual(expect.arrayContaining([
+      expect.objectContaining({ idempotency_hit: true })
+    ]));
+    expect(retryPayload.data.completed.map((entry: { resource: { id: string } }) => entry.resource.id))
+      .toEqual(executedPayload.data.completed.map(
+        (entry: { resource: { id: string } }) => entry.resource.id
+      ));
+    const afterRetry = await adminPool.query(`
       select
         (select count(*)::int from marketing_ops.campaigns where name = $1) as campaigns,
         (select count(*)::int from marketing_ops.campaign_items where campaign_id = $2) as items

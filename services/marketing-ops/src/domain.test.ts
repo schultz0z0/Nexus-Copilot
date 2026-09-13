@@ -12,8 +12,9 @@ import { createCampaignItemDraft, updateCampaignItemDraft } from './domain/items
 import { getCampaign, listCampaigns } from './domain/queries.js';
 
 const pool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres' });
+const adminPool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ?? process.env.MARKETING_OPS_TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres' });
 const actor: Actor = { userId: '11111111-1111-4111-8111-111111111111', tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', tenantSlug: 'ens', role: 'member' };
-afterAll(() => pool.end());
+afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 
 function context() {
   return { pool, actor, correlationId: randomUUID(), origin: 'rest' as const };
@@ -30,7 +31,7 @@ describe('idempotent draft domain', () => {
     const replay = await createCampaignDraft(context(), { name: 'Idempotent campaign', idempotencyKey });
     expect(replay.id).toBe(first.id);
     await expect(createCampaignDraft(context(), { name: 'Different campaign', idempotencyKey })).rejects.toMatchObject({ code: 'idempotency_conflict' });
-    const counts = await pool.query(`
+    const counts = await adminPool.query(`
       select
         (select count(*)::int from marketing_ops.campaigns where id = $1) as campaigns,
         (select count(*)::int from marketing_ops.audit_events where entity_id = $1) as audits,
@@ -44,7 +45,7 @@ describe('idempotent draft domain', () => {
       name: 'Progressive draft',
       idempotencyKey: randomUUID()
     });
-    const owner = await pool.query(`
+    const owner = await adminPool.query(`
       select member_role::text as "memberRole", is_primary as "isPrimary"
       from marketing_ops.campaign_members
       where campaign_id = $1 and user_id = $2
@@ -58,7 +59,7 @@ describe('idempotent draft domain', () => {
     const updated = await updateCampaignDraft(context(), campaign.id, 1, { name: 'Version two', idempotencyKey: randomUUID() });
     expect(updated.version).toBe(2);
     await expect(updateCampaignDraft(context(), campaign.id, 1, { name: 'Stale write', idempotencyKey: randomUUID() })).rejects.toMatchObject({ code: 'version_conflict' });
-    const row = await pool.query('select name, version::int from marketing_ops.campaigns where id = $1', [campaign.id]);
+    const row = await adminPool.query('select name, version::int from marketing_ops.campaigns where id = $1', [campaign.id]);
     expect(row.rows[0]).toMatchObject({ name: 'Version two', version: 2 });
   });
 
@@ -189,7 +190,7 @@ describe('idempotent draft domain', () => {
       correlationId,
       faultInjector: async (point: string) => { if (point === 'after_entity') throw new Error('injected failure'); }
     }, { name: 'Atomic campaign', idempotencyKey })).rejects.toThrow('injected failure');
-    const counts = await pool.query(`
+    const counts = await adminPool.query(`
       select
         (select count(*)::int from marketing_ops.campaigns where name = 'Atomic campaign') as campaigns,
         (select count(*)::int from marketing_ops.audit_events where correlation_id = $1) as audits,
