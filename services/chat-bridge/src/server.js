@@ -29,6 +29,7 @@ import { PictureClient } from "./picture-client.js";
 import { issuePictureDelegation, redactPictureDelegation, refreshPictureDelegation } from "./picture-delegation.js";
 import {
   buildPictureWorkspaceSummary,
+  createMemoryPictureSessionRepository,
   createPictureModeService,
   createSupabasePictureSessionRepository,
   validateChatExperience,
@@ -82,6 +83,7 @@ const config = {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
+  authMode: runtimeConfig.authMode,
   supabaseUrl: runtimeConfig.supabaseUrl,
   supabaseAnonKey: runtimeConfig.supabaseAnonKey,
   supabaseServiceRoleKey: runtimeConfig.supabaseServiceRoleKey,
@@ -239,6 +241,33 @@ const fetchBridgeUserProfile = async (userId) => {
 const verifyUser = async (req) => {
   const token = getBearerToken(req);
   const requestedTenantId = firstHeaderValue(req.headers["x-tenant-id"]);
+  const gatewayUserId = firstHeaderValue(req.headers["x-user-id"]);
+  const gatewayUserRole = firstHeaderValue(req.headers["x-user-role"]);
+  const gatewayUserName = firstHeaderValue(req.headers["x-user-name"]);
+  const gatewayUserEmail = firstHeaderValue(req.headers["x-user-email"]);
+
+  if (config.authMode === "gateway" || (!config.supabaseUrl && (gatewayUserId || token))) {
+    if (!gatewayUserId && !token) {
+      const error = new Error("missing_user_identity");
+      error.status = 401;
+      throw error;
+    }
+    const role = normalizeProfileRole(gatewayUserRole || "member");
+    return {
+      id: gatewayUserId || "authenticated",
+      token: token || "internal-gateway-token",
+      tenant_id: resolveTrustedTenantId({
+        requestedTenantId,
+        fallbackTenantId: config.defaultTenantId,
+        trustClientHeader: true,
+      }),
+      role,
+      profile_role: role,
+      name: gatewayUserName || "Usuario ENS",
+      email: gatewayUserEmail || null,
+    };
+  }
+
   if (!token) {
     const error = new Error("missing_bearer_token");
     error.status = 401;
@@ -351,6 +380,7 @@ const buildSupabaseAdminHeaders = () => {
 };
 
 const deleteSupabaseRows = async (table, filters) => {
+  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) return;
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     params.set(key, `eq.${value}`);
@@ -513,6 +543,7 @@ const fetchReplayContextMessages = async ({ sessionId, currentMessageText, limit
 
 
 const assertChatSessionOwner = async ({ sessionId, userId }) => {
+  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) return;
   const params = new URLSearchParams({
     id: `eq.${sessionId}`,
     user_id: `eq.${userId}`,
@@ -904,6 +935,8 @@ class HermesBridge {
       supabaseServiceRoleKey: config.supabaseServiceRoleKey,
       userToken: user.token,
       bucket: config.attachmentBucket,
+      artifactInternalUrl: config.artifactInternalUrl,
+      artifactInternalKey: config.artifactInternalKey,
       sharedImageBridgeDir: config.hermesImageInputsBridgeDir,
       sharedImageHermesDir: config.hermesImageInputsHermesDir,
     });
@@ -1738,10 +1771,12 @@ const pictureClient = new PictureClient({
   artifactBaseUrl: config.artifactInternalUrl,
   artifactInternalKey: config.artifactInternalKey,
 });
-const pictureSessions = createSupabasePictureSessionRepository({
-  supabaseUrl: config.supabaseUrl,
-  serviceRoleKey: config.supabaseServiceRoleKey,
-});
+const pictureSessions = config.supabaseUrl && config.supabaseServiceRoleKey
+  ? createSupabasePictureSessionRepository({
+      supabaseUrl: config.supabaseUrl,
+      serviceRoleKey: config.supabaseServiceRoleKey,
+    })
+  : createMemoryPictureSessionRepository();
 const pictureModeService = createPictureModeService({
   sessions: pictureSessions,
   picture: pictureClient,

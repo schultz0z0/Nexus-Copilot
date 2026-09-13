@@ -137,6 +137,9 @@ export async function chatRoutes(fastify, options) {
       "content-type": "application/json",
       "x-user-id": req.user.id,
       "x-tenant-id": req.user.tenant_id ?? "",
+      "x-user-role": req.user.role ?? "member",
+      "x-user-name": req.user.full_name ?? "",
+      "x-user-email": req.user.email ?? "",
     };
     const authHeader = req.headers.authorization || (req.token ? `Bearer ${req.token}` : undefined);
     if (authHeader) {
@@ -194,6 +197,9 @@ export async function chatRoutes(fastify, options) {
             "content-type": "application/json",
             "x-user-id": request.user.id,
             "x-tenant-id": request.user.tenant_id ?? "",
+            "x-user-role": request.user.role ?? "member",
+            "x-user-name": request.user.full_name ?? "",
+            "x-user-email": request.user.email ?? "",
             ...(authHeader ? { authorization: authHeader } : {}),
           },
           signal: AbortSignal.timeout(15000),

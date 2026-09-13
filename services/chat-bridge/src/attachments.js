@@ -148,6 +148,10 @@ export const assertAttachmentAccess = ({ attachment, userId, sessionId }) => {
   }
 
   const normalizedPath = String(attachment.storage_path ?? "").trim();
+  if (attachment.artifact_id || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedPath)) {
+    return;
+  }
+
   if (!normalizedPath || hasSuspiciousPathSegments(normalizedPath)) {
     throw new Error("invalid_attachment_path");
   }
@@ -198,11 +202,42 @@ const createAttachmentSignedUrl = async ({ supabaseUrl, bucket, storagePath, hea
   return toAbsoluteSignedUrl(supabaseUrl, parseSignedUrlPayload(payload));
 };
 
+const readArtifactBytes = async ({ artifactInternalUrl, artifactId, internalKey, fetchImpl = fetch }) => {
+  const response = await fetchImpl(`${artifactInternalUrl.replace(/\/$/, "")}/v1/artifacts/${encodeURIComponent(artifactId)}/content`, {
+    headers: internalKey ? { Authorization: `Bearer ${internalKey}` } : {},
+  });
+  if (!response.ok) throw new Error(`attachment_fetch_failed:${response.status}`);
+  const contentLength = Number(response.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > CHAT_ATTACHMENT_MAX_DOWNLOAD_BYTES) {
+    throw new Error("attachment_too_large");
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength > CHAT_ATTACHMENT_MAX_DOWNLOAD_BYTES) {
+    throw new Error("attachment_too_large");
+  }
+  return bytes;
+};
+
+const createArtifactSignedUrl = async ({ artifactInternalUrl, artifactId, userId, internalKey, fetchImpl = fetch }) => {
+  const response = await fetchImpl(`${artifactInternalUrl.replace(/\/$/, "")}/v1/artifacts/${encodeURIComponent(artifactId)}/access-link`, {
+    method: "POST",
+    headers: {
+      ...(internalKey ? { Authorization: `Bearer ${internalKey}` } : {}),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ owner_id: userId, expires_in_seconds: CHAT_ATTACHMENT_SIGNED_URL_TTL_SECONDS }),
+  });
+  if (!response.ok) throw new Error(`attachment_signed_url_failed:${response.status}`);
+  const payload = await response.json();
+  return payload.url;
+};
+
 const normalizeAttachment = (attachment) => ({
   kind: attachment?.kind === "image" ? "image" : "file",
   name: String(attachment?.name ?? "").trim() || "arquivo",
   mime_type: String(attachment?.mime_type ?? "").trim().toLowerCase(),
-  storage_path: String(attachment?.storage_path ?? "").trim(),
+  storage_path: String(attachment?.storage_path ?? attachment?.artifact_id ?? "").trim(),
+  artifact_id: String(attachment?.artifact_id ?? "").trim() || null,
 });
 
 export const prepareHermesAttachments = async ({
@@ -214,6 +249,8 @@ export const prepareHermesAttachments = async ({
   supabaseServiceRoleKey = "",
   userToken = "",
   bucket = CHAT_ATTACHMENT_BUCKET,
+  artifactInternalUrl = process.env.ARTIFACT_INTERNAL_URL || "http://localhost:8095",
+  artifactInternalKey = process.env.ARTIFACT_INTERNAL_KEY || "",
   sharedImageBridgeDir = process.env.HERMES_IMAGE_INPUTS_BRIDGE_DIR || "",
   sharedImageHermesDir = process.env.HERMES_IMAGE_INPUTS_HERMES_DIR || "",
   fetchImpl = fetch,
@@ -223,30 +260,56 @@ export const prepareHermesAttachments = async ({
     throw new Error("too_many_attachments");
   }
   if (normalizedAttachments.length === 0) return [];
-  if (!supabaseUrl) throw new Error("missing_SUPABASE_URL");
 
-  const normalizedSupabaseUrl = normalizeSupabaseUrl(supabaseUrl);
-  const headers = buildStorageHeaders({ supabaseAnonKey, supabaseServiceRoleKey, userToken });
+  const normalizedSupabaseUrl = supabaseUrl ? normalizeSupabaseUrl(supabaseUrl) : null;
+  const headers = (supabaseUrl && (supabaseServiceRoleKey || supabaseAnonKey || userToken))
+    ? buildStorageHeaders({ supabaseAnonKey, supabaseServiceRoleKey, userToken })
+    : {};
 
   return await Promise.all(normalizedAttachments.map(async (attachment) => {
     assertAttachmentAccess({ attachment, userId, sessionId });
 
-    const [bytes, signedUrl] = await Promise.all([
-      readAttachmentBytes({
-        supabaseUrl: normalizedSupabaseUrl,
-        bucket,
-        storagePath: attachment.storage_path,
-        headers,
-        fetchImpl,
-      }),
-      createAttachmentSignedUrl({
-        supabaseUrl: normalizedSupabaseUrl,
-        bucket,
-        storagePath: attachment.storage_path,
-        headers,
-        fetchImpl,
-      }),
-    ]);
+    const isArtifact = Boolean(attachment.artifact_id) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attachment.storage_path);
+    const artifactId = attachment.artifact_id || attachment.storage_path;
+
+    let bytes;
+    let signedUrl;
+
+    if (isArtifact) {
+      [bytes, signedUrl] = await Promise.all([
+        readArtifactBytes({
+          artifactInternalUrl,
+          artifactId,
+          internalKey: artifactInternalKey,
+          fetchImpl,
+        }),
+        createArtifactSignedUrl({
+          artifactInternalUrl,
+          artifactId,
+          userId,
+          internalKey: artifactInternalKey,
+          fetchImpl,
+        }),
+      ]);
+    } else {
+      if (!normalizedSupabaseUrl) throw new Error("missing_SUPABASE_URL");
+      [bytes, signedUrl] = await Promise.all([
+        readAttachmentBytes({
+          supabaseUrl: normalizedSupabaseUrl,
+          bucket,
+          storagePath: attachment.storage_path,
+          headers,
+          fetchImpl,
+        }),
+        createAttachmentSignedUrl({
+          supabaseUrl: normalizedSupabaseUrl,
+          bucket,
+          storagePath: attachment.storage_path,
+          headers,
+          fetchImpl,
+        }),
+      ]);
+    }
 
     const extractedText = extractAttachmentText(attachment, bytes);
     const hermesImageInput = await materializeHermesImageInput({

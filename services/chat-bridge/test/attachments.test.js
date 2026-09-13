@@ -114,3 +114,44 @@ test("prepareHermesAttachments materializes image inputs into a Hermes-readable 
     await rm(tmpDir, { force: true, recursive: true });
   }
 });
+
+test("prepareHermesAttachments supports artifact_id via Artifact Server", async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url: String(url), init });
+    if (String(url).includes("/v1/artifacts/11111111-1111-1111-1111-111111111111/content")) {
+      return new Response(textEncoder.encode("conteudo artifact"), {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+    if (String(url).includes("/v1/artifacts/11111111-1111-1111-1111-111111111111/access-link")) {
+      return createJsonResponse({ url: "http://localhost:8095/v1/artifacts/11111111-1111-1111-1111-111111111111/content?token=xyz" });
+    }
+    return createJsonResponse({ error: "unexpected" }, { status: 500 });
+  };
+
+  const prepared = await prepareHermesAttachments({
+    attachments: [{
+      kind: "file",
+      name: "doc.txt",
+      mime_type: "text/plain",
+      artifact_id: "11111111-1111-1111-1111-111111111111",
+    }],
+    userId: "user-1",
+    sessionId: "session-1",
+    artifactInternalUrl: "http://localhost:8095",
+    artifactInternalKey: "test-internal-key",
+    fetchImpl,
+  });
+
+  assert.equal(prepared.length, 1);
+  assert.equal(prepared[0].extracted_text, "conteudo artifact");
+  assert.equal(
+    prepared[0].signed_url,
+    "http://localhost:8095/v1/artifacts/11111111-1111-1111-1111-111111111111/content?token=xyz",
+  );
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].init.headers.Authorization, "Bearer test-internal-key");
+});
+

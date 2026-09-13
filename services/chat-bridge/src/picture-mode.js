@@ -118,3 +118,40 @@ export const createSupabasePictureSessionRepository = ({ supabaseUrl, serviceRol
     },
   };
 };
+
+export const createMemoryPictureSessionRepository = () => {
+  const workspaces = new Map();
+  const sessions = new Map();
+  return {
+    async findActiveWorkspace({ userId, tenantId }) {
+      return Array.from(workspaces.values()).find((w) => w.user_id === userId && w.tenant_id === tenantId && w.active) ?? null;
+    },
+    async findPictureSession({ userId }) {
+      return Array.from(sessions.values())
+        .filter((s) => s.user_id === userId && s.session_kind === "picture")
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
+    },
+    async assertPictureSession({ sessionId, userId }) {
+      const session = sessions.get(sessionId);
+      if (!session || session.user_id !== userId || session.session_kind !== "picture") {
+        throw Object.assign(new Error("picture_session_not_found"), { status: 404 });
+      }
+      return session;
+    },
+    async createPictureSession({ userId, title }) {
+      const session = {
+        id: `pic_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        user_id: userId,
+        title: title || "Picture Workspace",
+        session_kind: "picture",
+        created_at: new Date().toISOString(),
+      };
+      sessions.set(session.id, session);
+      return session;
+    },
+    async deletePictureSession({ userId, sessionId }) {
+      sessions.delete(sessionId);
+    },
+  };
+};
+

@@ -58,6 +58,25 @@ test("production fails closed without Supabase and delegation config", () => {
   assert.throws(() => validateBridgeRuntimeConfig({ NODE_ENV: "production" }), /SUPABASE_URL/);
 });
 
+test("production allows gateway auth mode without any Supabase configuration", () => {
+  const gatewayConfig = {
+    NODE_ENV: "production",
+    BRIDGE_AUTH_MODE: "gateway",
+    MARKETING_OPS_DELEGATION_ACTIVE_KID: "v1",
+    MARKETING_OPS_DELEGATION_ACTIVE_KEY: "production-delegation-key-at-least-32-bytes",
+    MARKETING_OPS_DELEGATION_REFRESH_KEY: "production-refresh-key-at-least-32-bytes",
+    PICTURE_INTERNAL_URL: "http://picture:8090",
+    PICTURE_INTERNAL_KEY: "production-picture-key-at-least-32-bytes",
+    PICTURE_DELEGATION_ACTIVE_KID: "p1",
+    PICTURE_DELEGATION_ACTIVE_KEY: "production-picture-delegation-key-32-bytes",
+    PICTURE_DELEGATION_REFRESH_KEY: "production-picture-refresh-key-32-bytes",
+  };
+  const validated = validateBridgeRuntimeConfig(gatewayConfig);
+  assert.equal(validated.authMode, "gateway");
+  assert.equal(validated.supabaseUrl, "");
+});
+
+
 test("production requires the internal delegation refresh key", () => {
   const productionConfig = {
     NODE_ENV: "production",

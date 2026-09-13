@@ -19,11 +19,13 @@ export const validateBridgeRuntimeConfig = (env = process.env) => {
   const marketingOpsDecisionTimeoutMs = Number.isFinite(configuredDecisionTimeoutMs)
     ? Math.max(1_000, Math.min(60_000, Math.trunc(configuredDecisionTimeoutMs)))
     : 15_000;
+  const authMode = (env.BRIDGE_AUTH_MODE || env.ENS_AUTH_MODE || "supabase").trim().toLowerCase();
+  const isGatewayAuth = authMode === "gateway" || authMode === "bff" || env.BRIDGE_STANDALONE === "true";
   const supabaseUrl = value(env, ["SUPABASE_URL", "VITE_SUPABASE_URL"]);
   const supabaseAnonKey = value(env, ["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
   const supabaseServiceRoleKey = value(env, ["SUPABASE_SERVICE_ROLE_KEY"]);
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-    if (!allowInsecureLocalAuth) {
+    if (!allowInsecureLocalAuth && !isGatewayAuth) {
       const missing = !supabaseUrl ? "SUPABASE_URL" : !supabaseAnonKey ? "SUPABASE_ANON_KEY" : "SUPABASE_SERVICE_ROLE_KEY";
       throw new Error(`${missing} is required; set BRIDGE_ALLOW_INSECURE_LOCAL_AUTH=true only for isolated local development`);
     }
@@ -65,6 +67,7 @@ export const validateBridgeRuntimeConfig = (env = process.env) => {
   return {
     production,
     allowInsecureLocalAuth,
+    authMode: isGatewayAuth ? "gateway" : "supabase",
     supabaseUrl,
     supabaseAnonKey,
     supabaseServiceRoleKey,
