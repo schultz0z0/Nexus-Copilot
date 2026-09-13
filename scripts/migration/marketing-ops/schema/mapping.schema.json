@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["tenants", "principals"],
+  "properties": {
+    "tenants": { "type": "object", "additionalProperties": { "type": "string", "format": "uuid" } },
+    "principals": { "type": "object", "additionalProperties": { "type": "string", "format": "uuid" } }
+  },
+  "additionalProperties": false
+}

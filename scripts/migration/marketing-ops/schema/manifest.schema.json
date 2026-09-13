@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["format_version", "run_id", "created_at", "tables", "fingerprint"],
+  "properties": {
+    "format_version": { "const": 1 },
+    "run_id": { "type": "string", "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "file", "row_count", "sha256"],
+        "properties": {
+          "name": { "type": "string" }, "file": { "type": "string" },
+          "row_count": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

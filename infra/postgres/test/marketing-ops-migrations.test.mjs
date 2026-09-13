@@ -46,3 +46,11 @@ test('0009 creates operational indexes', () => {
   const indexes = migration('0009_marketing_ops_indexes.sql');
   assert.match(indexes, /create index/);
 });
+
+test('0010 records idempotent migration runs without product-data authority', () => {
+  const control = migration('0010_marketing_ops_migration_control.sql');
+  assert.match(control, /create schema migration_control authorization nexus_owner/);
+  assert.match(control, /manifest_fingerprint text not null unique/);
+  assert.match(control, /marketing_ops_staging_rows/);
+  assert.doesNotMatch(control, /grant .*nexus_app/);
+});
