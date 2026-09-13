@@ -339,6 +339,12 @@ export const api = {
       request<{ ok: boolean; avatar_url: null }>("/api/users/me/avatar", {
         method: "DELETE",
       }),
+
+    updateProfile: (data: { full_name?: string | null }): Promise<{ ok: boolean; full_name: string | null }> =>
+      request<{ ok: boolean; full_name: string | null }>("/api/users/me", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
   },
 
   attachments: {

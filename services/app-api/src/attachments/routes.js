@@ -292,6 +292,18 @@ export async function attachmentRoutes(fastify, options) {
     return { avatar_url: avatarUrl };
   };
 
+  // PATCH /api/users/me (Update current user profile)
+  fastify.patch("/api/users/me", { preHandler: authenticateUser }, async (request, reply) => {
+    const { full_name } = request.body || {};
+    if (full_name !== undefined) {
+      await db.query(
+        "UPDATE iam.principals SET full_name = $1, updated_at = transaction_timestamp() WHERE id = $2",
+        [full_name || null, request.user.id]
+      );
+    }
+    return { ok: true, full_name: full_name || null };
+  });
+
   // POST /api/users/me/avatar
   fastify.post("/api/users/me/avatar", { preHandler: authenticateUser }, async (request, reply) => {
     return handleAvatarUploadForUser(request.user.id, request, reply);

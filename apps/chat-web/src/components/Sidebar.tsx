@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: SidebarProps) => {
-  const { isAdmin, canManageValidatedWorks, signOut, user } = useAuth();
+  const { isAdmin, signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -29,6 +29,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const marketingOps = marketingOpsFlags(import.meta.env);
 
@@ -39,7 +40,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
       const record = err as Record<string, unknown>;
       if (typeof record.message === "string") return record.message;
     }
-    return String(err);
+    return "Erro inesperado";
   };
 
   const handleNavigation = (tab: "chat" | "image") => {
@@ -65,15 +66,10 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
       if (!userId) return;
       try {
         setProfileLoading(true);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("id", userId)
-          .single();
-        if (error) throw error;
-        setFullName(data?.full_name || "");
-        setAvatarUrl(data?.avatar_url || null);
-        setAvatarPreview(data?.avatar_url || null);
+        const { user: profileUser } = await api.auth.session();
+        setFullName(profileUser.full_name || "");
+        setAvatarUrl(profileUser.avatar_url || null);
+        setAvatarPreview(profileUser.avatar_url || null);
       } catch (err: unknown) {
         toast.error("Falha ao carregar perfil: " + getErrorMessage(err));
       } finally {
@@ -83,25 +79,9 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
     loadProfile();
   }, [userId]);
 
-  const handleAvatarUpload = async (file: File, userId: string, oldAvatarUrl?: string) => {
-    if (oldAvatarUrl) {
-      try {
-        const oldFileName = oldAvatarUrl.split("/").pop();
-        if (oldFileName) {
-          await supabase.storage.from("avatars").remove([oldFileName]);
-        }
-      } catch (e) {
-        void e;
-      }
-    }
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(fileName, file, { upsert: true });
-    if (uploadError) throw uploadError;
-    const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
-    return data.publicUrl;
+  const handleAvatarUpload = async (file: File) => {
+    const res = await api.users.uploadAvatar(file);
+    return res.avatar_url;
   };
 
   const handleSaveProfile = async () => {
@@ -110,22 +90,13 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
       let nextAvatarUrl = avatarUrl;
       if (avatarFile) {
         try {
-          nextAvatarUrl = await handleAvatarUpload(avatarFile, user.id, avatarUrl || undefined);
+          nextAvatarUrl = await handleAvatarUpload(avatarFile);
         } catch (uploadErr: unknown) {
-          const msg = getErrorMessage(uploadErr);
-          if (msg.includes("Bucket not found")) {
-            toast.error("Bucket 'avatars' não encontrado. Crie um bucket público chamado 'avatars' no Supabase Storage.");
-          } else {
-            toast.error("Falha ao enviar imagem: " + msg);
-          }
+          toast.error("Falha ao enviar imagem: " + getErrorMessage(uploadErr));
           return;
         }
       }
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName || null, avatar_url: nextAvatarUrl || null })
-        .eq("id", user.id);
-      if (error) throw error;
+      await api.users.updateProfile({ full_name: fullName || null });
       setAvatarUrl(nextAvatarUrl || null);
       setAvatarPreview(nextAvatarUrl || null);
       setAvatarFile(null);
@@ -140,15 +111,19 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPassword) {
+      toast.error("Informe a senha atual");
+      return;
+    }
     if (!newPassword || newPassword.length < 8) {
-      toast.error("A senha deve ter pelo menos 8 caracteres");
+      toast.error("A nova senha deve ter pelo menos 8 caracteres");
       return;
     }
     try {
       setProfileLoading(true);
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await api.auth.changePassword(currentPassword, newPassword);
       toast.success("Senha alterada com sucesso!");
+      setCurrentPassword("");
       setNewPassword("");
     } catch (err: unknown) {
       toast.error("Erro ao alterar senha: " + getErrorMessage(err));
@@ -249,21 +224,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
           </>
         ) : null}
 
-        {canManageValidatedWorks && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-              location.pathname === "/manager/validated-works" && "bg-brand-primary/20 text-brand-primary"
-            )}
-            onClick={() => { navigate("/manager/validated-works"); onMobileClose?.(); }}
-            aria-label="Abrir trabalhos validados"
-            title="Trabalhos Validados"
-          >
-            <ClipboardCheck className="w-5 h-5" />
-          </Button>
-        )}
+
 
         {/* Admin Only Link */}
         {isAdmin && (
@@ -338,9 +299,15 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
               <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
             </div>
 
-            <form onSubmit={handleChangePassword} className="space-y-2">
-              <Label htmlFor="newPassword">Trocar senha</Label>
-              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nova senha" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="currentPassword">Senha atual</Label>
+                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Sua senha atual" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="newPassword">Nova senha</Label>
+                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nova senha (mín. 8 caracteres)" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+              </div>
               <Button type="submit" variant="outline" className="w-full border-slate-200 text-slate-700 hover:bg-slate-50">
                 <Key className="w-4 h-4 mr-2" /> Atualizar senha
               </Button>

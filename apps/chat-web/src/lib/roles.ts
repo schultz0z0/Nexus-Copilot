@@ -11,11 +11,6 @@ export const normalizeProfileRole = (role: ProfileRole): AppRole => {
 
 export const isAdminRole = (role: ProfileRole) => normalizeProfileRole(role) === "admin";
 
-export const canManageValidatedWorks = (role: ProfileRole) => {
-  const normalized = normalizeProfileRole(role);
-  return normalized === "admin" || normalized === "manager";
-};
-
 export const getRoleLabel = (role: ProfileRole) => {
   const normalized = normalizeProfileRole(role);
   if (normalized === "admin") return "Administrador";

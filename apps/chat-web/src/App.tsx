@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import UserManagement from "./pages/admin/UserManagement";
-import ValidatedWorks from "./pages/manager/ValidatedWorks";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -59,14 +58,7 @@ const AuthenticatedApp = () => {
               }
             />
 
-            <Route
-              path="/manager/validated-works"
-              element={
-                <ProtectedRoute requireManager>
-                  <ValidatedWorks />
-                </ProtectedRoute>
-              }
-            />
+
 
             {marketingOps.read ? (
               <>

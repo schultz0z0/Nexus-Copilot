@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api, onUnauthorized, type User } from "@/lib/api";
-import { AppRole, canManageValidatedWorks, isAdminRole, normalizeProfileRole } from "@/lib/roles";
+import { AppRole, isAdminRole, normalizeProfileRole } from "@/lib/roles";
 
 export type { User };
 
@@ -26,7 +26,6 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isManager: boolean;
-  canManageValidatedWorks: boolean;
   normalizedRole: AppRole;
   signIn: (email: string, password: string) => Promise<{ user: User }>;
   signOut: () => Promise<void>;
@@ -39,7 +38,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   isManager: false,
-  canManageValidatedWorks: false,
   normalizedRole: "member",
   signIn: async () => ({ user: { id: "", email: "" } }),
   signOut: async () => {},
@@ -136,7 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     normalizedRole,
     isAdmin: isAdminRole(profile?.role),
     isManager: normalizedRole === "manager",
-    canManageValidatedWorks: canManageValidatedWorks(profile?.role),
     signIn,
     signOut,
   };

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppRole, getRoleLabel, isAdminRole, normalizeProfileRole } from "@/lib/roles";
@@ -168,35 +167,9 @@ export default function UserManagement() {
     }
   };
 
-  const handleAvatarUpload = async (file: File, userId: string, oldAvatarUrl?: string) => {
-    // Se existir avatar antigo, tentar deletar
-    if (oldAvatarUrl) {
-      try {
-        // Extrai o nome do arquivo da URL antiga
-        // URL típica: .../storage/v1/object/public/avatars/filename.ext
-        const oldFileName = oldAvatarUrl.split('/').pop();
-        if (oldFileName) {
-          await supabase.storage.from('avatars').remove([oldFileName]);
-        }
-      } catch (err) {
-        console.warn("Falha ao deletar avatar antigo (não crítico):", err);
-      }
-    }
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    return data.publicUrl;
+  const handleAvatarUpload = async (file: File, userId: string) => {
+    const res = await api.admin.users.uploadAvatar(userId, file);
+    return res.avatar_url;
   };
 
   const handleUpdateUser = async (e: React.FormEvent) => {
@@ -209,15 +182,10 @@ export default function UserManagement() {
 
       if (editAvatarFile) {
         try {
-          // Passa a URL antiga para que seja deletada se o upload for bem-sucedido
-          avatarUrl = await handleAvatarUpload(editAvatarFile, selectedUserForEdit.id, selectedUserForEdit.avatar_url);
+          avatarUrl = await handleAvatarUpload(editAvatarFile, selectedUserForEdit.id);
         } catch (uploadErr: unknown) {
           const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr || "");
-          if (msg.includes("Bucket not found")) {
-            toast.error("Bucket 'avatars' não encontrado. Crie um bucket público chamado 'avatars' no Supabase Storage.");
-          } else {
-            toast.error("Falha ao enviar imagem: " + msg);
-          }
+          toast.error("Falha ao enviar imagem: " + msg);
           return;
         }
       }

@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false, requireManager = false }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, canManageValidatedWorks } = useAuth();
+  const { user, loading, isAdmin, isManager } = useAuth();
 
   if (loading) {
     return (
@@ -30,7 +30,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false, requireManager 
     return <Navigate to="/" replace />;
   }
 
-  if (requireManager && !canManageValidatedWorks) {
+  if (requireManager && !isAdmin && !isManager) {
     return <Navigate to="/" replace />;
   }
 
