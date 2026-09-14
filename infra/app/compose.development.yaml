@@ -24,6 +24,7 @@ services:
       MARKETING_OPS_FEATURE_READ: "true"
       MARKETING_OPS_FEATURE_WRITE: "true"
       MARKETING_OPS_FEATURE_APPROVALS: "true"
+      MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: "true"
     ports:
       - "${MARKETING_OPS_PORT:-8091}:8091"
 
@@ -34,6 +35,7 @@ services:
         VITE_MARKETING_OPS_READ: "true"
         VITE_MARKETING_OPS_WRITE: "true"
         VITE_MARKETING_OPS_APPROVALS: "true"
+        VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: "true"
         VITE_MARKETING_OPS_KILL_SWITCH: "false"
     ports:
       - "${CHAT_WEB_PORT:-8088}:8080"

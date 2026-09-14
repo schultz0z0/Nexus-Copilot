@@ -59,7 +59,10 @@ const app = createApp({
   })
 });
 const server = createServer(app);
-server.listen(config.port, '0.0.0.0', () => logger.info('marketing-ops started', { port: config.port }));
+server.listen(config.port, '0.0.0.0', () => logger.info('marketing-ops started', {
+  port: config.port,
+  features: config.features
+}));
 const stopApprovalExpiryWorker = config.features.write && config.features.approvals
   ? startApprovalExpiryWorker(pool, {
     ...config.approvalExpiry,

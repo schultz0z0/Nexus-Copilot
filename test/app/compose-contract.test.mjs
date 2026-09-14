@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-test("compose.yaml defines all 4 core application services", () => {
+test("compose.yaml defines all 5 core application services", () => {
   const composePath = path.resolve("infra/app/compose.yaml");
   const content = readFileSync(composePath, "utf8");
 
@@ -12,6 +12,7 @@ test("compose.yaml defines all 4 core application services", () => {
   assert.match(content, /chat-bridge:/, "chat-bridge must be defined");
   assert.match(content, /app-api:/, "app-api must be defined");
   assert.match(content, /chat-web:/, "chat-web must be defined");
+  assert.match(content, /marketing-ops:/, "marketing-ops must be defined");
 
   // Check no Supabase service
   assert.doesNotMatch(content, /supabase/, "compose must not define Supabase");
@@ -58,6 +59,53 @@ test("marketing-ops optional RAG probe times out before Docker readiness", () =>
   assert.ok(
     Number(ragTimeout[1]) < Number(healthcheckTimeout[1]) * 1_000,
     "optional RAG timeout must leave time for /ready to return degraded readiness",
+  );
+});
+
+test("structured plan execution is wired behind explicit backend and frontend flags", () => {
+  const baseCompose = readFileSync(path.resolve("infra/app/compose.yaml"), "utf8");
+  const developmentCompose = readFileSync(
+    path.resolve("infra/app/compose.development.yaml"),
+    "utf8",
+  );
+  const productionCompose = readFileSync(
+    path.resolve("infra/app/compose.production.yaml"),
+    "utf8",
+  );
+  const dockerfile = readFileSync(path.resolve("apps/chat-web/Dockerfile"), "utf8");
+  const envExample = readFileSync(path.resolve(".env.example"), "utf8");
+
+  assert.match(
+    baseCompose,
+    /MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:\s*\$\{MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:-false\}/,
+    "backend structured execution must default to false",
+  );
+  assert.match(
+    baseCompose,
+    /VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:\s*\$\{MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION:-false\}/,
+    "frontend structured execution build arg must default to false",
+  );
+  assert.match(
+    developmentCompose,
+    /MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:\s*"true"/,
+    "the local parity override must enable the backend gate explicitly",
+  );
+  assert.match(
+    developmentCompose,
+    /VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:\s*"true"/,
+    "the local parity override must enable the frontend gate explicitly",
+  );
+  assert.match(dockerfile, /ARG VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION="false"/);
+  assert.match(
+    dockerfile,
+    /VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION=\$VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION/,
+  );
+  assert.match(envExample, /^NEXUS_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION=false$/m);
+  assert.match(envExample, /^NEXUS_MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION=false$/m);
+  assert.doesNotMatch(
+    productionCompose,
+    /MARKETING_OPS_(?:FRONTEND_)?STRUCTURED_PLAN_EXECUTION:\s*"true"/,
+    "production must not force either structured execution gate on",
   );
 });
 

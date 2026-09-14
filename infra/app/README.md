@@ -10,6 +10,7 @@ Esta pasta contém o Docker Compose unificado da stack de aplicação do monorep
 | **app-api** | `services/app-api` | `3000` | BFF Fastify 5 (autenticação PostgreSQL, chat, upload via Artifact Server) |
 | **chat-bridge** | `services/chat-bridge` | `8080` | Bridge interna para Hermes Agent (Runs, SSE, saídas) |
 | **artifact-server** | `services/artifact-server` | `8095` | Content-Addressable Storage (CAS) com tokens HMAC de acesso |
+| **marketing-ops** | `services/marketing-ops` | `8091` | Domínio privado de campanhas, approvals, MCP e planos estruturados |
 
 ---
 
@@ -72,6 +73,20 @@ HERMES_API_KEY=sua-api-key-do-hermes
 NEXUS_PUBLIC_APP_HOST=app.solucoes-nexus.tech
 CORS_ORIGIN=https://app.solucoes-nexus.tech
 ```
+
+### Execução estruturada de planos
+
+O botão **Executar plano** possui dois gates independentes e desligados por
+padrão:
+
+- `MARKETING_OPS_STRUCTURED_PLAN_EXECUTION` habilita a execução no serviço;
+- `MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION` é convertido no build em
+  `VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION` e habilita o card no frontend.
+
+O override de desenvolvimento liga ambos para o gate local. Produção não os
+força: o operador deve ativá-los progressivamente somente após migration e
+smokes aprovados. Desligá-los e recriar `marketing-ops` e `chat-web` torna
+planos pendentes inertes sem apagar dados.
 
 ---
 

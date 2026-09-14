@@ -94,6 +94,12 @@ describe('runtime foundation', () => {
     expect(config.features).toEqual({ read: false, write: false, approvals: false, structuredPlanExecution: false });
   });
 
+  it('logs only bounded boolean feature markers at startup', () => {
+    const source = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+    expect(source).toMatch(/marketing-ops started[\s\S]*features:\s*config\.features/);
+    expect(source).not.toMatch(/marketing-ops started[\s\S]*process\.env/);
+  });
+
   it('uses the repository local PostgreSQL port and BFF-only auth defaults', () => {
     const config = loadConfig({ NODE_ENV: 'test' });
     expect(config.databaseUrl).toBe('postgresql://postgres:postgres@127.0.0.1:55322/postgres');
