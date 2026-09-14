@@ -28,7 +28,7 @@ nova.
 | Fundação PostgreSQL (M3) | Concluído na VPS | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md), [runbook](operations/postgresql-foundation.md) e [guia VPS](operations/vps-architecture-and-layout.md) |
 | Auth, Sessões e App API (M4) | Concluído na VPS | [ADR-0003](decisions/ADR-0003-auth-sessions-and-app-api.md) e [desenho de arquitetura M4](plans/2026-09-11-m4-auth-bff-architecture-design.md) |
 | Capacidades locais substitutas (M5) | Concluído na VPS | [desenho M5](plans/2026-09-13-m5-local-capabilities-design.md) |
-| Marketing Ops e cutover (M6) | Em homologação; bloqueado | [desenho M6](plans/2026-09-13-m6-marketing-ops-and-cutover-design.md), [execução estruturada](plans/2026-09-14-structured-marketing-ops-plan-execution-design.md) e [ADR-0004](decisions/ADR-0004-structured-marketing-ops-plan-execution.md) |
+| Marketing Ops e cutover (M6) | Em homologação; bloqueado | [desenho M6](plans/2026-09-13-m6-marketing-ops-and-cutover-design.md), [desenho da execução estruturada](plans/2026-09-14-structured-marketing-ops-plan-execution-design.md), [plano TDD](plans/2026-09-14-structured-marketing-ops-plan-execution-implementation.md), [prompt de handoff](handoffs/2026-09-14-structured-marketing-ops-plan-execution-agent-prompt.md) e [ADR-0004](decisions/ADR-0004-structured-marketing-ops-plan-execution.md) |
 | Migração de Supabase | Em execução; inventário inicial registrado | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) e [inventário de capacidades](migration/supabase-capability-inventory.md) |
 | Ledger DDL do Supabase | Implementação e scan local concluídos | [relatório](migration/supabase-ledger/supabase-object-ledger.md) e [plano/evidências](plans/2026-09-10-supabase-ddl-ledger-implementation.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
@@ -46,6 +46,8 @@ dependência de endpoint privado no Hermes.
 - `migration/`: fases, dependências, gates e rastreabilidade da migração;
 - `plans/`: desenhos e planos de implementação datados;
 - `operations/`: runbooks operacionais, deploy, atualização, backup e recuperação.
+- `handoffs/`: prompts autocontidos para transferir uma implementação sem perder
+  decisões, gates ou limites de autoridade.
 
 ## Estados dos documentos
 

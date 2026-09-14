@@ -264,3 +264,17 @@
 5. Update status/roadmap only after all returned evidence is validated.
 6. Run final repository verification and commit: `docs(m6): record validated marketing ops cutover`.
 
+### Task 15: Complete the structured plan execution gate
+
+**Status:** required after the production finding of 2026-09-14; not implemented.
+
+The original conversational confirmation design is superseded for browser
+execution by:
+
+- [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md);
+- [approved complementary design](2026-09-14-structured-marketing-ops-plan-execution-design.md);
+- [TDD implementation plan](2026-09-14-structured-marketing-ops-plan-execution-implementation.md).
+
+M6 remains incomplete until that plan passes locally and the human operator
+returns validated production evidence. Do not restore the private Hermes
+decision endpoint or solve the gate with natural-language confirmation.

@@ -111,6 +111,8 @@ Adicionar a migration `0017_marketing_ops_prepared_plans.sql` e a tabela
 | `status` | `pending`, `executing`, `completed`, `partial`, `failed`, `expired`, `invalidated` |
 | `expires_at` | expiração absoluta, no máximo 30 minutos após criação |
 | `execution_key` | chave de idempotência única após primeiro clique |
+| `execution_started_at` | início/lease da tentativa atual |
+| `execution_attempts` | contador limitado para diagnóstico e recuperação |
 | `result` | envelope sanitizado da execução, nulo enquanto pending |
 | `executed_by`/`executed_at` | ator e instante da execução |
 | `created_at`/`updated_at` | auditoria temporal |
@@ -200,22 +202,24 @@ Erros estáveis esperados:
 
 ## 8. Execução transacional e concorrência
 
-1. Abrir transação com o contexto `app.*` do usuário atual.
-2. Buscar o plano com lock de linha e escopo de tenant/ator.
-3. Validar `pending`, expiração, `plan_hash`, flags e membership ativa.
-4. Revalidar o schema e derivar novamente os escopos das ações.
-5. Registrar/confirmar `Idempotency-Key` e mudar para `executing`.
-6. Executar o executor de planos já existente sem aceitar ações do request.
-7. Persistir resultado terminal, auditoria, outbox e idempotência.
-8. Confirmar a transação e devolver o envelope sanitizado.
+1. Em uma transação curta com contexto `app.*`, buscar o plano com lock de linha,
+   validar tenant/ator/hash/status/expiração e reservar a execução com
+   `Idempotency-Key`, `executing` e lease temporal.
+2. Executar o executor de planos já existente sem aceitar ações do request. Cada
+   ação conserva sua transação/idempotência de domínio e o resultado pode ser
+   `completed`, `partial` ou `failed`.
+3. Em outra transação curta, persistir resultado terminal, auditoria e
+   correlação da tentativa.
 
 A implementação deve reutilizar `executeMarketingOpsPlan`, mas a camada de
 serviço não deve fabricar um `DelegatedActor` falso. Ela cria um
 `CommandContext` BFF autenticado e um plano validado a partir do registro.
 
 Dois cliques concorrentes não podem repetir efeitos. O segundo aguarda o lock e
-recebe o resultado idempotente ou `plan_not_pending` estável. Se a execução
-existente produz `partial`, o plano é terminal; retry de ações exige novo plano.
+recebe o resultado idempotente ou `plan_not_pending` estável. Se o processo cair
+em `executing`, somente a mesma chave pode retomar após uma lease curta; o
+executor por ação absorve o replay. Uma chave diferente recebe conflito. Se a
+execução produz `partial`, o plano é terminal; retry de ações exige novo plano.
 
 ## 9. Card e UX
 

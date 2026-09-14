@@ -265,7 +265,8 @@ de `/v1/internal/marketing-ops-decision`, ausente no Hermes oficial, e o
 **Gate complementar obrigatório:** implementar o
 [card estruturado e botão Executar plano](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md)
 conforme a [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md),
-passar o plano TDD e repetir a homologação local e produtiva. Até isso ocorrer,
+passar o [plano de implementação TDD](../plans/2026-09-14-structured-marketing-ops-plan-execution-implementation.md)
+e repetir a homologação local e produtiva. Até isso ocorrer,
 M6 permanece **não concluído**, ainda que as flags atuais estejam ativas.
 
 ## M7 — Hardening e retirada do legado

@@ -234,6 +234,11 @@ um card confiável com o botão **Executar plano**. O clique seguirá pela App
 API/BFF e executará o ID/hash exatos sem nova interpretação do modelo. Consulte
 a [ADR-0004](docs/decisions/ADR-0004-structured-marketing-ops-plan-execution.md)
 e o [desenho da melhoria](docs/plans/2026-09-14-structured-marketing-ops-plan-execution-design.md).
+O trabalho foi decomposto no
+[plano de implementação TDD](docs/plans/2026-09-14-structured-marketing-ops-plan-execution-implementation.md)
+e possui um
+[prompt de handoff](docs/handoffs/2026-09-14-structured-marketing-ops-plan-execution-agent-prompt.md)
+para execução por outro agente sem ampliar o escopo.
 
 Crédito de planejamento atual: 8% dos 10% do M6, elevando a estimativa global a
 92%. Isso não representa aceite do marco. O M6 só será concluído após a
