@@ -10,6 +10,11 @@ export type StreamStatus = {
 
 export type StreamArtifact = Omit<ChatMessageArtifactPart, "id" | "type">;
 
+export type StreamTerminalRun = {
+  runId: string;
+  status: "completed" | "failed" | "cancelled" | "canceled" | "expired" | "interrupted";
+};
+
 type SendMessageToChatbotStreamParams = {
   payload: ChatProxyPayload;
   getAccessToken: () => Promise<string>;
@@ -21,6 +26,7 @@ type SendMessageToChatbotStreamParams = {
   onStatus?: (status: StreamStatus) => void;
   onFiles?: (files: ChatMessageFilePart[]) => void;
   onArtifact?: (artifact: StreamArtifact) => void;
+  onTerminalRun?: (run: StreamTerminalRun) => void;
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -171,6 +177,7 @@ export const sendMessageToChatbotStream = async ({
   onStatus,
   onFiles,
   onArtifact,
+  onTerminalRun,
 }: SendMessageToChatbotStreamParams) => {
   let accessToken = await getAccessToken();
   let response: Response;
@@ -217,6 +224,14 @@ export const sendMessageToChatbotStream = async ({
   let completed = false;
   let streamError: string | null = null;
   let cursor = 0;
+  let terminalNotified = false;
+
+  const notifyTerminal = (status: StreamTerminalRun["status"] = "completed") => {
+    if (!terminalNotified) {
+      terminalNotified = true;
+      onTerminalRun?.({ runId, status });
+    }
+  };
 
   const processChunk = (chunk: string) => {
     const lines = chunk.split("\n");
@@ -239,6 +254,7 @@ export const sendMessageToChatbotStream = async ({
 
     if (eventType === "done") {
       completed = true;
+      notifyTerminal("completed");
       return;
     }
 
@@ -414,6 +430,7 @@ export const sendMessageToChatbotStream = async ({
     const status = snapshot?.run?.status;
     if (status === "completed") {
       completed = true;
+      notifyTerminal("completed");
       return true;
     }
     if (
@@ -423,6 +440,7 @@ export const sendMessageToChatbotStream = async ({
       status === "expired" ||
       status === "interrupted"
     ) {
+      notifyTerminal(status as StreamTerminalRun["status"]);
       throw new Error("Hermes encerrou a execução antes de entregar uma resposta.");
     }
 
@@ -512,6 +530,10 @@ export const sendMessageToChatbotStream = async ({
   if (buffer.trim()) {
     processChunk(buffer);
     cursor += 1;
+  }
+
+  if (completed) {
+    notifyTerminal("completed");
   }
 
   if (streamError) {

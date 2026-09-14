@@ -108,6 +108,36 @@ describe("sendMessageToChatbotStream", () => {
       "X-User-Id": "user-1",
     });
   });
+
+  it("notifies onTerminalRun when done event is received", async () => {
+    const doneStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("event: done\ndata: {}\n\n"));
+        controller.close();
+      },
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ run: { id: "run-terminal-test" } }, { status: 202 }))
+      .mockResolvedValueOnce(new Response(doneStream, { status: 200 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+    const terminalEvents: unknown[] = [];
+
+    await sendMessageToChatbotStream({
+      payload: { session_id: "chat-1", message_text: "teste" },
+      getAccessToken: async () => "token-1",
+      refreshAccessToken: async () => null,
+      signOut: async () => {},
+      resolveChatbotProxyBaseUrl: () => "https://bridge.solucoes-nexus.tech",
+      onDelta: () => {},
+      onTerminalRun: (event) => terminalEvents.push(event),
+    });
+
+    expect(terminalEvents).toEqual([
+      { runId: "run-terminal-test", status: "completed" },
+    ]);
+  });
 });
 
 describe("stopChatbotRun", () => {

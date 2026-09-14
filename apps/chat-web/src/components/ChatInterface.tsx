@@ -15,7 +15,17 @@ import {
   Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChatMessageContent } from "./ChatMessageContent";
+import { AgentPlanCard } from "./marketing-ops/AgentPlanCard";
+import { marketingOpsClient as defaultMarketingOpsClient } from "@/lib/marketingOps/runtime";
+import { marketingOpsFlags } from "@/lib/marketingOps/flags";
+import { marketingOpsKeys } from "@/lib/marketingOps/queryKeys";
+import type { MarketingOpsClient } from "@/lib/marketingOps/client";
+import type {
+  MarketingOpsPreparedPlanSummary,
+  MarketingOpsPlanExecutionResult,
+} from "@/lib/marketingOps/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { chatService } from "@/lib/chatService";
 import {
@@ -66,6 +76,8 @@ interface ChatInterfaceProps {
   pictureWorkspaceId?: string;
   hideHistory?: boolean;
   onActivitySettled?: () => void;
+  marketingOpsClient?: MarketingOpsClient;
+  marketingOpsFlags?: ReturnType<typeof marketingOpsFlags>;
 }
 
 type ChatMessagesPaneProps = {
@@ -83,6 +95,11 @@ type ChatMessagesPaneProps = {
   onLoadOlderMessages: () => void;
   scrollRequest: ChatScrollRequest;
   showPendingAssistantIndicator: boolean;
+  pendingPlans?: MarketingOpsPreparedPlanSummary[];
+  marketingOpsClient?: MarketingOpsClient;
+  canWrite?: boolean;
+  canApprove?: boolean;
+  onPlanExecuted?: (result: MarketingOpsPlanExecutionResult) => void;
 };
 
 type ChatScrollRequest = {
@@ -106,6 +123,11 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
   onLoadOlderMessages,
   scrollRequest,
   showPendingAssistantIndicator,
+  pendingPlans,
+  marketingOpsClient,
+  canWrite = false,
+  canApprove = false,
+  onPlanExecuted,
 }: ChatMessagesPaneProps) {
   useLayoutEffect(() => {
     if (scrollRequest.version === 0) return;
@@ -202,8 +224,38 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
               />
             </div>
           </div>
+          {index === (lastAssistantIndex !== -1 ? lastAssistantIndex : displayMessages.length - 1) &&
+            pendingPlans && pendingPlans.length > 0 && (
+              <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
+                {pendingPlans.map((plan) => (
+                  <AgentPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    client={marketingOpsClient}
+                    canWrite={canWrite}
+                    canApprove={canApprove}
+                    onExecuted={onPlanExecuted}
+                  />
+                ))}
+              </div>
+            )}
         </Fragment>
       ))}
+
+      {displayMessages.length === 0 && pendingPlans && pendingPlans.length > 0 && (
+        <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
+          {pendingPlans.map((plan) => (
+            <AgentPlanCard
+              key={plan.id}
+              plan={plan}
+              client={marketingOpsClient}
+              canWrite={canWrite}
+              canApprove={canApprove}
+              onExecuted={onPlanExecuted}
+            />
+          ))}
+        </div>
+      )}
 
       {showPendingAssistantIndicator && (
         <div className="flex justify-start">
@@ -228,7 +280,13 @@ export const ChatInterface = ({
   pictureWorkspaceId,
   hideHistory = false,
   onActivitySettled,
+  marketingOpsClient: propClient,
+  marketingOpsFlags: propFlags,
 }: ChatInterfaceProps) => {
+  const queryClient = useQueryClient();
+  const flags = propFlags ?? marketingOpsFlags(import.meta.env);
+  const client = propClient ?? defaultMarketingOpsClient;
+
   const { user, session, signOut } = useAuth();
   const approvalBridgeBaseUrl = useMemo(() => chatService.resolveChatbotProxyBaseUrl() ?? "", []);
   const getApprovalAccessToken = useCallback(async () => session?.access_token ?? null, [session?.access_token]);
@@ -238,6 +296,33 @@ export const ChatInterface = ({
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const currentSessionId = fixedSessionId ?? searchParams.get("chat");
+
+  const isStructuredExecutionEnabled = Boolean(
+    flags.structuredPlanExecution && currentSessionId
+  );
+
+  const { data: plansData } = useQuery({
+    queryKey: marketingOpsKeys.agentPlans(currentSessionId ?? undefined, "pending"),
+    queryFn: async () => {
+      if (!currentSessionId) return [];
+      const res = await client.listAgentPlans(currentSessionId, "pending");
+      return res.data;
+    },
+    enabled: isStructuredExecutionEnabled,
+  });
+
+  const pendingPlans = isStructuredExecutionEnabled ? (plansData ?? []) : [];
+
+  const handlePlanExecuted = useCallback(
+    (_result: MarketingOpsPlanExecutionResult) => {
+      if (currentSessionId && flags.structuredPlanExecution) {
+        void queryClient.invalidateQueries({
+          queryKey: marketingOpsKeys.agentPlans(currentSessionId, "pending"),
+        });
+      }
+    },
+    [currentSessionId, flags.structuredPlanExecution, queryClient]
+  );
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -278,7 +363,7 @@ export const ChatInterface = ({
   
   const PAGE_SIZE = 50;
 
-  const isEmpty = messages.length === 0;
+  const isEmpty = messages.length === 0 && pendingPlans.length === 0;
   const suggestionCards = useMemo(() => ([
     {
       icon: Share2,
@@ -868,6 +953,13 @@ export const ChatInterface = ({
             assistantArtifacts.push(nextArtifact);
           }
         },
+        onTerminalRun: () => {
+          if (activeSessionId && flags.structuredPlanExecution) {
+            void queryClient.invalidateQueries({
+              queryKey: marketingOpsKeys.agentPlans(activeSessionId, "pending"),
+            });
+          }
+        },
       });
 
       if (!assistantContent.trim() && assistantFiles.length === 0 && assistantArtifacts.length === 0) {
@@ -882,6 +974,12 @@ export const ChatInterface = ({
       const finalAssistantContent = serializeChatMessageContent(assistantParts) || assistantContent;
       flushStreamingContent(assistantId, finalAssistantContent);
       await chatService.addMessage(activeSessionId, "assistant", finalAssistantContent);
+
+      if (flags.structuredPlanExecution) {
+        void queryClient.invalidateQueries({
+          queryKey: marketingOpsKeys.agentPlans(activeSessionId, "pending"),
+        });
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
@@ -999,6 +1097,11 @@ export const ChatInterface = ({
               onLoadOlderMessages={loadOlderMessages}
               scrollRequest={scrollRequest}
               showPendingAssistantIndicator={showPendingAssistantIndicator}
+              pendingPlans={pendingPlans}
+              marketingOpsClient={client}
+              canWrite={flags.write}
+              canApprove={flags.approvals}
+              onPlanExecuted={handlePlanExecuted}
             />
           )}
 
