@@ -150,6 +150,11 @@ test(
 test('the example environment file contains no configured provider or credential', () => {
   const source = readFileSync(environmentFile, 'utf8');
   assert.match(source, /^HERMES_PROFILE_NAME=ens$/m);
+  assert.match(
+    source,
+    /^NEXUS_MARKETING_OPS_MCP_URL=http:\/\/marketing-ops:8091\/mcp$/m,
+    'the example must use the canonical Marketing Ops MCP port',
+  );
   assert.match(source, /^API_SERVER_KEY=$/m);
   assert.doesNotMatch(source, /^(?:.*PROVIDER|.*MODEL)=/im);
   assert.doesNotMatch(source, /^(?:.*SECRET|.*TOKEN)=.+/im);
