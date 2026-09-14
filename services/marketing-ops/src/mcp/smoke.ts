@@ -14,9 +14,10 @@ type ListedTool = { name?: unknown };
 
 type CapabilityPayload = {
   contractVersion?: unknown;
-  features?: { read?: unknown; write?: unknown };
+  features?: { read?: unknown; write?: unknown; structuredPlanExecution?: unknown };
   delegationRequiredForDomain?: unknown;
   conversationalConfirmationRequiredForWrites?: unknown;
+  browserWriteExecution?: unknown;
 };
 
 export function assertMarketingOpsMcpContract(
@@ -30,10 +31,16 @@ export function assertMarketingOpsMcpContract(
   if (capabilities.features?.read !== true || capabilities.features?.write !== true) {
     throw new Error('Marketing Ops MCP read/write features are not active');
   }
+  if (capabilities.features?.structuredPlanExecution !== true) {
+    throw new Error('Marketing Ops structured plan execution is not active');
+  }
   if (capabilities.delegationRequiredForDomain !== true) {
     throw new Error('Marketing Ops MCP delegation boundary is not active');
   }
   if (capabilities.conversationalConfirmationRequiredForWrites !== true) {
     throw new Error('Marketing Ops MCP write confirmation boundary is not active');
+  }
+  if (capabilities.browserWriteExecution !== 'product_ui_only') {
+    throw new Error('Marketing Ops browser writes must execute through the product UI');
   }
 }

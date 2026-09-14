@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+
 /**
  * Smoke test automatizado da stack de aplicação ENS (Marco M5).
  *
@@ -37,6 +40,64 @@ const testStep = async (name, fn) => {
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+
+export function structuredSmokeConfiguration(env = process.env) {
+  if (env.SMOKE_STRUCTURED_PLAN_EXECUTION !== 'true') return { enabled: false };
+
+  const required = [
+    'SMOKE_STRUCTURED_PLAN_SESSION_ID',
+    'SMOKE_STRUCTURED_PLAN_ID',
+    'SMOKE_STRUCTURED_PLAN_HASH',
+  ];
+  for (const key of required) {
+    if (!env[key]) throw new Error(`${key} is required when structured plan smoke is enabled`);
+  }
+
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  assert(uuid.test(env.SMOKE_STRUCTURED_PLAN_SESSION_ID), 'SMOKE_STRUCTURED_PLAN_SESSION_ID must be a UUID');
+  assert(uuid.test(env.SMOKE_STRUCTURED_PLAN_ID), 'SMOKE_STRUCTURED_PLAN_ID must be a UUID');
+  assert(/^[0-9a-f]{64}$/i.test(env.SMOKE_STRUCTURED_PLAN_HASH), 'SMOKE_STRUCTURED_PLAN_HASH must be a SHA-256 hex digest');
+
+  return {
+    enabled: true,
+    sessionId: env.SMOKE_STRUCTURED_PLAN_SESSION_ID,
+    planId: env.SMOKE_STRUCTURED_PLAN_ID,
+    planHash: env.SMOKE_STRUCTURED_PLAN_HASH,
+  };
+}
+
+export function assertInertStructuredPlan(plan) {
+  assert(plan && typeof plan === 'object', 'Expected a persisted structured plan');
+  assert(plan.status === 'pending', 'Structured smoke requires a pending plan');
+  assert(Array.isArray(plan.actions) && plan.actions.length > 0, 'Structured smoke requires plan actions');
+  assert(
+    plan.actions.every((action) => action?.type === 'approval.submit_operational'),
+    'Structured smoke accepts only an inert operational approval plan',
+  );
+  assert(
+    plan.actions.every((action) => action?.action_package?.configuration?.mode === 'sandbox'),
+    'Structured smoke operational packages must use sandbox mode',
+  );
+}
+
+export function assertIdempotentStructuredExecution(first, replay, approval) {
+  assert(first?.status === 'completed' && replay?.status === 'completed', 'Expected completed plan executions');
+  assert(first.plan_id === replay.plan_id, 'Idempotent replay must return the same plan');
+  assert(Array.isArray(first.failed) && first.failed.length === 0, 'First execution must have no failed actions');
+  assert(Array.isArray(replay.failed) && replay.failed.length === 0, 'Replay must have no failed actions');
+
+  const approvalIds = (execution) => execution.completed
+    ?.filter((entry) => entry?.action_type === 'approval.submit_operational')
+    .map((entry) => entry?.resource?.id)
+    .filter(Boolean) ?? [];
+  const firstApprovals = approvalIds(first);
+  const replayApprovals = approvalIds(replay);
+  assert(firstApprovals.length === 1, 'Expected exactly one operational approval result');
+  assert(JSON.stringify(firstApprovals) === JSON.stringify(replayApprovals), 'Replay must return the same approval');
+  assert(approval?.id === firstApprovals[0], 'Approval detail must match the execution result');
+  assert(approval?.status === 'pending', 'Structured smoke must leave the approval pending');
+  assert(approval?.decision == null, 'Structured smoke must leave the approval without a decision');
+}
 
 const run = async () => {
   console.log("=== ENS Application Stack Smoke Test (M6) ===");
@@ -123,6 +184,7 @@ const run = async () => {
     assert(res.status === 401, `Expected 401 Unauthorized, got ${res.status}`);
   });
 
+  let sessionCookie = null;
   if (process.env.SMOKE_EMAIL && process.env.SMOKE_PASSWORD) {
     await testStep("BFF serves Marketing Ops through an App API session", async () => {
       const login = await fetch(`${APP_URL}/api/auth/login`, {
@@ -135,16 +197,84 @@ const run = async () => {
         signal: AbortSignal.timeout(10000)
       });
       assert(login.ok, `Expected successful login, got ${login.status}`);
-      const cookie = login.headers.get("set-cookie")?.split(";", 1)[0];
-      assert(cookie, "Expected an HttpOnly application session cookie");
+      sessionCookie = login.headers.get("set-cookie")?.split(";", 1)[0] ?? null;
+      assert(sessionCookie, "Expected an HttpOnly application session cookie");
       const campaigns = await fetch(`${APP_URL}/api/marketing/campaigns?limit=1`, {
-        headers: { Cookie: cookie },
+        headers: { Cookie: sessionCookie },
         signal: AbortSignal.timeout(10000)
       });
       assert(campaigns.ok, `Expected authenticated Marketing Ops response, got ${campaigns.status}`);
       const payload = await campaigns.json();
       assert(Array.isArray(payload.data), "Expected a Marketing Ops data array");
     });
+  }
+
+  let structuredConfig = { enabled: false };
+  await testStep("Structured plan smoke configuration is safe", async () => {
+    structuredConfig = structuredSmokeConfiguration(process.env);
+    if (structuredConfig.enabled) {
+      assert(sessionCookie, 'SMOKE_EMAIL and SMOKE_PASSWORD are required for structured plan smoke');
+    }
+  });
+
+  if (structuredConfig.enabled && sessionCookie) {
+    let preparedPlan = null;
+    await testStep("BFF returns the exact persisted inert plan for the authenticated actor", async () => {
+      const url = new URL(`${APP_URL}/api/marketing/agent-plans`);
+      url.searchParams.set('chat_session_id', structuredConfig.sessionId);
+      url.searchParams.set('status', 'pending');
+      const response = await fetch(url, {
+        headers: { Cookie: sessionCookie },
+        signal: AbortSignal.timeout(10000),
+      });
+      assert(response.ok, `Expected actor-scoped plan list, got ${response.status}`);
+      const payload = await response.json();
+      assert(Array.isArray(payload.data), 'Expected a structured plan data array');
+      preparedPlan = payload.data.find((plan) => plan?.id === structuredConfig.planId) ?? null;
+      assert(preparedPlan, 'Expected the configured persisted plan for this actor/session');
+      assert(preparedPlan.planHash === structuredConfig.planHash, 'Persisted plan hash does not match the configured hash');
+      assertInertStructuredPlan(preparedPlan);
+      assert(!JSON.stringify(preparedPlan).includes('plan_token'), 'REST plan DTO must not expose plan_token');
+      assert(!JSON.stringify(preparedPlan).includes('delegation_token'), 'REST plan DTO must not expose delegation_token');
+    });
+
+    if (preparedPlan) {
+      await testStep("Explicit execution is idempotent and creates one undecided approval", async () => {
+        const executionKey = randomUUID();
+        const execute = async () => {
+          const response = await fetch(
+            `${APP_URL}/api/marketing/agent-plans/${encodeURIComponent(structuredConfig.planId)}/execute`,
+            {
+              method: 'POST',
+              headers: {
+                Cookie: sessionCookie,
+                'Content-Type': 'application/json',
+                'Idempotency-Key': executionKey,
+              },
+              body: JSON.stringify({ planHash: structuredConfig.planHash }),
+              signal: AbortSignal.timeout(15000),
+            },
+          );
+          assert(response.ok, `Expected structured execution success, got ${response.status}`);
+          const payload = await response.json();
+          return payload.data;
+        };
+
+        const first = await execute();
+        const replay = await execute();
+        const approvalId = first?.completed?.find(
+          (entry) => entry?.action_type === 'approval.submit_operational',
+        )?.resource?.id;
+        assert(approvalId, 'Expected the operational approval identifier');
+        const approvalResponse = await fetch(
+          `${APP_URL}/api/marketing/approval-requests/${encodeURIComponent(approvalId)}`,
+          { headers: { Cookie: sessionCookie }, signal: AbortSignal.timeout(10000) },
+        );
+        assert(approvalResponse.ok, `Expected approval detail, got ${approvalResponse.status}`);
+        const approvalPayload = await approvalResponse.json();
+        assertIdempotentStructuredExecution(first, replay, approvalPayload.data);
+      });
+    }
   }
 
   await testStep("Network security gate: no Supabase endpoints exposed", async () => {
@@ -160,7 +290,13 @@ const run = async () => {
   }
 };
 
-run().catch((err) => {
-  console.error("Erro fatal no smoke test:", err);
-  process.exit(1);
-});
+const isMainModule = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
+
+if (isMainModule) {
+  run().catch((err) => {
+    console.error("Erro fatal no smoke test:", err);
+    process.exit(1);
+  });
+}

@@ -20,7 +20,7 @@ tokens, full prompts, user content, or raw authorization data.
 | Sanitized symptom | Likely boundary | Action |
 |---|---|---|
 | JSON-RPC `-32602`, `expected array`, `invalid_type` | Provider serialization or input schema | Confirm that `actions` reached the service as an array-compatible structure. The service accepts only native arrays, `item` wrappers, direct typed action objects, or JSON-encoded forms of those; all then remain strictly validated. |
-| `confirmation_required` | Context classifier or Bridge confirmation intent | Check only the decision enum and `output_contract` log fields. Never claim execution; retain the plan and request clarification if the user intent was not approved. |
+| `confirmation_required` from the compatibility execute tool | Non-browser automation omitted its explicit confirmation claim | Do not retry from browser chat. Browser execution belongs exclusively to the trusted product card. |
 | `delegation_scope_denied`, expired, or replay | Authorization lifecycle | Do not ask the user for a token. Start a fresh read/prepare cycle as appropriate. |
 | Version conflict | Transactional state changed | Re-read the object, prepare a revised plan, and require new confirmation. |
 | Unavailable MCP/RAG/Graph | Dependency availability | State the affected verification is unavailable; do not fabricate a result or switch to direct database access. |

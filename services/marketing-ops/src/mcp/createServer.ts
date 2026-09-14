@@ -108,7 +108,8 @@ export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): 
     contractVersion: 1,
     features: deps.features,
     delegationRequiredForDomain: true,
-    conversationalConfirmationRequiredForWrites: true
+    conversationalConfirmationRequiredForWrites: true,
+    browserWriteExecution: 'product_ui_only'
   } })));
 
   server.registerTool('marketing_ops_list_campaigns_v1', {
@@ -285,7 +286,7 @@ export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): 
 
   server.registerTool('marketing_ops_prepare_plan_v1', {
     title: 'Prepare Marketing Ops mutation plan',
-    description: 'Validates and signs an exact mutation plan without writing domain data. Present every action naturally and ask the user for one explicit confirmation before execution.',
+    description: 'Validates, persists and signs an exact mutation plan without writing domain data. In browser chat, present the plan and wait for the trusted product card; never ask for typed confirmation.',
     inputSchema: z.object({
       delegation_token: delegationToken,
       actions: z.preprocess(normalizeMiniMaxActionArray, marketingOpsPlanActionsSchema)
@@ -329,7 +330,7 @@ export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): 
 
   server.registerTool('marketing_ops_execute_plan_v1', {
     title: 'Execute confirmed Marketing Ops plan',
-    description: 'Executes only the exact signed plan from an earlier turn. Requires a fresh delegation proving one explicit user confirmation for the complete plan.',
+    description: 'Compatibility tool for non-browser automation. Executes only the exact signed plan from an earlier turn with a fresh delegation proving explicit confirmation. Browser chat must use the product UI route instead.',
     inputSchema: z.object({
       delegation_token: delegationToken,
       plan_token: z.string().min(20)

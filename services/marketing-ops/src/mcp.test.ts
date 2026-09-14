@@ -4,6 +4,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { SignJWT } from 'jose';
 import pg from 'pg';
 import { afterAll, describe, expect, it, vi } from 'vitest';
+import { withActorTransaction } from './db/actorTransaction.js';
 import { verifyDelegation } from './delegation/verifier.js';
 import { createMarketingOpsMcpServer } from './mcp/createServer.js';
 import { marketingOpsPlanActionsSchema } from './plans/contracts.js';
@@ -12,7 +13,20 @@ const pool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_DATA
 const adminPool = new pg.Pool({ connectionString: process.env.MARKETING_OPS_TEST_ADMIN_DATABASE_URL ?? process.env.MARKETING_OPS_TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres' });
 const activeKey = 'active-local-delegation-key-at-least-32-bytes';
 const keyring = { activeKid: 'v2', activeKey, previousKid: 'v1', previousKey: 'previous-local-delegation-key-32-bytes', issuer: 'nexus-chat-bridge', audience: 'nexus-marketing-ops', maxTtlSeconds: 120 };
+const integrationActor = {
+  userId: '11111111-1111-4111-8111-111111111111',
+  tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  tenantSlug: 'ens',
+  role: 'member' as const
+};
 afterAll(() => Promise.all([pool.end(), adminPool.end()]));
+
+const actorQuery = (text: string, values: unknown[] = []) => withActorTransaction(
+  adminPool,
+  integrationActor,
+  randomUUID(),
+  (client) => client.query(text, values)
+);
 
 async function token(
   overrides: Record<string, unknown> = {},
@@ -114,7 +128,11 @@ describe('delegation and MCP', () => {
     const result = await client.callTool({ name: 'marketing_ops_capabilities_v1', arguments: {} });
     expect(result.isError).not.toBe(true);
     const text = (result.content as Array<{ type: string; text?: string }>)[0]?.text ?? '{}';
-    expect(JSON.parse(text).trace).toMatchObject({
+    const capabilities = JSON.parse(text);
+    expect(capabilities).toMatchObject({
+      browserWriteExecution: 'product_ui_only'
+    });
+    expect(capabilities.trace).toMatchObject({
       tool_name: 'marketing_ops_capabilities_v1',
       tool_call_id: expect.stringMatching(/^[0-9a-f-]{36}$/i)
     });
@@ -259,7 +277,7 @@ describe('delegation and MCP', () => {
       plan: { status: 'pending' }
     });
 
-    const planInDb = await adminPool.query(
+    const planInDb = await actorQuery(
       'select * from marketing_ops.prepared_agent_plans where id = $1',
       [preparedPayload.plan.id]
     );
@@ -295,13 +313,13 @@ describe('delegation and MCP', () => {
     const revisedPayload = toolPayload(revisedPrepared);
     expect(revisedPayload.plan.id).not.toBe(preparedPayload.plan.id);
     expect(revisedPayload.plan.status).toBe('pending');
-    const firstPlanRow = await adminPool.query(
+    const firstPlanRow = await actorQuery(
       'select status from marketing_ops.prepared_agent_plans where id = $1',
       [preparedPayload.plan.id]
     );
     expect(firstPlanRow.rows[0].status).toBe('invalidated');
 
-    const before = await adminPool.query('select count(*)::int as count from marketing_ops.campaigns where name = $1', [campaignName]);
+    const before = await actorQuery('select count(*)::int as count from marketing_ops.campaigns where name = $1', [campaignName]);
     expect(before.rows[0].count).toBe(0);
 
     const sameTurn = await client.callTool({
@@ -335,7 +353,7 @@ describe('delegation and MCP', () => {
     expect(executedPayload.data).toMatchObject({ status: 'completed' });
     expect(executedPayload.data.completed).toHaveLength(2);
 
-    const persisted = await adminPool.query(`
+    const persisted = await actorQuery(`
       select c.id, count(i.id)::int as items
       from marketing_ops.campaigns c
       left join marketing_ops.campaign_items i on i.campaign_id = c.id
@@ -364,7 +382,7 @@ describe('delegation and MCP', () => {
       .toEqual(executedPayload.data.completed.map(
         (entry: { resource: { id: string } }) => entry.resource.id
       ));
-    const afterRetry = await adminPool.query(`
+    const afterRetry = await actorQuery(`
       select
         (select count(*)::int from marketing_ops.campaigns where name = $1) as campaigns,
         (select count(*)::int from marketing_ops.campaign_items where campaign_id = $2) as items

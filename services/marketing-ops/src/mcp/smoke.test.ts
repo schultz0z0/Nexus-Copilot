@@ -7,19 +7,23 @@ describe('Marketing Ops MCP smoke contract', () => {
       MARKETING_OPS_MCP_TOOLS.map((name) => ({ name })),
       {
         contractVersion: 1,
-        features: { read: true, write: true },
+        features: { read: true, write: true, structuredPlanExecution: true },
         delegationRequiredForDomain: true,
-        conversationalConfirmationRequiredForWrites: true
+        conversationalConfirmationRequiredForWrites: true,
+        browserWriteExecution: 'product_ui_only'
       }
     )).not.toThrow();
   });
 
-  it('rejects missing tools and weakened write confirmation', () => {
-    expect(() => assertMarketingOpsMcpContract([], {
+  it('rejects a browser contract that permits conversational execution', () => {
+    expect(() => assertMarketingOpsMcpContract(
+      MARKETING_OPS_MCP_TOOLS.map((name) => ({ name })),
+      {
       contractVersion: 1,
-      features: { read: true, write: true },
+      features: { read: true, write: true, structuredPlanExecution: true },
       delegationRequiredForDomain: true,
-      conversationalConfirmationRequiredForWrites: false
-    })).toThrow(/missing MCP tools/);
+      conversationalConfirmationRequiredForWrites: true,
+      browserWriteExecution: 'conversation_allowed'
+    })).toThrow(/product UI/);
   });
 });

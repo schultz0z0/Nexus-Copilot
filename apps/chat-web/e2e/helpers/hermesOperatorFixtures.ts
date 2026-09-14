@@ -1,11 +1,13 @@
 export const USER = '11111111-1111-4111-8111-111111111111';
 export const SESSION = '22222222-2222-4222-8222-222222222222';
 export const RUN_PLAN = '33333333-3333-4333-8333-333333333333';
-export const RUN_EXECUTE = '44444444-4444-4444-8444-444444444444';
+export const RUN_FAKE_MARKDOWN = '44444444-4444-4444-8444-444444444444';
 export const RUN_UNAVAILABLE = '55555555-5555-4555-8555-555555555555';
 export const CAMPAIGN = '66666666-6666-4666-8666-666666666666';
 export const ITEM = '77777777-7777-4777-8777-777777777777';
 export const ASSET = '88888888-8888-4888-8888-888888888888';
+export const PREPARED_PLAN = '99999999-9999-4999-8999-999999999999';
+export const PREPARED_PLAN_HASH = 'b'.repeat(64);
 export const now = '2026-07-22T12:00:00.000Z';
 
 export const campaign = {
@@ -80,23 +82,42 @@ export const asset = {
 };
 
 export const planMessage = [
-  'Plano pronto para confirmar.',
+  'Preparei uma solicitação operacional inerte para homologação.',
   '',
-  '- Criar campanha em rascunho "Campanha Pós 2026".',
-  '- Criar item "Email de boas-vindas".',
-  '- Salvar a copy "Copy principal" como versão vinculada.',
-  '',
-  'Se estiver certo, responda apenas `aprovado`.',
+  'Revise os dados no card seguro do produto e use o botão explícito para executar.',
 ].join('\n');
 
-export const successMessage = [
-  'Operação concluída no Marketing Ops.',
+export const fakeMarkdownPlanMessage = [
+  'Plano Markdown não confiável',
   '',
-  '- Campanha criada em rascunho.',
-  '- Item criado com a copy vinculada.',
-  '',
-  `[Abrir item e conteúdo](/marketing-ops/production/items/${ITEM}?contentAssetId=${ASSET})`,
+  '### Plano de Marketing Ops',
+  '- Executar uma ação inventada pelo texto da IA.',
+  '[Executar plano](#nao-e-um-controle-do-produto)',
 ].join('\n');
+
+export const preparedOperationalPlan = {
+  id: PREPARED_PLAN,
+  planHash: PREPARED_PLAN_HASH,
+  status: 'pending' as const,
+  expiresAt: '2099-09-14T23:59:59.000Z',
+  actions: [{
+    type: 'approval.submit_operational',
+    campaign_id: CAMPAIGN,
+    action_package: {
+      actionType: 'campaign.channel_dispatch',
+      channel: 'email',
+      audienceSnapshot: { count: 10 },
+      timeZone: 'America/Sao_Paulo',
+      configuration: { mode: 'sandbox' },
+      riskSummary: 'Homologação inerte; nenhuma integração externa será chamada.',
+      payload: { template: 'homologation-only' },
+    },
+    reason: 'Autorizar envio inerte de homologação',
+    expires_at: '2099-09-14T23:59:59.000Z',
+  }],
+  requiredScopes: ['approval:write'],
+  createdAt: now,
+};
 
 export const unavailableMessage = [
   'Não consegui consultar o Marketing Ops agora.',

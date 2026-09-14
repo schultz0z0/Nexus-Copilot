@@ -2,22 +2,63 @@ import { expect, type Page, type Route } from '@playwright/test';
 import {
   CAMPAIGN,
   ITEM,
-  RUN_EXECUTE,
+  PREPARED_PLAN,
+  PREPARED_PLAN_HASH,
+  RUN_FAKE_MARKDOWN,
   RUN_PLAN,
   RUN_UNAVAILABLE,
   SESSION,
   USER,
   asset,
   campaign,
+  fakeMarkdownPlanMessage,
   item,
   now,
   planMessage,
-  successMessage,
+  preparedOperationalPlan,
   unavailableMessage,
 } from './hermesOperatorFixtures';
 
-export const enabled = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true';
+export const enabled = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true'
+  || process.env.E2E_FAKE_MODE === 'marketing-ops';
 export const APPROVAL_REQUEST = 'abababab-abab-4bab-8bab-abababababab';
+
+export interface HermesOperatorFakeOptions {
+  denyPlanAccess?: boolean;
+  expiredPlan?: boolean;
+  failFirstPlanExecution?: boolean;
+  mismatchedPlanHash?: boolean;
+  seedApprovalQueue?: boolean;
+}
+
+export interface HermesOperatorFakeState {
+  bridgeRunRequests: number;
+  planListRequests: number;
+  planExecuteRequests: number;
+  approvalRequestsCreated: number;
+  approvalDecisionsCreated: number;
+  externalActionsExecuted: number;
+  executionKeys: string[];
+}
+
+interface InternalFakeState extends HermesOperatorFakeState {
+  approvalVisible: boolean;
+  planAvailable: boolean;
+  planCompleted: boolean;
+}
+
+const createFakeState = (options: HermesOperatorFakeOptions): InternalFakeState => ({
+  bridgeRunRequests: 0,
+  planListRequests: 0,
+  planExecuteRequests: 0,
+  approvalRequestsCreated: 0,
+  approvalDecisionsCreated: 0,
+  externalActionsExecuted: 0,
+  executionKeys: [],
+  approvalVisible: options.seedApprovalQueue !== false,
+  planAvailable: false,
+  planCompleted: false,
+});
 
 const cors = {
   'access-control-allow-credentials': 'true',
@@ -163,7 +204,7 @@ async function installAppApiFakes(page: Page) {
   });
 }
 
-async function installBridgeFakes(page: Page) {
+async function installBridgeFakes(page: Page, state: InternalFakeState) {
   await page.route('http://127.0.0.1:18081/**', async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: corsFor(route) });
@@ -171,14 +212,15 @@ async function installBridgeFakes(page: Page) {
     const path = url.pathname;
 
     if (path === '/api/chat/runs' && request.method() === 'POST') {
+      state.bridgeRunRequests += 1;
       const payload = request.postDataJSON() as Record<string, unknown>;
       expect(payload).toMatchObject({ session_id: SESSION });
       expect(payload).not.toHaveProperty('experience');
       expect(payload).not.toHaveProperty('picture_workspace_id');
 
       const messageText = String(payload.message_text ?? '').trim().toLowerCase();
-      const runId = messageText === 'aprovado'
-        ? RUN_EXECUTE
+      const runId = messageText.includes('markdown falso')
+        ? RUN_FAKE_MARKDOWN
         : messageText.includes('indisponivel')
           ? RUN_UNAVAILABLE
           : RUN_PLAN;
@@ -186,6 +228,7 @@ async function installBridgeFakes(page: Page) {
     }
 
     if (path === `/api/chat/runs/${RUN_PLAN}/events`) {
+      state.planAvailable = true;
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
@@ -203,16 +246,13 @@ async function installBridgeFakes(page: Page) {
       });
     }
 
-    if (path === `/api/chat/runs/${RUN_EXECUTE}/events`) {
+    if (path === `/api/chat/runs/${RUN_FAKE_MARKDOWN}/events`) {
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
         headers: { ...corsFor(route), 'cache-control': 'no-cache' },
         body: [
-          'event: status',
-          'data: {"text":"Hermes está executando o plano confirmado...","tone":"info"}',
-          '',
-          `event: delta\ndata: ${JSON.stringify({ delta: successMessage })}`,
+          `event: delta\ndata: ${JSON.stringify({ delta: fakeMarkdownPlanMessage })}`,
           '',
           'event: done',
           'data: {}',
@@ -247,7 +287,11 @@ async function installBridgeFakes(page: Page) {
   });
 }
 
-async function installMarketingOpsFakes(page: Page) {
+async function installMarketingOpsFakes(
+  page: Page,
+  state: InternalFakeState,
+  options: HermesOperatorFakeOptions,
+) {
   let approval = {
     id: APPROVAL_REQUEST,
     campaignId: CAMPAIGN,
@@ -294,6 +338,60 @@ async function installMarketingOpsFakes(page: Page) {
         meta: { timeZone: 'America/Sao_Paulo' },
       }, 200, { 'x-correlation-id': 'corr-hermes-operator-e2e' });
 
+    if (path === '/v1/agent-plans' && request.method() === 'GET') {
+      state.planListRequests += 1;
+      if (!state.planAvailable || state.planCompleted || options.denyPlanAccess) return ok([]);
+      return ok([{
+        ...preparedOperationalPlan,
+        planHash: options.mismatchedPlanHash ? 'c'.repeat(64) : preparedOperationalPlan.planHash,
+        expiresAt: options.expiredPlan ? '2020-01-01T00:00:00.000Z' : preparedOperationalPlan.expiresAt,
+      }]);
+    }
+
+    if (path === `/v1/agent-plans/${PREPARED_PLAN}/execute` && request.method() === 'POST') {
+      state.planExecuteRequests += 1;
+      const executionKey = request.headers()['idempotency-key'] ?? '';
+      state.executionKeys.push(executionKey);
+
+      if (options.denyPlanAccess) {
+        return json(route, { error: { code: 'plan_not_found', message: 'Plan not found' } }, 404);
+      }
+      if (options.expiredPlan) {
+        return json(route, { error: { code: 'plan_expired', message: 'O plano expirou' } }, 409);
+      }
+
+      const body = request.postDataJSON() as { planHash?: string };
+      if (body.planHash !== PREPARED_PLAN_HASH) {
+        return json(route, { error: { code: 'plan_hash_mismatch', message: 'O plano foi alterado' } }, 409);
+      }
+      if (!executionKey) {
+        return json(route, { error: { code: 'idempotency_key_required', message: 'Idempotency-Key required' } }, 400);
+      }
+      if (options.failFirstPlanExecution && state.planExecuteRequests === 1) {
+        return json(route, { error: { code: 'temporary_unavailable', message: 'Falha temporária de rede' } }, 503);
+      }
+
+      if (!state.planCompleted) {
+        state.approvalRequestsCreated += 1;
+        state.approvalVisible = true;
+        state.planCompleted = true;
+      }
+
+      return ok({
+        status: 'completed',
+        plan_id: PREPARED_PLAN,
+        completed: [{
+          action_index: 0,
+          action_type: 'approval.submit_operational',
+          idempotency_hit: state.planExecuteRequests > 1,
+          resource: { id: APPROVAL_REQUEST },
+        }],
+        failed: [],
+        pending: [],
+        deep_links: [`/marketing-ops/approvals/${APPROVAL_REQUEST}`],
+      });
+    }
+
     if (path === '/v1/campaigns') {
       return ok([campaign], { limit: 100, count: 1, nextCursor: null });
     }
@@ -319,14 +417,19 @@ async function installMarketingOpsFakes(page: Page) {
     }
 
     if (path === '/v1/approval-requests' && request.method() === 'GET') {
-      return ok([approval], { limit: 25, count: 1, nextCursor: null });
+      const approvals = state.approvalVisible ? [approval] : [];
+      return ok(approvals, { limit: 25, count: approvals.length, nextCursor: null });
     }
 
     if (path === `/v1/approval-requests/${APPROVAL_REQUEST}` && request.method() === 'GET') {
+      if (!state.approvalVisible) {
+        return json(route, { error: { code: 'not_found', message: 'not found' } }, 404);
+      }
       return ok(approval);
     }
 
     if (path === `/v1/approval-requests/${APPROVAL_REQUEST}/decisions` && request.method() === 'POST') {
+      state.approvalDecisionsCreated += 1;
       const body = request.postDataJSON() as { decision: string; comment?: string };
       approval = { ...approval, status: body.decision as typeof approval.status, version: 2,
         capabilities: { decide: false, cancel: false },
@@ -345,10 +448,15 @@ async function installMarketingOpsFakes(page: Page) {
   await page.route('**/api/marketing/**', handleMarketingOps);
 }
 
-export async function installHermesOperatorFakeStack(page: Page) {
+export async function installHermesOperatorFakeStack(
+  page: Page,
+  options: HermesOperatorFakeOptions = {},
+): Promise<HermesOperatorFakeState> {
+  const state = createFakeState(options);
   await installSupabaseFakes(page);
   await installAppApiFakes(page);
-  await installBridgeFakes(page);
-  await installMarketingOpsFakes(page);
+  await installBridgeFakes(page, state);
+  await installMarketingOpsFakes(page, state, options);
   await installSession(page);
+  return state;
 }

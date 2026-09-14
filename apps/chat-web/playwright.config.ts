@@ -2,7 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 const baseURL = process.env.MARKETING_OPS_E2E_BASE_URL ?? 'http://127.0.0.1:8088';
 const pictureFake = process.env.PICTURE_HERMES_E2E_FAKE === 'true';
-const marketingOpsFake = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true';
+const marketingOpsFake = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true'
+  || process.env.E2E_FAKE_MODE === 'marketing-ops';
 const fakeWebServer = pictureFake || marketingOpsFake;
 const fakeWebServerPort = Number(new URL(baseURL).port || 80);
 if (!Number.isInteger(fakeWebServerPort) || fakeWebServerPort < 1 || fakeWebServerPort > 65_535) {
@@ -32,6 +33,7 @@ export default defineConfig({
       VITE_MARKETING_OPS_READ: 'true',
       VITE_MARKETING_OPS_WRITE: 'true',
       VITE_MARKETING_OPS_APPROVALS: 'true',
+      VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: 'true',
       VITE_MARKETING_OPS_KILL_SWITCH:
         process.env.MARKETING_OPS_KILL_SWITCH_E2E === 'true' ? 'true' : 'false',
       VITE_CHAT_STREAM_FILE_HOSTS: '127.0.0.1,localhost',
