@@ -110,9 +110,15 @@ function safeError(error: unknown) {
     : { code: 'internal_error', message: 'Internal server error', status: 500 };
 }
 
+export interface ExecutableMarketingOpsPlan {
+  plan_id: string;
+  plan_hash?: string;
+  actions: MarketingOpsPlanAction[];
+}
+
 export async function executeMarketingOpsPlan(
   context: PlanExecutorContext,
-  plan: MarketingOpsPlan,
+  plan: ExecutableMarketingOpsPlan | MarketingOpsPlan,
   dependencies: PlanExecutorDependencies = defaultDependencies
 ): Promise<MarketingOpsPlanExecutionResult> {
   const campaignRefs = new Map<string, string>();

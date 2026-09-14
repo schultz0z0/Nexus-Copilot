@@ -877,6 +877,56 @@ paths:
           description: Request cancelled
           content: { application/json: { schema: { $ref: '#/components/schemas/ApprovalRequestResponse' } } }
         default: { $ref: '#/components/responses/Error' }
+  /agent-plans:
+    get:
+      operationId: listAgentPlans
+      summary: List durable prepared agent plans for the current actor
+      parameters:
+        - { name: chat_session_id, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, executing, completed, partial, failed, expired, invalidated], default: pending } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Prepared agent plans
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PreparedAgentPlanSummary' }
+        default: { $ref: '#/components/responses/Error' }
+  /agent-plans/{planId}/execute:
+    post:
+      operationId: executeAgentPlan
+      summary: Execute an immutable prepared agent plan
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [planHash]
+              additionalProperties: false
+              properties:
+                planHash: { type: string, pattern: '^[0-9a-f]{64}$' }
+      responses:
+        '200':
+          description: Plan execution completed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+        default: { $ref: '#/components/responses/Error' }
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -893,6 +943,7 @@ components:
     MaterialId: { name: materialId, in: path, required: true, schema: { type: string, format: uuid } }
     UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
     ApprovalRequestId: { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+    PlanId: { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
     Filename: { name: X-Nexus-Filename, in: header, required: true, schema: { type: string, minLength: 1, maxLength: 255 } }
     FilenameOptional: { name: X-Nexus-Filename, in: header, required: false, schema: { type: string, minLength: 1, maxLength: 255 } }
     AssetIdOptional: { name: X-Nexus-Asset-Id, in: header, required: false, schema: { type: string, format: uuid } }
@@ -905,6 +956,17 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    PreparedAgentPlanSummary:
+      type: object
+      required: [id, planHash, status, expiresAt, actions, requiredScopes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        planHash: { type: string, pattern: '^[0-9a-f]{64}$' }
+        status: { type: string, enum: [pending, executing, completed, partial, failed, expired, invalidated] }
+        expiresAt: { type: string, format: date-time }
+        actions: { type: array, items: { type: object } }
+        requiredScopes: { type: array, items: { type: string } }
+        createdAt: { type: string, format: date-time }
     ApprovalKind: { type: string, enum: [editorial, operational] }
     ApprovalStatus: { type: string, enum: [pending, approved, rejected, changes_requested, cancelled, expired] }
     ApprovalRisk: { type: string, enum: [low, medium, high, critical] }

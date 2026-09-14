@@ -118,7 +118,14 @@ const metricDefinitions: Record<string, MetricDefinition> = {
   marketing_ops_mcp_idempotency_total: { labels: { result: mcpIdempotency } },
   marketing_ops_mcp_objects_mutated_total: { labels: { resource: mcpResource } },
   marketing_ops_mcp_plan_latency_seconds_count: { labels: {} },
-  marketing_ops_mcp_plan_latency_seconds_sum: { labels: {} }
+  marketing_ops_mcp_plan_latency_seconds_sum: { labels: {} },
+  marketing_ops_prepared_plans_total: { labels: { result: oneOf('success', 'error') } },
+  marketing_ops_plan_execution_total: { labels: { result: oneOf('completed', 'partial', 'failed') } },
+  marketing_ops_plan_execution_latency_seconds_count: { labels: {} },
+  marketing_ops_plan_execution_latency_seconds_sum: { labels: {} },
+  marketing_ops_pending_plans: { labels: {} },
+  marketing_ops_plan_expirations_total: { labels: {} },
+  marketing_ops_plan_idempotency_total: { labels: { result: oneOf('hit', 'miss') } }
 };
 
 function normalizeLabels(name: string, labels: Record<string, string>): Record<string, string> {

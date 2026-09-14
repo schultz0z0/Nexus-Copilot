@@ -14,6 +14,8 @@ import { registerReferences } from './references.js';
 import { registerTimeline } from './timeline.js';
 import { registerNotifications } from './notifications.js';
 import { registerApprovals } from './approvals.js';
+import { registerAgentPlans } from './agentPlans.js';
+import { AgentPlanService } from '../../plans/service.js';
 import type { ArtifactClient } from '../../integrations/artifactClient.js';
 import type { RagCourseClient } from '../../integrations/ragCourseClient.js';
 import type { DelegationKeyring } from '../../delegation/claims.js';
@@ -24,7 +26,7 @@ import type { MetricsRegistry } from '../../observability/metrics.js';
 export interface ApiRouterDependencies {
   pool: Pool;
   corsOrigins: string[];
-  features: { read: boolean; write: boolean; approvals?: boolean };
+  features: { read: boolean; write: boolean; approvals?: boolean; structuredPlanExecution?: boolean };
   verifyAssertion: (token: string, method: string, path: string, correlationId: string) => Promise<BffActorClaims>;
   artifactClient: ArtifactClient;
   ragCourseClient: RagCourseClient;
@@ -32,6 +34,7 @@ export interface ApiRouterDependencies {
   refreshDelegation?: (token: string) => Promise<string>;
   tenantTimeZone?: string;
   metrics?: Pick<MetricsRegistry, 'increment'>;
+  agentPlanService?: AgentPlanService;
 }
 
 export function createApiRouter(deps: ApiRouterDependencies): Router {
@@ -56,6 +59,13 @@ export function createApiRouter(deps: ApiRouterDependencies): Router {
   registerContent(router, deps.pool, deps.artifactClient, deps.features);
   registerApprovals(router, deps.pool, deps.features);
   registerAudit(router, deps.pool, deps.features);
+  const agentPlanService = deps.agentPlanService ?? new AgentPlanService({
+    pool: deps.pool,
+    artifacts: deps.artifactClient,
+    features: deps.features,
+    ...(deps.metrics ? { metrics: deps.metrics } : {})
+  });
+  registerAgentPlans(router, agentPlanService, deps.features);
   if (deps.keyring) router.use(createMcpRouter({
     pool: deps.pool,
     features: deps.features,

@@ -41,7 +41,7 @@ export interface AppConfig {
     url: string;
     timeoutMs: number;
   };
-  features: { read: boolean; write: boolean; approvals: boolean };
+  features: { read: boolean; write: boolean; approvals: boolean; structuredPlanExecution: boolean };
   approvalExpiry: { intervalMs: number; batchSize: number };
 }
 
@@ -182,7 +182,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     features: {
       read: booleanValue(env.MARKETING_OPS_FEATURE_READ),
       write: booleanValue(env.MARKETING_OPS_FEATURE_WRITE),
-      approvals: booleanValue(env.MARKETING_OPS_FEATURE_APPROVALS)
+      approvals: booleanValue(env.MARKETING_OPS_FEATURE_APPROVALS),
+      structuredPlanExecution: booleanValue(env.MARKETING_OPS_STRUCTURED_PLAN_EXECUTION)
     },
     approvalExpiry: {
       intervalMs: z.coerce.number().int().min(5_000).max(3_600_000)

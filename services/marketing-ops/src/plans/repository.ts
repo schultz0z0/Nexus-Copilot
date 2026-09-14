@@ -156,32 +156,42 @@ export class PreparedPlanRepository {
     });
   }
 
-  async listPending(actor: Actor, chatSessionId: string, limit = 10): Promise<PreparedAgentPlanRecord[]> {
-    const correlationId = 'list-pending-' + chatSessionId;
+  async listPending(actor: Actor, chatSessionId?: string, limit = 10): Promise<PreparedAgentPlanRecord[]> {
+    const correlationId = 'list-pending-' + (chatSessionId ?? 'all');
     return this.withClient(actor, correlationId, async (client) => {
+      const sessionClause = chatSessionId ? ' AND chat_session_id = $3' : '';
+      const updateParams: unknown[] = [actor.tenantId, actor.userId];
+      if (chatSessionId) updateParams.push(chatSessionId);
+
       // Opportunistic expiry update
       await client.query(
         `UPDATE marketing_ops.prepared_agent_plans
             SET status = 'expired'
           WHERE tenant_id = $1
-            AND prepared_by = $2
-            AND chat_session_id = $3
+            AND prepared_by = $2${sessionClause}
             AND status = 'pending'
             AND expires_at <= clock_timestamp()`,
-        [actor.tenantId, actor.userId, chatSessionId]
+        updateParams
       );
+
+      const selectParams: unknown[] = [actor.tenantId, actor.userId];
+      let limitParamIndex = 3;
+      if (chatSessionId) {
+        selectParams.push(chatSessionId);
+        limitParamIndex = 4;
+      }
+      selectParams.push(Math.max(1, Math.min(limit, 50)));
 
       const result = await client.query(
         `SELECT *
            FROM marketing_ops.prepared_agent_plans
           WHERE tenant_id = $1
-            AND prepared_by = $2
-            AND chat_session_id = $3
+            AND prepared_by = $2${sessionClause}
             AND status = 'pending'
             AND expires_at > clock_timestamp()
           ORDER BY created_at DESC
-          LIMIT $4`,
-        [actor.tenantId, actor.userId, chatSessionId, Math.max(1, Math.min(limit, 50))]
+          LIMIT $${limitParamIndex}`,
+        selectParams
       );
 
       return result.rows.map(mapRowToRecord);

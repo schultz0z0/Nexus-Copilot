@@ -90,6 +90,7 @@ describe('Marketing Ops REST v1', () => {
   it('keeps every public REST operation in the OpenAPI contract', () => {
     const document = parse(readFileSync(new URL('../openapi/marketing-ops.v1.yaml', import.meta.url), 'utf8')) as { paths: Record<string, unknown> };
     expect(Object.keys(document.paths).sort()).toEqual([
+      '/agent-plans', '/agent-plans/{planId}/execute',
       '/approval-requests', '/approval-requests/editorial',
       '/approval-requests/operational', '/approval-requests/{requestId}',
       '/approval-requests/{requestId}/cancel', '/approval-requests/{requestId}/decisions',

@@ -91,7 +91,7 @@ describe('runtime foundation', () => {
   it('provides harmless defaults only in tests', () => {
     const config = loadConfig({ NODE_ENV: 'test' });
     expect(config.port).toBe(8091);
-    expect(config.features).toEqual({ read: false, write: false, approvals: false });
+    expect(config.features).toEqual({ read: false, write: false, approvals: false, structuredPlanExecution: false });
   });
 
   it('uses the repository local PostgreSQL port and BFF-only auth defaults', () => {
@@ -285,6 +285,24 @@ describe('runtime foundation', () => {
       view: 'private-tenant',
       result: 'success'
     })).toThrow(/view/i);
+  });
+
+  it('renders the structured agent plans operational metric contract', () => {
+    const metrics = createMetrics();
+    metrics.increment('marketing_ops_prepared_plans_total', { result: 'success' });
+    metrics.increment('marketing_ops_plan_execution_total', { result: 'completed' });
+    metrics.increment('marketing_ops_plan_idempotency_total', { result: 'hit' });
+    metrics.set('marketing_ops_pending_plans', 4);
+    metrics.increment('marketing_ops_plan_expirations_total', {}, 2);
+    const output = metrics.render();
+    expect(output).toContain('marketing_ops_prepared_plans_total{result="success"} 1');
+    expect(output).toContain('marketing_ops_plan_execution_total{result="completed"} 1');
+    expect(output).toContain('marketing_ops_plan_idempotency_total{result="hit"} 1');
+    expect(output).toContain('marketing_ops_pending_plans 4');
+    expect(output).toContain('marketing_ops_plan_expirations_total 2');
+    expect(() => metrics.increment('marketing_ops_plan_execution_total', {
+      result: 'invalid_status'
+    })).toThrow(/result/i);
   });
 
   it('serves health without dependencies and readiness through its probe', async () => {
