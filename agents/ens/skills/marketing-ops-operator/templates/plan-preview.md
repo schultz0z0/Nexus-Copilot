@@ -11,7 +11,7 @@ with server-returned plan details and the user’s requested business terms.
 > - [ação 1 em linguagem natural]
 > - [ação 2 em linguagem natural, se houver]
 >
-> Nada foi salvo ainda. Quer que eu execute exatamente este plano?
+> Nada foi salvo ainda. Um card com o botão "Executar plano" foi preparado na interface para você confirmar.
 
 Rules:
 
@@ -29,5 +29,7 @@ Rules:
   it does not approve or execute the underlying action.
 - Keep every planned action visible; a vague “confirmar?” is insufficient for
   multiple actions.
+- Do not ask the user to type a confirmation in chat. The user executes the
+  plan directly through the "Executar plano" button in the interface card.
 - If the user changes any detail, do not execute this preview. Prepare and
   display the revised plan instead.

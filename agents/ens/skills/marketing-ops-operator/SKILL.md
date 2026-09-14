@@ -92,13 +92,17 @@ decisions happen only in the authenticated approval UI.
    for the missing campaign/item business context. Never choose the nearest
    result.
 4. For any write, collect all intended changes and call `marketing_ops_prepare_plan_v1`.
-5. Present the complete plan in natural pt-BR. For writes to an existing
-   object, name every resolved parent and target so the user can verify them.
-   State: **Nada foi salvo ainda.** Ask for a **single confirmation** covering
-   every listed action.
-6. End that turn. Never execute a plan in the turn that prepared it.
-7. Call `marketing_ops_execute_plan_v1` only when the next current user message unambiguously confirms the exact plan.
-8. If the user changes, limits, rejects, or adds anything, do not execute. Prepare the revised plan and request a new confirmation. Do not ask for confirmation until the revised plan has been successfully prepared.
+   This validates the schema and durably persists the pending plan in PostgreSQL.
+5. Present the complete plan in natural pt-BR following `templates/plan-preview.md`.
+   For writes to an existing object, name every resolved parent and target so the
+   user can verify them. State: **Nada foi salvo ainda. Um card com o botão "Executar plano" foi preparado na interface para você confirmar.**
+6. End that turn. Do not ask the user to type a text confirmation in chat and do
+   not call `marketing_ops_execute_plan_v1` in the browser channel; execution is
+   performed directly by the user clicking the button in the product interface.
+7. If the user asks to change, adjust, or cancel anything conversationally, call
+   `marketing_ops_prepare_plan_v1` with the revised actions (which automatically
+   invalidates the earlier pending plan) and present the revised preview. Do not
+   claim execution until the user executes through the product interface.
 
 For briefing → calendar/checklist, read the campaign and current schedule,
 ground institutional facts with RAG, then prepare all

@@ -19,6 +19,7 @@ import type { ArtifactClient } from '../integrations/artifactClient.js';
 import type { MetricsRegistry } from '../observability/metrics.js';
 import { marketingOpsPlanActionsSchema, requiredScopesForPlan } from '../plans/contracts.js';
 import { executeMarketingOpsPlan } from '../plans/executor.js';
+import { PreparedPlanRepository } from '../plans/repository.js';
 import { issueMarketingOpsPlan, verifyMarketingOpsPlan } from '../plans/token.js';
 import { delegationToken, uuid } from './contracts.js';
 import { createMcpRateLimiter } from './rateLimit.js';
@@ -47,6 +48,7 @@ export interface MarketingOpsMcpDependencies {
   rateLimiter?: ReturnType<typeof createMcpRateLimiter>;
   artifactClient?: ArtifactClient;
   metrics?: Pick<MetricsRegistry, 'increment'>;
+  planRepository?: PreparedPlanRepository;
 }
 
 export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): McpServer {
@@ -297,16 +299,30 @@ export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): 
       const actor = await verifyDelegation(input.delegation_token, scopes, deps);
       setActor(actor);
       rateLimiter.consume(actor.userId, 'marketing_ops_prepare_plan_v1', 'prepare');
-      const prepared = await issueMarketingOpsPlan(actor, input.actions, deps.keyring);
+      const planRepository = deps.planRepository ?? new PreparedPlanRepository(deps.pool);
+      const persisted = await planRepository.prepare({
+        actor,
+        chatSessionId: actor.chatSessionId,
+        sourceRunId: actor.runId,
+        preparedDelegationJti: actor.jti,
+        correlationId: actor.correlationId
+      }, {
+        actions: input.actions
+      });
+      const prepared = await issueMarketingOpsPlan(actor, input.actions, deps.keyring, {
+        planId: persisted.id
+      });
       return { value: {
         plan_token: prepared.token,
         plan: {
-          id: prepared.planId,
-          hash: prepared.planHash,
-          expires_at: new Date(prepared.expiresAt * 1000).toISOString(),
-          actions: prepared.actions
+          id: persisted.id,
+          hash: persisted.planHash,
+          status: persisted.status,
+          expires_at: persisted.expiresAt,
+          actions: persisted.actions
         },
-        persisted: false,
+        persisted: true,
+        confirmation: 'product_ui_required',
         confirmation_required: true
       } };
   }));

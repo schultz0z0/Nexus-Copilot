@@ -231,10 +231,12 @@ describe('delegation and MCP', () => {
     ]));
 
     const sessionId = randomUUID();
+    const runId = randomUUID();
     const preparationJti = randomUUID();
     const campaignName = `Conversational plan ${randomUUID()}`;
     const preparationToken = await token({
       chat_session_id: sessionId,
+      run_id: runId,
       scopes: ['campaign:read', 'campaign:write', 'item:write'],
       confirmation_intent: false
     }, activeKey, 'v2', 60, Math.floor(Date.now() / 1000), preparationJti);
@@ -251,6 +253,54 @@ describe('delegation and MCP', () => {
     });
     expect(prepared.isError).not.toBe(true);
     const preparedPayload = toolPayload(prepared);
+    expect(preparedPayload).toMatchObject({
+      persisted: true,
+      confirmation: 'product_ui_required',
+      plan: { status: 'pending' }
+    });
+
+    const planInDb = await adminPool.query(
+      'select * from marketing_ops.prepared_agent_plans where id = $1',
+      [preparedPayload.plan.id]
+    );
+    expect(planInDb.rows).toHaveLength(1);
+    expect(planInDb.rows[0].status).toBe('pending');
+    expect(JSON.stringify(planInDb.rows[0])).not.toContain(preparedPayload.plan_token);
+
+    // Same run and same actions returns idempotent plan
+    const preparedSame = await client.callTool({
+      name: 'marketing_ops_prepare_plan_v1',
+      arguments: { delegation_token: preparationToken, actions }
+    });
+    const preparedSamePayload = toolPayload(preparedSame);
+    expect(preparedSamePayload.plan.id).toBe(preparedPayload.plan.id);
+
+    // Revised actions with same run invalidates previous pending plan
+    const revisedToken = await token({
+      chat_session_id: sessionId,
+      run_id: runId,
+      scopes: ['campaign:read', 'campaign:write', 'item:write'],
+      confirmation_intent: false
+    }, activeKey, 'v2', 60, Math.floor(Date.now() / 1000), randomUUID());
+    const revisedPrepared = await client.callTool({
+      name: 'marketing_ops_prepare_plan_v1',
+      arguments: {
+        delegation_token: revisedToken,
+        actions: [
+          ...actions,
+          { type: 'campaign_item.create', campaign_ref: 'campaign-main', kind: 'review', title: 'Revisao final' }
+        ]
+      }
+    });
+    const revisedPayload = toolPayload(revisedPrepared);
+    expect(revisedPayload.plan.id).not.toBe(preparedPayload.plan.id);
+    expect(revisedPayload.plan.status).toBe('pending');
+    const firstPlanRow = await adminPool.query(
+      'select status from marketing_ops.prepared_agent_plans where id = $1',
+      [preparedPayload.plan.id]
+    );
+    expect(firstPlanRow.rows[0].status).toBe('invalidated');
+
     const before = await adminPool.query('select count(*)::int as count from marketing_ops.campaigns where name = $1', [campaignName]);
     expect(before.rows[0].count).toBe(0);
 

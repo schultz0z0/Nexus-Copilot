@@ -27,7 +27,7 @@ const planClaimsSchema = z.object({
 
 export type MarketingOpsPlan = z.infer<typeof planClaimsSchema>;
 
-interface PlanTimeOptions { now?: number; ttlSeconds?: number }
+interface PlanTimeOptions { now?: number; ttlSeconds?: number; planId?: string }
 
 export async function issueMarketingOpsPlan(
   actor: DelegatedActor,
@@ -38,7 +38,7 @@ export async function issueMarketingOpsPlan(
   const actions = marketingOpsPlanActionsSchema.parse(inputActions);
   const now = options.now ?? Math.floor(Date.now() / 1000);
   const ttlSeconds = Math.max(60, Math.min(MAX_PLAN_TTL_SECONDS, options.ttlSeconds ?? 900));
-  const planId = randomUUID();
+  const planId = options.planId ?? randomUUID();
   const planHash = hashCanonicalPayload(actions);
   const expiresAt = now + ttlSeconds;
   const token = await new SignJWT({

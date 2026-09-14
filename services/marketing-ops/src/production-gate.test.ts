@@ -91,7 +91,11 @@ async function preparePlan(role: Role, scopes: string[], actions: Action[], chat
     actions
   });
   expect(prepared.result.isError).not.toBe(true);
-  expect(prepared.payload).toMatchObject({ persisted: false, confirmation_required: true });
+  expect(prepared.payload).toMatchObject({
+    persisted: true,
+    confirmation: 'product_ui_required',
+    plan: { status: 'pending' }
+  });
   return { prepared, chatSessionId, role, scopes };
 }
 
