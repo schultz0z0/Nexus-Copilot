@@ -100,3 +100,25 @@ test('0016 allows an idempotent plan retry only with a fresh delegation JTI', ()
   assert.match(compatibility, /drop constraint delegation_uses_tenant_id_actor_id_operation_idempotency_ke_key/);
   assert.doesNotMatch(compatibility, /drop constraint delegation_uses_pkey/);
 });
+
+test('0017 creates durable prepared agent plans with forced tenant RLS and immutable identity', () => {
+  const sql = migration('0017_marketing_ops_prepared_plans.sql');
+  assert.match(sql, /create table marketing_ops\.prepared_agent_plans\b/);
+  for (const field of [
+    'id', 'tenant_id', 'prepared_by', 'chat_session_id', 'source_run_id',
+    'prepared_delegation_jti', 'plan_hash', 'actions', 'required_scopes',
+    'status', 'expires_at', 'execution_key', 'execution_started_at',
+    'execution_attempts', 'result', 'executed_by', 'executed_at',
+    'created_at', 'updated_at'
+  ]) {
+    assert.match(sql, new RegExp(`\\b${field}\\b`));
+  }
+  assert.match(sql, /references iam\.tenants\s*\(id\)/);
+  assert.match(sql, /references iam\.principals\s*\(id\)/);
+  assert.match(sql, /force row level security/);
+  assert.match(sql, /grant (?:select|insert|update).*on(?: table)? marketing_ops\.prepared_agent_plans to nexus_app/);
+  assert.doesNotMatch(sql, /grant delete on(?: table)? marketing_ops\.prepared_agent_plans to nexus_app/);
+  assert.doesNotMatch(sql, /\b(plan_token|delegation_token)\b/);
+  assert.match(sql, /idx_prepared_agent_plans_pending/);
+  assert.match(sql, /prepared_agent_plans_execution_key_unique|unique\s*\(tenant_id,\s*execution_key\)/);
+});
