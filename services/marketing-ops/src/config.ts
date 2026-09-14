@@ -84,7 +84,9 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     const host = env.PGHOST?.trim() || 'localhost';
     const port = env.PGPORT?.trim() || '5432';
     const database = env.PGDATABASE?.trim() || 'nexus';
-    databaseUrl = `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(databasePassword)}@${host}:${port}/${encodeURIComponent(database)}`;
+    const sslMode = env.PGSSLMODE?.trim();
+    const query = sslMode ? `?sslmode=${encodeURIComponent(sslMode)}` : '';
+    databaseUrl = `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(databasePassword)}@${host}:${port}/${encodeURIComponent(database)}${query}`;
   }
   databaseUrl = databaseUrl
     ?? requiredProductionValue(env, 'DATABASE_URL', 'postgresql://postgres:postgres@127.0.0.1:55322/postgres', production);

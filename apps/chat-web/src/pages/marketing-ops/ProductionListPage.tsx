@@ -204,7 +204,7 @@ export default function ProductionListPage({
                 </Button>
               ) : null}
               {canWrite ? (
-                <Button onClick={() => setCreateOpen(true)} className="hidden h-11 rounded-[8px] text-slate-950 sm:inline-flex">
+                <Button onClick={() => setCreateOpen(true)} className="hidden h-11 rounded-[8px] sm:inline-flex">
                   <Plus className="mr-2 h-4 w-4" /> Novo item
                 </Button>
               ) : null}

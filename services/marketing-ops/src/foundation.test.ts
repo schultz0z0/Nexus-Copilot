@@ -112,6 +112,20 @@ describe('runtime foundation', () => {
     )).toEqual({ rejectUnauthorized: false });
   });
 
+  it('propagates PGSSLMODE when composing a database URL from Docker PG variables', () => {
+    const config = loadConfig({
+      NODE_ENV: 'test',
+      PGHOST: 'postgres',
+      PGPORT: '5432',
+      PGDATABASE: 'nexus',
+      PGUSER: 'nexus_app',
+      PGPASSWORD: 'local-only-password',
+      PGSSLMODE: 'disable'
+    });
+    expect(new URL(config.databaseUrl).searchParams.get('sslmode')).toBe('disable');
+    expect(resolveDatabaseSsl(config.databaseUrl)).toBe(false);
+  });
+
   it('configures the private Artifact Server dependency', () => {
     const config = loadConfig({
       NODE_ENV: 'test',
@@ -566,6 +580,16 @@ describe('runtime foundation', () => {
     expect(limited.status).toBe(429);
     expect(limited.headers['retry-after']).toBe('60');
     expect(limited.body.error.code).toBe('rate_limited');
+  });
+
+  it('keeps the default HTTP budget above the authenticated workspace fan-out', async () => {
+    const app = createApp({
+      readiness: async () => true,
+      logger: createLogger(() => undefined),
+      metrics: createMetrics()
+    });
+    const response = await request(app).get('/health');
+    expect(response.headers['ratelimit-limit']).toBe('300');
   });
 });
 

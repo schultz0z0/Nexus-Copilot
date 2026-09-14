@@ -16,6 +16,7 @@
     "test:approvals-performance": "vitest run src/approvals.performance.test.ts --pool=forks --maxWorkers=1",
     "test:approvals-concurrency": "node scripts/test_approval_decision_concurrency.mjs",
     "test:approvals-expiry-worker": "node scripts/test_approval_expiry_worker.mjs",
+    "smoke:mcp": "npm run build && node scripts/smoke-mcp.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -20,15 +20,20 @@ export const enabled = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true';
 export const APPROVAL_REQUEST = 'abababab-abab-4bab-8bab-abababababab';
 
 const cors = {
-  'access-control-allow-origin': 'http://127.0.0.1:8088',
+  'access-control-allow-credentials': 'true',
   'access-control-allow-headers': 'authorization,apikey,content-type,x-client-info,x-tenant-id,x-user-id',
   'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
 };
 
+const corsFor = (route: Route) => ({
+  ...cors,
+  'access-control-allow-origin': route.request().headers().origin ?? 'http://127.0.0.1:8088',
+});
+
 const json = (route: Route, body: unknown, status = 200, headers: Record<string, string> = {}) => route.fulfill({
   status,
   contentType: 'application/json',
-  headers: { ...cors, ...headers },
+  headers: { ...corsFor(route), ...headers },
   body: JSON.stringify(body),
 });
 
@@ -69,7 +74,7 @@ async function installSupabaseFakes(page: Page) {
 
   await page.route('http://127.0.0.1:55321/**', async (route) => {
     const request = route.request();
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: corsFor(route) });
     const url = new URL(request.url());
 
     if (url.pathname.includes('/profiles')) {
@@ -108,10 +113,60 @@ async function installSupabaseFakes(page: Page) {
   });
 }
 
+async function installAppApiFakes(page: Page) {
+  const sessions: Array<Record<string, unknown>> = [];
+  const messages: Array<Record<string, unknown>> = [];
+  const user = {
+    id: USER,
+    email: 'gestora-operator@example.test',
+    full_name: 'Gestora E2E',
+    tenant_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    role: 'manager'
+  };
+
+  await page.route('**/api/auth/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me' || path === '/api/auth/session') return json(route, { user });
+    return json(route, { ok: true });
+  });
+
+  await page.route('**/api/chat/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (path === '/api/chat/sessions') {
+      if (request.method() === 'GET') return json(route, { sessions });
+      const payload = request.postDataJSON() as Record<string, unknown>;
+      const session = {
+        id: SESSION,
+        user_id: USER,
+        title: typeof payload.title === 'string' ? payload.title : 'Nova conversa',
+        session_kind: 'normal',
+        created_at: now,
+        updated_at: now
+      };
+      sessions.splice(0, sessions.length, session);
+      return json(route, { session }, 201);
+    }
+    if (path === `/api/chat/sessions/${SESSION}/messages`) {
+      if (request.method() === 'GET') return json(route, { messages, hasMore: false });
+      const payload = request.postDataJSON() as Record<string, unknown>;
+      const message = {
+        id: crypto.randomUUID(),
+        session_id: SESSION,
+        created_at: new Date().toISOString(),
+        ...payload
+      };
+      messages.push(message);
+      return json(route, { message }, 201);
+    }
+    return json(route, { error: { code: 'not_found', message: 'not found' } }, 404);
+  });
+}
+
 async function installBridgeFakes(page: Page) {
   await page.route('http://127.0.0.1:18081/**', async (route) => {
     const request = route.request();
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: corsFor(route) });
     const url = new URL(request.url());
     const path = url.pathname;
 
@@ -134,7 +189,7 @@ async function installBridgeFakes(page: Page) {
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        headers: { ...cors, 'cache-control': 'no-cache' },
+        headers: { ...corsFor(route), 'cache-control': 'no-cache' },
         body: [
           'event: status',
           'data: {"text":"Hermes está montando a proposta...","tone":"info"}',
@@ -152,7 +207,7 @@ async function installBridgeFakes(page: Page) {
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        headers: { ...cors, 'cache-control': 'no-cache' },
+        headers: { ...corsFor(route), 'cache-control': 'no-cache' },
         body: [
           'event: status',
           'data: {"text":"Hermes está executando o plano confirmado...","tone":"info"}',
@@ -170,7 +225,7 @@ async function installBridgeFakes(page: Page) {
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        headers: { ...cors, 'cache-control': 'no-cache' },
+        headers: { ...corsFor(route), 'cache-control': 'no-cache' },
         body: [
           'event: status',
           'data: {"text":"Hermes está consultando o Marketing Ops...","tone":"info"}',
@@ -224,11 +279,13 @@ async function installMarketingOpsFakes(page: Page) {
     },
     capabilities: { decide: true, cancel: false }
   };
-  await page.route('http://127.0.0.1:19091/**', async (route) => {
+  const handleMarketingOps = async (route: Route) => {
     const request = route.request();
-    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: corsFor(route) });
     const url = new URL(request.url());
-    const path = url.pathname;
+    const path = url.pathname.startsWith('/api/marketing')
+      ? `/v1${url.pathname.slice('/api/marketing'.length)}`
+      : url.pathname;
 
     const ok = (data: unknown, pageMeta?: { limit: number; count: number; nextCursor?: string | null }) =>
       json(route, {
@@ -283,11 +340,14 @@ async function installMarketingOpsFakes(page: Page) {
     return json(route, { error: { code: 'not_found', message: 'not found' } }, 404, {
       'x-correlation-id': 'corr-hermes-operator-e2e',
     });
-  });
+  };
+  await page.route('http://127.0.0.1:19091/**', handleMarketingOps);
+  await page.route('**/api/marketing/**', handleMarketingOps);
 }
 
 export async function installHermesOperatorFakeStack(page: Page) {
   await installSupabaseFakes(page);
+  await installAppApiFakes(page);
   await installBridgeFakes(page);
   await installMarketingOpsFakes(page);
   await installSession(page);

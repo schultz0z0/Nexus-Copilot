@@ -142,7 +142,7 @@ declare global {
 export function createApp(deps: AppDependencies) {
   const app = express();
   const clients = new Map<string, { count: number; resetAt: number }>();
-  const rateLimit = deps.rateLimit ?? { max: 120, windowMs: 60_000 };
+  const rateLimit = deps.rateLimit ?? { max: 300, windowMs: 60_000 };
   app.disable('x-powered-by');
   // Production traffic arrives through one trusted Traefik hop.
   app.set('trust proxy', 1);

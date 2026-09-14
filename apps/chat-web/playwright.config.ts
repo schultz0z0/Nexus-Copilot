@@ -4,6 +4,10 @@ const baseURL = process.env.MARKETING_OPS_E2E_BASE_URL ?? 'http://127.0.0.1:8088
 const pictureFake = process.env.PICTURE_HERMES_E2E_FAKE === 'true';
 const marketingOpsFake = process.env.MARKETING_OPS_HERMES_E2E_FAKE === 'true';
 const fakeWebServer = pictureFake || marketingOpsFake;
+const fakeWebServerPort = Number(new URL(baseURL).port || 80);
+if (!Number.isInteger(fakeWebServerPort) || fakeWebServerPort < 1 || fakeWebServerPort > 65_535) {
+  throw new Error('MARKETING_OPS_E2E_BASE_URL must contain a valid TCP port');
+}
 
 export default defineConfig({
   testDir: './e2e',
@@ -15,12 +19,11 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [['list']],
   webServer: fakeWebServer ? {
-    command: 'npm run dev -- --host 127.0.0.1 --port 8088',
+    command: `npm run dev -- --host 127.0.0.1 --port ${fakeWebServerPort}`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      ...process.env,
       VITE_SUPABASE_URL: 'http://127.0.0.1:55321',
       VITE_SUPABASE_ANON_KEY: 'picture-e2e-anon-key',
       VITE_CHATBOT_PROXY_URL: 'http://127.0.0.1:18081',
@@ -29,6 +32,8 @@ export default defineConfig({
       VITE_MARKETING_OPS_READ: 'true',
       VITE_MARKETING_OPS_WRITE: 'true',
       VITE_MARKETING_OPS_APPROVALS: 'true',
+      VITE_MARKETING_OPS_KILL_SWITCH:
+        process.env.MARKETING_OPS_KILL_SWITCH_E2E === 'true' ? 'true' : 'false',
       VITE_CHAT_STREAM_FILE_HOSTS: '127.0.0.1,localhost',
     },
   } : undefined,

@@ -9,6 +9,23 @@ export function decideRun(completedRuns, fingerprint, allowNewRun) {
   return { action: 'load' };
 }
 
+export function selectLoadableColumns(row, columnMetadata) {
+  const allowed = new Set(columnMetadata
+    .filter(({ is_generated: isGenerated }) => isGenerated === 'NEVER')
+    .map(({ column_name: columnName }) => columnName));
+  return Object.keys(row).filter((column) => allowed.has(column));
+}
+
+export function serializeLoadValues(row, columns, columnMetadata) {
+  const dataTypes = new Map(columnMetadata.map((entry) => [entry.column_name, entry.data_type]));
+  return columns.map((column) => {
+    const value = row[column];
+    return (dataTypes.get(column) === 'json' || dataTypes.get(column) === 'jsonb') && value !== null
+      ? canonicalJson(value)
+      : value;
+  });
+}
+
 export async function load({ pool, inputDirectory, allowNewRun = false }) {
   const manifest = JSON.parse(await readFile(join(inputDirectory, 'manifest.json'), 'utf8'));
   const client = await pool.connect();
@@ -35,12 +52,11 @@ export async function load({ pool, inputDirectory, allowNewRun = false }) {
         await client.query(`insert into migration_control.marketing_ops_staging_rows
           (run_id, table_name, source_id, payload, payload_hash) values ($1,$2,$3,$4::jsonb,$5)`,
           [manifest.run_id, table, sourceId, canonicalJson(row), sha256(canonicalJson(row))]);
-        const columnsResult = await client.query(`select column_name from information_schema.columns
+        const columnsResult = await client.query(`select column_name, is_generated, data_type from information_schema.columns
           where table_schema = 'marketing_ops' and table_name = $1`, [table]);
-        const allowed = new Set(columnsResult.rows.map(({ column_name }) => column_name));
-        const columns = Object.keys(row).filter((column) => allowed.has(column));
+        const columns = selectLoadableColumns(row, columnsResult.rows);
         if (!columns.length) throw new Error(`no loadable columns for ${table}`);
-        const values = columns.map((column) => row[column]);
+        const values = serializeLoadValues(row, columns, columnsResult.rows);
         await client.query(`insert into marketing_ops.${quoteIdent(table)} (${columns.map(quoteIdent).join(',')})
           values (${columns.map((_, index) => `$${index + 1}`).join(',')}) on conflict do nothing`, values);
         await client.query(`update migration_control.marketing_ops_staging_rows set loaded_at = transaction_timestamp()

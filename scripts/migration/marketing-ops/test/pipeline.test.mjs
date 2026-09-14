@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { manifestFingerprint, rowsJsonl, sha256 } from '../core.mjs';
 import { transformRow } from '../transform.mjs';
-import { decideRun } from '../load.mjs';
+import { decideRun, selectLoadableColumns, serializeLoadValues } from '../load.mjs';
 
 test('canonical JSONL and manifest fingerprints are deterministic', () => {
   const left = rowsJsonl([{ id: 'b', name: 'B' }, { name: 'A', id: 'a' }]);
@@ -17,6 +17,29 @@ test('same manifest is a no-op and a divergent fingerprint requires an explicit 
   assert.deepEqual(decideRun(completed, 'a'.repeat(64), false), { action: 'skip', runId: 'run-one' });
   assert.throws(() => decideRun(completed, 'b'.repeat(64), false), /--new-run/);
   assert.deepEqual(decideRun(completed, 'b'.repeat(64), true), { action: 'load' });
+});
+
+test('loader excludes generated columns from extracted rows', () => {
+  assert.deepEqual(selectLoadableColumns(
+    { id: 'campaign-1', name: 'Campaign', search_vector: 'generated value' },
+    [
+      { column_name: 'id', is_generated: 'NEVER' },
+      { column_name: 'name', is_generated: 'NEVER' },
+      { column_name: 'search_vector', is_generated: 'ALWAYS' }
+    ]
+  ), ['id', 'name']);
+});
+
+test('loader serializes JSON arrays without turning them into PostgreSQL arrays', () => {
+  const row = { id: 'notification-1', payload: [{ type: 'approval', readAt: null }] };
+  const metadata = [
+    { column_name: 'id', is_generated: 'NEVER', data_type: 'uuid' },
+    { column_name: 'payload', is_generated: 'NEVER', data_type: 'jsonb' }
+  ];
+  assert.deepEqual(serializeLoadValues(row, ['id', 'payload'], metadata), [
+    'notification-1',
+    '[{"readAt":null,"type":"approval"}]'
+  ]);
 });
 
 test('transform maps tenant and principal identities to canonical IAM', () => {

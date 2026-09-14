@@ -280,52 +280,54 @@ export async function markInAppNotificationsRead(
     context.pool,
     context.actor,
     context.correlationId,
-    async (client) => executeIdempotentCommand(
-      client,
-      context,
-      'in_app_notification.read',
-      idempotencyKey,
-      { ids: orderedIds },
-      async () => {
-        const before = await ownedNotifications(client, context, orderedIds);
-        const earliestOccurredAt = before.reduce((earliest, notification) => {
-          const occurredAt = new Date(notification.occurred_at);
-          return occurredAt > earliest ? occurredAt : earliest;
-        }, new Date(0));
-        const readAt = now < earliestOccurredAt ? earliestOccurredAt : now;
-        const result = await client.query<NotificationRow>(`
-          update marketing_ops.in_app_notifications
-          set read_at = coalesce(read_at, $4::timestamptz)
-          where tenant_id = $1 and user_id = $2 and id = any($3::uuid[])
-          returning *
-        `, [
-          context.actor.tenantId,
-          context.actor.userId,
-          orderedIds,
-          readAt.toISOString()
-        ]);
-        const notifications = result.rows.map(mapNotification)
-          .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) ||
-            right.id.localeCompare(left.id));
-        await writeAudit(
-          client,
-          context,
-          'in_app_notification',
-          context.actor.userId,
-          'in_app_notification.read',
-          { ids: orderedIds, read: false },
-          { ids: orderedIds, read: true }
-        );
-        await writeDomainEvent(
-          client,
-          context,
-          'in_app_notification',
-          context.actor.userId,
-          'marketing_ops.in_app_notification.read.v1',
-          { ids: orderedIds, count: notifications.length }
-        );
-        return notifications;
-      }
-    )
+    async (client) => {
+      const before = await ownedNotifications(client, context, orderedIds);
+      return executeIdempotentCommand(
+        client,
+        context,
+        'in_app_notification.read',
+        idempotencyKey,
+        { ids: orderedIds },
+        async () => {
+          const earliestOccurredAt = before.reduce((earliest, notification) => {
+            const occurredAt = new Date(notification.occurred_at);
+            return occurredAt > earliest ? occurredAt : earliest;
+          }, new Date(0));
+          const readAt = now < earliestOccurredAt ? earliestOccurredAt : now;
+          const result = await client.query<NotificationRow>(`
+            update marketing_ops.in_app_notifications
+            set read_at = coalesce(read_at, $4::timestamptz)
+            where tenant_id = $1 and user_id = $2 and id = any($3::uuid[])
+            returning *
+          `, [
+            context.actor.tenantId,
+            context.actor.userId,
+            orderedIds,
+            readAt.toISOString()
+          ]);
+          const notifications = result.rows.map(mapNotification)
+            .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) ||
+              right.id.localeCompare(left.id));
+          await writeAudit(
+            client,
+            context,
+            'in_app_notification',
+            context.actor.userId,
+            'in_app_notification.read',
+            { ids: orderedIds, read: false },
+            { ids: orderedIds, read: true }
+          );
+          await writeDomainEvent(
+            client,
+            context,
+            'in_app_notification',
+            context.actor.userId,
+            'marketing_ops.in_app_notification.read.v1',
+            { ids: orderedIds, count: notifications.length }
+          );
+          return notifications;
+        }
+      );
+    }
   );
 }

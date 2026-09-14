@@ -59,6 +59,7 @@ describe('ArtifactClient', () => {
   it('creates short owner-bound access links', async () => {
     const fetchImpl = vi.fn(async (_input: string | URL, _init?: RequestInit) => new Response(JSON.stringify({
       url: 'https://files.example.test/signed',
+      token: 'opaque-artifact-token',
       expires_at: '2026-07-14T12:05:00.000Z'
     }), { status: 200, headers: { 'content-type': 'application/json' } }));
     const client = new ArtifactClient({

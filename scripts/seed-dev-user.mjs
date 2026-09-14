@@ -17,16 +17,20 @@ const client = new pg.Client({
 
 async function seed() {
   await client.connect();
-  console.log("Connected to PostgreSQL at 127.0.0.1:55432 as nexus_bootstrap");
+  console.log(`Connected to PostgreSQL at ${client.host}:${client.port} as nexus_bootstrap`);
 
-  const tenantId = "a0000000-0000-0000-0000-000000000001";
-  const tenantSlug = "dev-tenant";
-  const tenantName = "Desenvolvimento ENS";
+  const tenantId = process.env.DEV_TENANT_ID || "a0000000-0000-0000-0000-000000000001";
+  const tenantSlug = process.env.DEV_TENANT_SLUG || "dev-tenant";
+  const tenantName = process.env.DEV_TENANT_NAME || "Desenvolvimento ENS";
 
-  const userId = "b0000000-0000-0000-0000-000000000001";
+  const userId = process.env.DEV_USER_ID || "b0000000-0000-0000-0000-000000000001";
   const email = (process.env.DEV_USER_EMAIL || "admin@ens.local").toLowerCase();
   const rawPassword = process.env.DEV_USER_PASSWORD || "AdminDev123!";
-  const fullName = "Administrador Dev";
+  const fullName = process.env.DEV_USER_FULL_NAME || "Administrador Dev";
+  const role = process.env.DEV_USER_ROLE || "admin";
+  if (!["member", "manager", "admin"].includes(role)) {
+    throw new Error("DEV_USER_ROLE must be member, manager or admin");
+  }
 
   const passwordHash = await bcrypt.hash(rawPassword, 12);
 
@@ -57,14 +61,14 @@ async function seed() {
   );
   console.log(`Credentials updated for user ${email}`);
 
-  // 4. Ensure active membership as admin
+  // 4. Ensure active membership with the requested canonical role
   await client.query(
     `INSERT INTO iam.memberships (tenant_id, principal_id, role, active)
-     VALUES ($1, $2, 'admin', true)
-     ON CONFLICT (tenant_id, principal_id) DO UPDATE SET role = 'admin', active = true`,
-    [tenantId, userId]
+     VALUES ($1, $2, $3, true)
+     ON CONFLICT (tenant_id, principal_id) DO UPDATE SET role = EXCLUDED.role, active = true`,
+    [tenantId, userId, role]
   );
-  console.log(`Membership verified: ${userId} is admin of tenant ${tenantId}`);
+  console.log(`Membership verified: ${userId} is ${role} of tenant ${tenantId}`);
 
   // 5. Test authentication function
   const authCheck = await client.query(`SELECT * FROM iam.authenticate_by_email($1)`, [email]);
@@ -76,8 +80,8 @@ async function seed() {
 
   await client.end();
   console.log("\nDev seed completed successfully!");
-  console.log(`Email:    ${email}`);
-  console.log(`Password: ${rawPassword}`);
+  console.log(`Principal: ${email} (${userId})`);
+  console.log("Password configured from local input (value not logged)");
 }
 
 seed().catch((err) => {

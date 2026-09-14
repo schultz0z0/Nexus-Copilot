@@ -47,7 +47,7 @@ const ArtifactResponseSchema = z.object({
 const AccessLinkResponseSchema = z.object({
   url: z.string().url(),
   expires_at: z.string().datetime()
-}).strict();
+}).passthrough();
 
 function invalidDependencyResponse(): never {
   throw appError('dependency_invalid_response', 502, 'Artifact Server returned an invalid response');

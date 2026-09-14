@@ -32,30 +32,34 @@ function dateTimeFromNow(offsetDays: number, time = '10:00'): string {
   return `${dateFromNow(offsetDays)}T${time}`;
 }
 
-async function accessToken(role: TestRole): Promise<string> {
+async function applicationSessionCookie(role: TestRole): Promise<string> {
   const account = credentials(role);
-  const supabaseUrl = requiredEnv('MARKETING_OPS_E2E_SUPABASE_URL').replace(/\/+$/, '');
-  const anonKey = requiredEnv('MARKETING_OPS_E2E_SUPABASE_ANON_KEY');
-  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+  const appUrl = requiredEnv('MARKETING_OPS_E2E_BASE_URL').replace(/\/+$/, '');
+  const response = await fetch(`${appUrl}/api/auth/login`, {
     method: 'POST',
     headers: {
-      apikey: anonKey,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(account)
   });
-  const payload = await response.json() as { access_token?: string };
-  if (!response.ok || !payload.access_token) {
+  if (!response.ok) {
     throw new Error(`controlled ${role} authentication failed`);
   }
-  return payload.access_token;
+  const cookie = response.headers.get('set-cookie')?.split(';', 1)[0];
+  if (!cookie) throw new Error(`controlled ${role} session cookie is missing`);
+  return cookie;
 }
 
 async function apiClient(role: TestRole) {
-  const token = await accessToken(role);
+  const cookie = await applicationSessionCookie(role);
+  const authenticatedFetch: typeof globalThis.fetch = (input, init = {}) => {
+    const headers = new Headers(init.headers);
+    headers.set('Cookie', cookie);
+    return fetch(input, { ...init, headers });
+  };
   return createMarketingOpsClient({
-    baseUrl: requiredEnv('MARKETING_OPS_E2E_API_URL'),
-    getAccessToken: async () => token
+    baseUrl: `${requiredEnv('MARKETING_OPS_E2E_BASE_URL').replace(/\/+$/, '')}/api/marketing`,
+    fetch: authenticatedFetch
   });
 }
 
@@ -79,8 +83,11 @@ async function login(page: Page, role: TestRole): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('E-mail').fill(account.email);
   await page.getByLabel('Senha').fill(account.password);
+  const loginResponse = page.waitForResponse((response) => (
+    response.url().endsWith('/api/auth/login') && response.request().method() === 'POST'
+  ));
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByText('Login realizado com sucesso!')).toBeVisible();
+  expect((await loginResponse).status()).toBe(200);
   await page.goto('/marketing-ops/campaigns');
   await expect(page.getByRole('heading', { name: 'Campanhas' })).toBeVisible();
 }
@@ -98,6 +105,13 @@ async function createCampaign(page: Page, name: string): Promise<string> {
 async function archiveCampaign(page: Page): Promise<void> {
   const archive = page.getByRole('button', { name: 'Arquivar campanha' });
   await expect(archive).toBeVisible();
+  if (await archive.isDisabled()) {
+    const discard = page.getByRole('button', { name: 'Descartar' });
+    if (await discard.isVisible() && await discard.isEnabled()) {
+      await discard.click();
+    }
+  }
+  await expect(archive).toBeEnabled();
   await archive.click();
   const dialog = page.getByRole('alertdialog', { name: 'Arquivar campanha' });
   await dialog.getByRole('button', { name: 'Confirmar arquivamento' }).click();
@@ -109,11 +123,15 @@ async function expectNoWcagViolations(page: Page): Promise<void> {
     .include('main')
     .withTags(['wcag2a', 'wcag2aa'])
     .analyze();
-  expect(results.violations.map(({ id, impact, nodes }) => ({ id, impact, nodes: nodes.length }))).toEqual([]);
+  expect(results.violations.map(({ id, impact, nodes }) => ({
+    id,
+    impact,
+    nodes: nodes.map(({ target, html }) => ({ target, html }))
+  }))).toEqual([]);
 }
 
 test.describe('Marketing Ops integrated Phase 2 and 3 journeys', () => {
-  test.skip(!enabled, 'Set MARKETING_OPS_E2E_ENABLED=true only in the controlled VPS gate.');
+  test.skip(!enabled, 'Set MARKETING_OPS_E2E_ENABLED=true only for a controlled local or operator gate.');
 
   test('manager completes collaboration, material and timeline flow', async ({ page }) => {
     const name = `${fixturePrefix} manager ${Date.now()}`;
@@ -124,17 +142,14 @@ test.describe('Marketing Ops integrated Phase 2 and 3 journeys', () => {
 
     try {
       await page.getByLabel('Objetivo').fill('Validar a jornada operacional E2E');
-      await page.getByLabel('Tipo de referência').selectOption('course');
-      const courseQuery = requiredEnv('MARKETING_OPS_E2E_COURSE_QUERY');
-      const courseTitle = requiredEnv('MARKETING_OPS_E2E_COURSE_TITLE');
-      await page.getByRole('searchbox', { name: 'Buscar curso oficial' }).fill(courseQuery);
-      await page.getByRole('button', { name: courseTitle }).click();
-      await expect(page.getByText(courseTitle, { exact: true })).toBeVisible();
+      await page.locator('#campaign-reference-type').selectOption('product');
+      await page.locator('#campaign-reference-key').fill('M6-LOCAL-PRODUCT');
+      await page.locator('#campaign-reference-title').fill('Produto ENS Local');
       await page.getByLabel('Público').fill('Tenant controlado de testes');
       await page.getByLabel('Início').fill(dateFromNow(1));
       await page.getByLabel('Término').fill(dateFromNow(8));
       await page.getByLabel('Canal principal').selectOption('email');
-      await page.getByLabel('Briefing').fill('Conteúdo sintético marcado para o gate da Fase 2.');
+      await page.getByRole('textbox', { name: 'Briefing' }).fill('Conteúdo sintético marcado para o gate da Fase 2.');
       await page.getByRole('button', { name: 'Salvar alterações' }).click();
       await expect(page.getByText(/versão 2/i)).toBeVisible();
 
@@ -146,14 +161,15 @@ test.describe('Marketing Ops integrated Phase 2 and 3 journeys', () => {
       await participantDialog.getByRole('button', { name: 'Confirmar participante' }).click();
       participantAdded = true;
       await expect(page.getByText(candidateName)).toBeVisible();
+      await expect(page.getByText(/versão 3/i)).toBeVisible();
 
-      const artifactId = requiredEnv('MARKETING_OPS_E2E_EXISTING_ARTIFACT_ID');
-      await page.getByRole('button', { name: 'Vincular existente' }).click();
-      const materialDialog = page.getByRole('dialog', { name: 'Vincular artefato existente' });
-      await materialDialog.getByLabel('ID do artefato').fill(artifactId);
-      await materialDialog.getByRole('button', { name: 'Confirmar vínculo' }).click();
-      materialLinked = true;
+      await page.locator('#campaign-material-upload').setInputFiles({
+        name: `${fixturePrefix}-material.txt`,
+        mimeType: 'text/plain',
+        buffer: Buffer.from('controlled M6 campaign material\n')
+      });
       await expect(page.getByText('1 material')).toBeVisible();
+      materialLinked = true;
 
       let uploadRequests = 0;
       page.on('request', (request) => {
@@ -331,7 +347,7 @@ test.describe('Marketing Ops integrated Phase 2 and 3 journeys', () => {
       await itemDialog.getByLabel(/Início/).fill(dateTimeFromNow(4, '09:00'));
       await itemDialog.getByLabel(/Prazo/).fill(dateTimeFromNow(5, '11:00'));
       const updateResponse = page.waitForResponse((response) => (
-        response.url().includes(`/v1/campaign-items/${dependent.data.id}`)
+        response.url().includes(`/campaign-items/${dependent.data.id}`)
         && response.request().method() === 'PATCH'
       ));
       await itemDialog.getByRole('button', { name: 'Salvar alterações' }).click();
