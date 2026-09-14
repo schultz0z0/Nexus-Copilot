@@ -320,9 +320,81 @@ describe('Marketing Ops frontend contracts', () => {
   });
 
   it('keeps read and write off by default and honors the kill switch', () => {
-    expect(marketingOpsFlags({})).toEqual({ enabled: false, read: false, write: false, approvals: false });
-    expect(marketingOpsFlags({ VITE_MARKETING_OPS_ENABLED: 'true', VITE_MARKETING_OPS_READ: 'true', VITE_MARKETING_OPS_WRITE: 'true', VITE_MARKETING_OPS_KILL_SWITCH: 'true' }))
-      .toEqual({ enabled: false, read: false, write: false, approvals: false });
+    expect(marketingOpsFlags({})).toEqual({
+      enabled: false,
+      read: false,
+      write: false,
+      approvals: false,
+      structuredPlanExecution: false
+    });
+    expect(marketingOpsFlags({
+      VITE_MARKETING_OPS_ENABLED: 'true',
+      VITE_MARKETING_OPS_READ: 'true',
+      VITE_MARKETING_OPS_WRITE: 'true',
+      VITE_MARKETING_OPS_KILL_SWITCH: 'true',
+      VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: 'true'
+    })).toEqual({
+      enabled: false,
+      read: false,
+      write: false,
+      approvals: false,
+      structuredPlanExecution: false
+    });
+    expect(marketingOpsFlags({
+      VITE_MARKETING_OPS_ENABLED: 'true',
+      VITE_MARKETING_OPS_READ: 'true',
+      VITE_MARKETING_OPS_WRITE: 'false',
+      VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: 'true'
+    })).toMatchObject({
+      structuredPlanExecution: false
+    });
+    expect(marketingOpsFlags({
+      VITE_MARKETING_OPS_ENABLED: 'true',
+      VITE_MARKETING_OPS_READ: 'true',
+      VITE_MARKETING_OPS_WRITE: 'true',
+      VITE_MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: 'true'
+    })).toMatchObject({
+      structuredPlanExecution: true
+    });
+  });
+
+  it('lists prepared agent plans for a chat session and executes via explicit POST', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: 'plan-1', planHash: 'h1', status: 'pending' }] }), {
+        status: 200,
+        headers: { 'X-Correlation-Id': 'corr-list' }
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { status: 'completed', plan_id: 'plan-1' } }), {
+        status: 200,
+        headers: { 'X-Correlation-Id': 'corr-exec' }
+      }));
+
+    const client = createMarketingOpsClient({ baseUrl: '/api/marketing', fetch });
+    const sessionId = '44444444-4444-4444-8444-444444444444';
+    const planId = '55555555-5555-4555-8555-555555555555';
+    const planHash = 'c'.repeat(64);
+    const idempotencyKey = 'idem-exec-1';
+
+    const listResult = await client.listAgentPlans(sessionId, 'pending');
+    expect(listResult.data).toHaveLength(1);
+    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/marketing/agent-plans?chat_session_id=${sessionId}&status=pending`);
+    expect(fetch.mock.calls[0]?.[1]?.credentials).toBe('same-origin');
+
+    const execResult = await client.executeAgentPlan(planId, planHash, idempotencyKey);
+    expect(execResult.data).toEqual({ status: 'completed', plan_id: 'plan-1' });
+    expect(fetch.mock.calls[1]?.[0]).toBe(`/api/marketing/agent-plans/${planId}/execute`);
+    expect(fetch.mock.calls[1]?.[1]?.method).toBe('POST');
+    expect(fetch.mock.calls[1]?.[1]?.credentials).toBe('same-origin');
+
+    const execHeaders = fetch.mock.calls[1]?.[1]?.headers as Headers;
+    expect(execHeaders.get('Idempotency-Key')).toBe(idempotencyKey);
+    expect(execHeaders.get('Content-Type')).toBe('application/json');
+
+    const body = JSON.parse(fetch.mock.calls[1]?.[1]?.body as string);
+    expect(body).toEqual({ planHash });
+    expect(body.actions).toBeUndefined();
+    expect(body.plan_token).toBeUndefined();
+    expect(body.delegation_token).toBeUndefined();
   });
 
   it('round-trips campaign IDs without embedding state', () => {

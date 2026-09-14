@@ -49,7 +49,10 @@ import type {
   MarketingOpsApprovalFilters,
   MarketingOpsApprovalRequest,
   MarketingOpsEditorialApprovalSubmission,
-  MarketingOpsOperationalApprovalSubmission
+  MarketingOpsOperationalApprovalSubmission,
+  MarketingOpsPreparedPlanStatus,
+  MarketingOpsPreparedPlanSummary,
+  MarketingOpsPlanExecutionResult
 } from './types';
 
 function conflictVersion(details: unknown): number | null {
@@ -521,6 +524,22 @@ export function createMarketingOpsClient(options: MarketingOpsClientOptions) {
       request<MarketingOpsApprovalRequest>(
         `/v1/approval-requests/${encodeURIComponent(requestId)}/cancel`,
         { method: 'POST', headers: mutationHeaders(idempotencyKey, version) }
+      ),
+
+    listAgentPlans: (chatSessionId?: string, status: MarketingOpsPreparedPlanStatus = 'pending') =>
+      request<MarketingOpsPreparedPlanSummary[]>(withQuery('/v1/agent-plans', {
+        chat_session_id: chatSessionId,
+        status
+      })),
+
+    executeAgentPlan: (planId: string, planHash: string, idempotencyKey: string) =>
+      request<MarketingOpsPlanExecutionResult>(
+        `/v1/agent-plans/${encodeURIComponent(planId)}/execute`,
+        {
+          method: 'POST',
+          headers: mutationHeaders(idempotencyKey),
+          body: JSON.stringify({ planHash })
+        }
       )
   };
 }

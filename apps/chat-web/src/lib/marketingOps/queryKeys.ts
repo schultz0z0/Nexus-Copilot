@@ -43,5 +43,10 @@ export const marketingOpsKeys = {
   approvals: (filters: MarketingOpsApprovalFilters = {}) =>
     ['marketing-ops', 'approvals', { ...filters }] as const,
   approval: (requestId: string) =>
-    ['marketing-ops', 'approval', requestId] as const
+    ['marketing-ops', 'approval', requestId] as const,
+  agentPlans: (chatSessionId?: string, status = 'pending') => chatSessionId
+    ? ['marketing-ops', 'agent-plans', chatSessionId, status] as const
+    : ['marketing-ops', 'agent-plans', 'all', status] as const,
+  agentPlan: (planId: string) =>
+    ['marketing-ops', 'agent-plan', planId] as const
 };

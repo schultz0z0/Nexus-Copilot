@@ -70,4 +70,17 @@ describe('Marketing Ops query keys', () => {
       'marketing-ops', 'approval', 'request-1'
     ]);
   });
+
+  it('scopes prepared agent plans by chat session and status', () => {
+    const sessionId = '44444444-4444-4444-8444-444444444444';
+    expect(marketingOpsKeys.agentPlans(sessionId)).toEqual([
+      'marketing-ops', 'agent-plans', sessionId, 'pending'
+    ]);
+    expect(marketingOpsKeys.agentPlans(sessionId, 'executing')).toEqual([
+      'marketing-ops', 'agent-plans', sessionId, 'executing'
+    ]);
+    expect(marketingOpsKeys.agentPlan('plan-1')).toEqual([
+      'marketing-ops', 'agent-plan', 'plan-1'
+    ]);
+  });
 });
