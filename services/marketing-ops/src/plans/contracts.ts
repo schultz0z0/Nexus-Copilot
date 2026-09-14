@@ -225,3 +225,44 @@ export function requiredScopesForPlan(actions: MarketingOpsPlanAction[]): string
   }
   return [...scopes].sort();
 }
+
+export type PreparedAgentPlanStatus =
+  | 'pending'
+  | 'executing'
+  | 'completed'
+  | 'partial'
+  | 'failed'
+  | 'expired'
+  | 'invalidated';
+
+export interface PreparedAgentPlanRecord {
+  id: string;
+  tenantId: string;
+  preparedBy: string;
+  chatSessionId: string;
+  sourceRunId: string;
+  preparedDelegationJti: string | null;
+  planHash: string;
+  actions: MarketingOpsPlanAction[];
+  requiredScopes: string[];
+  status: PreparedAgentPlanStatus;
+  expiresAt: string;
+  executionKey: string | null;
+  executionStartedAt: string | null;
+  executionAttempts: number;
+  result: Record<string, unknown> | null;
+  executedBy: string | null;
+  executedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PreparedAgentPlanSummaryDTO {
+  id: string;
+  planHash: string;
+  status: PreparedAgentPlanStatus;
+  expiresAt: string;
+  actions: MarketingOpsPlanAction[];
+  requiredScopes: string[];
+  createdAt: string;
+}
