@@ -12,7 +12,7 @@ Data da baseline: 2026-08-27
 - Build de produção do frontend e build TypeScript do Marketing Ops: aprovados.
 - Profile Distribution ENS: YAML e JSON carregados e estrutura mínima validada.
 
-## Gate ainda vermelho
+## Gate vermelho da baseline histórica
 
 O comando agregado `npm test` não está verde porque o Marketing Ops ainda depende da infraestrutura que este corte deliberadamente não trouxe:
 
@@ -21,6 +21,10 @@ O comando agregado `npm test` não está verde porque o Marketing Ops ainda depe
 - alguns testes de delegação carregam premissas temporais/runtime do fork anterior.
 
 Isso será resolvido quando `db/migrations` receber a baseline PostgreSQL vanilla e Marketing Ops for adaptado ao novo contrato de identidade/delegação. A falha não foi mascarada nem removida dos scripts.
+
+> Esta seção registra o diagnóstico da baseline de 2026-08-27. Os problemas de
+> migrations e identidade descritos aqui foram tratados nos marcos seguintes; o
+> gate ativo atual está na seção M6 abaixo.
 
 ## Hermes oficial — M1 concluído na VPS (2026-09-11)
 
@@ -198,6 +202,43 @@ Em 2026-09-13, a stack de aplicação substituta dos serviços gerenciados (Supa
   - Desacoplamento de credenciais Supabase obrigatórias no serviço `services/marketing-ops/src/config.ts`.
 
 M5 está 100% concluído (14% de 14%). O progresso global da migração atinge 84%.
+
+## Marketing Ops e cutover — M6 em homologação, não concluído (2026-09-14)
+
+O operador executou os checkpoints produtivos de forma incremental e devolveu
+evidência sanitizada. Foram comprovados:
+
+- backup lógico Restic válido e repositório verificado;
+- migrations `0006`–`0016` aplicadas e ledger `0001`–`0016` idempotente;
+- destino Marketing Ops iniciado vazio, sem importação de dados legados por
+  decisão explícita do responsável;
+- `marketing-ops`, App API, Artifact Server, Chat Bridge e Chat Web saudáveis,
+  privados e sem portas publicadas no host;
+- Profile ENS `0.1.1` no Hermes oficial com MCP corrigido para
+  `http://marketing-ops:8091/mcp` e 10 ferramentas descobertas;
+- smoke autenticado de leitura pelo frontend/BFF;
+- criação do zero da campanha de homologação
+  `d32a43e0-30b2-4f4d-bc58-a173e951dabd` e consulta posterior pelo Hermes;
+- ativação progressiva de escrita e approvals no backend/frontend.
+
+A última etapa revelou um bloqueio arquitetural. O plano
+`8ecdee9b-a0fe-457b-b4e1-d4d6ef08c6c1` foi preparado, mas não executado. O
+Hermes oficial não oferece o endpoint privado
+`/v1/internal/marketing-ops-decision`; o Chat Bridge converteu a resposta em
+`clarify` e emitiu `confirmation_intent=false`. O `plan_token` também não estava
+disponível no turno seguinte. A negação foi fail-closed e nenhuma solicitação de
+approval ou ação externa foi criada.
+
+Decisão aprovada: Marketing Ops persistirá o plano imutável e o frontend exibirá
+um card confiável com o botão **Executar plano**. O clique seguirá pela App
+API/BFF e executará o ID/hash exatos sem nova interpretação do modelo. Consulte
+a [ADR-0004](docs/decisions/ADR-0004-structured-marketing-ops-plan-execution.md)
+e o [desenho da melhoria](docs/plans/2026-09-14-structured-marketing-ops-plan-execution-design.md).
+
+Crédito de planejamento atual: 8% dos 10% do M6, elevando a estimativa global a
+92%. Isso não representa aceite do marco. O M6 só será concluído após a
+implementação TDD, gate no Docker Desktop e homologação produtiva do botão pelo
+operador.
 
 
 ## Dívida de dependências herdada

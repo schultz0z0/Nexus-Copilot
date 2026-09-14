@@ -39,7 +39,7 @@ ou Artifact Server quando o desenho de storage for aprovado.
 | Orquestração conversacional | Chat Bridge | adaptar contratos do produto à API oficial do Hermes |
 | Execução do agente | Hermes oficial | runs, sessões, ferramentas, aprovações e eventos |
 | Personalidade e integrações ENS | `agents/ens` | SOUL, skills, plugins, MCPs e configuração distribuível |
-| Operações de marketing | Marketing Ops MCP | ferramentas de domínio autorizadas e auditáveis |
+| Operações de marketing | Marketing Ops | ferramentas MCP, planos preparados duráveis e execução de domínio autorizada/auditável |
 | Entrada pública e TLS | Traefik externo | roteamento somente dos endpoints aprovados |
 
 ## Componentes
@@ -105,6 +105,14 @@ Permanece interno. Recebe contexto e credenciais controlados pela aplicação e
 expõe ferramentas explícitas. Referências legadas ao Supabase serão substituídas
 na fase de dados e integrações.
 
+Planos de mutação preparados pelo agente pertencem ao Marketing Ops e são
+persistidos de forma imutável no PostgreSQL. A confirmação do navegador é um
+evento estruturado: a App API entrega o plano ao frontend e o botão **Executar
+plano** chama o BFF para executar exatamente seu ID/hash. O modelo não interpreta
+o clique, o Chat Bridge não guarda o plano e nenhum token MCP chega ao browser.
+Essa fronteira é definida pela
+[ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md).
+
 ## Ambientes
 
 | Aspecto | Desenvolvimento Windows | Produção VPS Linux |
@@ -148,8 +156,11 @@ O mecanismo exato de Auth e a forma do contexto transacional aguardam ADR.
 2. A aplicação autoriza e cria o registro de produto.
 3. Chat Bridge cria um Run na API interna oficial do Hermes.
 4. Bridge consome eventos SSE, normaliza-os e os transmite ao frontend.
-5. Aprovações humanas voltam ao Bridge e são enviadas ao endpoint oficial do Run.
-6. Estado durável e auditoria de produto são persistidos no PostgreSQL.
+5. Aprovações nativas de uma Run Hermes voltam ao Bridge e são enviadas ao
+   endpoint oficial do Run.
+6. Planos de domínio preparados por MCP são mostrados como dados estruturados e
+   confirmados pelo BFF, sem novo turno do agente.
+7. Estado durável e auditoria de produto são persistidos no PostgreSQL.
 
 ## Restrições invariantes
 

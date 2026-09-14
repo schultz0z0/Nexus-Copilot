@@ -1,6 +1,6 @@
 # M6 — Marketing Ops, dados e cutover
 
-**Estado:** rascunho para aprovação do operador  
+**Estado:** Em execução; gate complementar de execução estruturada pendente  
 **Data:** 2026-09-13  
 **Marco:** M6 — migração de dados e cutover  
 **Escopo desta etapa:** design somente; nenhuma alteração de runtime, migration ou produção está autorizada por este documento.
@@ -10,6 +10,13 @@
 Ativar o domínio Marketing Ops no monorepo ENS sobre o PostgreSQL próprio, publicar sua API apenas por meio da App API/BFF, disponibilizar suas ferramentas MCP ao Hermes oficial e migrar os dados aceitos do legado Supabase com carga idempotente, reconciliação verificável e rollback ensaiado.
 
 O M6 termina quando campanhas, produção, calendário, conteúdo, aprovações e operações assistidas pelo Hermes usam a nova autoridade PostgreSQL sem perda silenciosa e sem dependência de autenticação, roles, claims, SDKs ou endpoints Supabase.
+
+> **Extensão aprovada em 2026-09-14:** a homologação produtiva revelou que a
+> confirmação textual de um plano depende de endpoint privado ausente no Hermes
+> oficial e da recuperação de um token entre turnos. O M6 não termina sem o card
+> estruturado e o botão **Executar plano** definidos no
+> [desenho complementar](2026-09-14-structured-marketing-ops-plan-execution-design.md)
+> e na [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md).
 
 ## 2. Restrições invariantes
 
@@ -116,7 +123,11 @@ As funções auxiliares ficam em schema privado, sem `EXECUTE` para `PUBLIC`. RL
 
 O fluxo existente de delegação curta é preservado, com chaves fora do Git, escopos mínimos, `jti`, vínculo à run/sessão/tenant e confirmação explícita para escrita. Ao verificar a delegação, Marketing Ops também confirma usuário, tenant e papel em `iam.memberships`; claims não se tornam autoridade sozinhos.
 
-As ferramentas de leitura continuam diretas. Escritas continuam em duas etapas: preparar plano imutável e, após confirmação explícita do usuário, executar o mesmo plano assinado. Replay é bloqueado por `delegation_uses` e `idempotency_records`.
+As ferramentas de leitura continuam diretas. O MCP prepara um plano imutável,
+mas, no navegador, a confirmação e execução ocorrem pelo card estruturado da App
+API/BFF. A confirmação não depende de texto livre, de um endpoint privado no
+Hermes nem da memória do modelo. Replay é bloqueado pelo registro durável do
+plano, por `delegation_uses` e por `idempotency_records`.
 
 ## 7. Modelo PostgreSQL canônico
 

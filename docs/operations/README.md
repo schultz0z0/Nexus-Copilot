@@ -20,7 +20,7 @@ data, o resultado e as premissas usadas.
 | [Observabilidade operacional PostgreSQL](postgresql-observability.md) | M3 | Avaliação de RPO/RTO e contrato JSON sanitizado exercitados localmente em 2026-09-11; VPS pendente |
 | Incidente de Auth/sessão | M4 | Pendente |
 | Backup e restore de artefatos | M5 | Pendente |
-| [Marketing Ops e cutover](m6-marketing-ops-cutover.md) | M6 | Ensaio local aprovado em 2026-09-14; Checkpoint 1 de produção aguardando operador |
+| [Marketing Ops e cutover](m6-marketing-ops-cutover.md) | M6 | P1–P3 e leitura P4 executados; execução estruturada pendente antes do novo checkpoint |
 | Retirada do dashboard Hermes público | M7 | Pendente |
 
 ## Situação do gate M1

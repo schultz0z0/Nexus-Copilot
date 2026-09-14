@@ -1,7 +1,7 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** gates locais aprovados; Checkpoint 1 de produção aguardando execução do operador  
+**Estado:** Checkpoints produtivos executados parcialmente; gate complementar bloqueia o fechamento  
 **Último ensaio local:** 2026-09-14  
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
@@ -12,10 +12,28 @@ interno sem reintroduzir Supabase, Graph MCP ou Neo4j. O navegador continua
 falando somente com a App API e PostgreSQL continua sendo a autoridade dos dados
 do produto.
 
-Produção é operada exclusivamente pelo responsável humano. Este documento
-libera **somente o Checkpoint 1**. Os checkpoints de containers, dados/smoke e
-homologação não estão autorizados até que a saída redigida deste checkpoint seja
-validada. Não execute SSH, deploy ou restauração a partir de um agente.
+Produção é operada exclusivamente pelo responsável humano. Os comandos abaixo
+permanecem como registro histórico e modelo de rollback; não devem ser repetidos
+sem um novo checkpoint explícito. Não execute SSH, deploy ou restauração a
+partir de um agente.
+
+## Estado produtivo registrado em 2026-09-14
+
+- P1: backup Restic, migrations `0001`–`0016`, ledger e idempotência aprovados.
+- P2: secrets/configuração, imagens de rollback e containers Marketing Ops/App
+  saudáveis aprovados.
+- P3: destino vazio aprovado pelo responsável; não houve carga legada.
+- P4 leitura: frontend/BFF, campanha criada do zero e consulta Hermes aprovados.
+- P4 escrita: flags de write e approvals ativadas progressivamente; preparação
+  de plano aprovada.
+- P4 execução: **não aprovada**. A execução por confirmação textual depende de
+  endpoint privado ausente no Hermes oficial e perdeu o `plan_token` entre
+  turnos. O bloqueio falhou fechado, sem mutação ou approval criado.
+
+O próximo checkpoint de produção só poderá ser escrito após o gate local do
+[plano estruturado com botão Executar plano](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md).
+Até lá, não repetir confirmações textuais, não fazer fork do Hermes e não criar
+um substituto ad hoc para `/v1/internal/marketing-ops-decision`.
 
 ## Evidência local aprovada
 
@@ -40,7 +58,7 @@ O ensaio isolado em Docker Desktop comprovou:
 Nenhum dado, dump, credencial ou artefato temporário do ensaio foi versionado.
 Os projetos Docker e volumes descartáveis `ens-m6-cutover-*` foram removidos.
 
-## Checkpoint 1 — backup, migrations e validação do ledger
+## Checkpoint 1 — backup, migrations e validação do ledger (executado)
 
 ### Pré-condições
 
@@ -191,13 +209,26 @@ Remova e-mails, nomes, IP público, tokens, URLs de conexão, conteúdo de dados
 IDs de sessão e qualquer valor lido de secret. Após receber essa evidência, o
 copiloto valida o Gate P1 e somente então prepara o Checkpoint 2.
 
-## Checkpoints ainda não liberados
+## Registro dos checkpoints subsequentes
 
-- Checkpoint 2 — pull/build e atualização controlada dos containers, com flags
-  de escrita desligadas;
-- Checkpoint 3 — carga final, reconciliação e smoke autenticado;
-- Checkpoint 4 — homologação no navegador e Hermes, seguida da ativação
-  progressiva `read → write → approvals`.
+- Checkpoint 2 foi executado com atualização controlada, rollback images e
+  serviços saudáveis.
+- Checkpoint 3 foi encerrado com destino vazio por decisão do responsável e
+  smoke HTTP 10/10. O smoke MCP de escrita apontou as flags antes da ativação,
+  sem derrubar os containers.
+- Checkpoint 4 comprovou leitura e preparação, mas não a execução. As flags
+  foram ativadas com sucesso técnico, porém isso não fecha o gate funcional.
 
-`MIGRATION_STATUS.md` e `docs/migration/roadmap.md` permanecem inalterados até
-que os quatro checkpoints tenham evidência produtiva validada.
+### Condição de retomada
+
+Somente liberar novo comando para a VPS quando o Docker Desktop comprovar:
+
+1. migration do plano durável e rollback por flag;
+2. card vindo de resposta estruturada, sem parsing do texto do Hermes;
+3. clique idempotente sem nova Run do agente;
+4. negação cross-tenant, cross-user, expirada e com hash divergente;
+5. plano inerte de approval criando exatamente uma solicitação `pending`.
+
+O novo checkpoint deve novamente declarar impacto, resultado esperado, condição
+de parada e rollback. Nenhuma credencial deve ser copiada para documentação ou
+logs.

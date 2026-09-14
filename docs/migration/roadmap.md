@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-13
+**Atualizado em:** 2026-09-14
 
 ## Regra de progressão
 
@@ -17,7 +17,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
-| M6 — dados e cutover | Pendente | migração validada, reconciliação e troca de tráfego |
+| M6 — dados e cutover | Em homologação; bloqueado | stack e leitura/escrita preparadas; falta execução estruturada de planos sem fork |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
 ## Estimativa de progresso global
@@ -34,9 +34,9 @@ do legado sem aceite no alvo não conta como concluído.
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
-| M6 | 10% | 0% | dados e cutover ainda não executados |
+| M6 | 10% | 8% | schema/backup/cutover técnico, campanha e leitura Hermes comprovados; gate do botão estruturado pendente |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **84% concluído / 16% restante** | estimativa em 2026-09-13 |
+| **Total** | **100%** | **92% de crédito estimado / 8% restante** | M6 não concluído; estimativa em 2026-09-14 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -253,6 +253,20 @@ janela de freeze ou dual-write aprovado, plano de cutover e rollback.
 - ensaio completo mede duração e limites da janela;
 - decisão go/no-go e responsáveis estão registrados;
 - rollback não depende de improviso durante a janela.
+
+**Situação em 2026-09-14:** a origem legada foi deliberadamente descartada pelo
+responsável e o domínio começou vazio. Migrations `0001`–`0016`, backup Restic,
+containers privados, BFF, flags progressivas, criação/leitura de campanha e
+consulta MCP pelo Hermes oficial foram comprovados na VPS. A tentativa de
+executar um plano após confirmação textual falhou fechado: o Chat Bridge dependia
+de `/v1/internal/marketing-ops-decision`, ausente no Hermes oficial, e o
+`plan_token` não atravessou o novo turno. Nenhuma mutação ou approval foi criado.
+
+**Gate complementar obrigatório:** implementar o
+[card estruturado e botão Executar plano](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md)
+conforme a [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md),
+passar o plano TDD e repetir a homologação local e produtiva. Até isso ocorrer,
+M6 permanece **não concluído**, ainda que as flags atuais estejam ativas.
 
 ## M7 — Hardening e retirada do legado
 
