@@ -35,7 +35,6 @@ import {
   validateChatExperience,
 } from "./picture-mode.js";
 import {
-  confirmationIntentForMarketingOpsDecision,
   isValidDelegationRefreshKey,
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
@@ -88,7 +87,6 @@ const config = {
   supabaseAnonKey: runtimeConfig.supabaseAnonKey,
   supabaseServiceRoleKey: runtimeConfig.supabaseServiceRoleKey,
   allowInsecureLocalAuth: runtimeConfig.allowInsecureLocalAuth,
-  marketingOpsDecisionTimeoutMs: runtimeConfig.marketingOpsDecisionTimeoutMs,
   attachmentBucket: process.env.CHAT_ATTACHMENTS_BUCKET || process.env.VITE_CHAT_ATTACHMENTS_BUCKET || CHAT_ATTACHMENT_BUCKET,
   supabaseOutputsBucket: process.env.SUPABASE_OUTPUTS_BUCKET || "image-gen-outputs",
   supabaseGeneratedImagesPrefix: process.env.SUPABASE_GENERATED_IMAGES_PREFIX || "hermes-chat-images",
@@ -883,7 +881,7 @@ const issueRunMarketingOpsDelegation = async (run) => {
     chatSessionId: run.chat_session_id,
     runId: run.id,
     correlationId: run.id,
-    confirmationIntent: confirmationIntentForMarketingOpsDecision(run.marketing_ops_decision),
+    confirmationIntent: false,
   }, scopes, config.marketingOpsDelegation);
 };
 
@@ -1224,25 +1222,6 @@ class HermesBridge {
     };
   }
 
-  async resolveRunMarketingOpsDecision(run, hermesBaseUrl) {
-    if (run.experience === "picture") return "none";
-    try {
-      const response = await fetch(new URL("/v1/internal/marketing-ops-decision", hermesBaseUrl.origin), {
-        method: "POST",
-        headers: this.buildHermesHeaders("application/json", run),
-        body: JSON.stringify({ session_id: run.hermes_session_id, message: run.message_text }),
-        signal: AbortSignal.timeout(config.marketingOpsDecisionTimeoutMs),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) return "clarify";
-      return ["approve", "reject", "revise", "clarify", "none"].includes(payload?.decision)
-        ? payload.decision
-        : "clarify";
-    } catch {
-      return "clarify";
-    }
-  }
-
   createRunsClient(run, hermesBaseUrl) {
     return new HermesRunsClient({
       baseUrl: hermesBaseUrl,
@@ -1362,7 +1341,6 @@ class HermesBridge {
         replayContextMessages: run.replay_context_messages,
         nexusContext: buildRunNexusContext(run),
         marketingOpsDelegation,
-        marketingOpsDecision: run.marketing_ops_decision,
       });
       run.input = redactMarketingOpsDelegation(requestPayload.input);
 
@@ -1434,7 +1412,6 @@ class HermesBridge {
         imageOptions: run.image_options,
         nexusContext: buildRunNexusContext(run),
         marketingOpsDelegation,
-        marketingOpsDecision: run.marketing_ops_decision,
         experience: run.experience,
         pictureWorkspaceId: run.picture_workspace_id,
         pictureWorkspaceSummary: run.picture_workspace_summary,
@@ -1616,7 +1593,6 @@ class HermesBridge {
       imageTransport,
       nexusContext: buildRunNexusContext(run),
       marketingOpsDelegation,
-      marketingOpsDecision: run.marketing_ops_decision,
     });
     run.input = redactMarketingOpsDelegation(JSON.stringify(requestPayload.input));
 
@@ -1732,12 +1708,6 @@ class HermesBridge {
     run.hermes_session_id = state.hermes_session_id || buildHermesRunSessionId(run.chat_session_id);
     run.hermes_conversation_id = state.hermes_conversation_id;
 
-    run.marketing_ops_decision = await this.resolveRunMarketingOpsDecision(run, hermesBaseUrl);
-
-    this.appendEvent(run, {
-      event: "meta",
-      data: { provider: "hermes", event: "marketing_ops.decision", decision: run.marketing_ops_decision },
-    });
     run.status = "running";
     this.appendEvent(run, { event: "status", data: { text: "Hermes iniciou a tarefa.", tone: "info" } });
     await this.store.save(run);

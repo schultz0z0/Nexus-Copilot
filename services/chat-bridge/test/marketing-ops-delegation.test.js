@@ -5,7 +5,6 @@ import { decodeProtectedHeader, decodeJwt, jwtVerify, SignJWT } from "jose";
 import { validateBridgeRuntimeConfig } from "../src/runtime-config.js";
 import {
   buildMarketingOpsDelegationSystemMessage,
-  confirmationIntentForMarketingOpsDecision,
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
   withMarketingOpsDelegation,
@@ -168,37 +167,27 @@ test("delegation has exact short-lived claims and active kid", async () => {
   assert.equal(verified.payload.exp - verified.payload.iat, 90);
 });
 
-test("only the internal approve decision grants confirmation intent", () => {
-  assert.equal(confirmationIntentForMarketingOpsDecision("approve"), true);
-  for (const decision of ["reject", "revise", "clarify", "none", "unknown", "", null]) {
-    assert.equal(confirmationIntentForMarketingOpsDecision(decision), false, String(decision));
-  }
+test("all browser-originated delegations remain confirmation_intent=false", async () => {
+  const issued = await issueMarketingOpsDelegation({
+    userId: activeRun.user_id,
+    tenantId: activeRun.tenant_id,
+    role: activeRun.user_role,
+    chatSessionId: activeRun.chat_session_id,
+    runId: activeRun.id,
+    correlationId: activeRun.id,
+    confirmationIntent: false,
+  }, ["campaign:read", "campaign:write"], refreshKeyring);
+  assert.equal(decodeJwt(issued).confirmation_intent, false);
 });
 
-test("clarify turns explicitly forbid execute-plan retries", () => {
-  const message = buildMarketingOpsDelegationSystemMessage("delegation-token", "clarify");
-  assert.match(message, /confirmation was not granted/i);
-  assert.match(message, /do not call marketing_ops_execute_plan_v1/i);
+test("prompt text tells the model to wait for the product card after preparation", () => {
+  const systemMessage = buildMarketingOpsDelegationSystemMessage("delegation-token");
+  assert.match(systemMessage, /card confiavel|interface/i);
+  assert.match(systemMessage, /nao chame marketing_ops_execute_plan_v1/i);
 
-  const embeddedMessage = withMarketingOpsDelegation("Confirmação ambígua", "delegation-token", "clarify");
-  assert.match(embeddedMessage, /confirmation was not granted/i);
-  assert.match(embeddedMessage, /do not call marketing_ops_execute_plan_v1/i);
-
-  const approved = buildMarketingOpsDelegationSystemMessage("delegation-token", "approve");
-  assert.doesNotMatch(approved, /confirmation was not granted/i);
-});
-
-test("contextual decision timeout accommodates the real classifier latency", () => {
-  const defaultConfig = validateBridgeRuntimeConfig({
-    BRIDGE_ALLOW_INSECURE_LOCAL_AUTH: "true",
-  });
-  const overriddenConfig = validateBridgeRuntimeConfig({
-    BRIDGE_ALLOW_INSECURE_LOCAL_AUTH: "true",
-    MARKETING_OPS_DECISION_TIMEOUT_MS: "20000",
-  });
-
-  assert.equal(defaultConfig.marketingOpsDecisionTimeoutMs, 15_000);
-  assert.equal(overriddenConfig.marketingOpsDecisionTimeoutMs, 20_000);
+  const embedded = withMarketingOpsDelegation("Mensagem", "delegation-token");
+  assert.match(embedded, /product UI card|interface/i);
+  assert.match(embedded, /do not call marketing_ops_execute_plan_v1/i);
 });
 
 test("delegation signs and refreshes the confirmation intent from the user turn", async () => {

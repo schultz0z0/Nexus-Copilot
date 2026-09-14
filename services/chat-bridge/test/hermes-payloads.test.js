@@ -22,6 +22,8 @@ import {
 
   NEXUS_HUMANIZER_RESPONSE_CONTRACT,
 
+  NEXUS_MARKETING_OPS_OPERATOR_CONTRACT,
+
   NEXUS_MEMORY_ROUTING_CONTRACT,
 
   selectHermesBridgeMode,
@@ -330,13 +332,12 @@ test("buildHermesSessionChatRequest enforces conversational planning for Marketi
 
   assert.match(request.system_message, /Contrato Nexus Marketing Ops/);
   assert.match(request.system_message, /marketing_ops_prepare_plan_v1/);
-  assert.match(request.system_message, /marketing_ops_execute_plan_v1/);
-  assert.match(request.system_message, /Nada e persistido antes da confirmacao/);
+  assert.match(request.system_message, /Nunca chame marketing_ops_execute_plan_v1/);
+  assert.match(request.system_message, /card confiavel da interface/);
   assert.match(request.system_message, /course_slug e opcional/);
   assert.match(request.system_message, /marketing_ops_prepare_plan_v1.*campo actions como uma lista/is);
   assert.match(request.system_message, /campaign\.create_draft.*somente os campos type, ref e name/is);
   assert.match(request.system_message, /campaign\.update.*somente depois de a campanha existir/is);
-  assert.match(request.system_message, /resposta atual,? no contexto do plano pendente/i);
   assert.match(request.system_message, /pergunta, ressalva, negacao ou alteracao/i);
   assert.match(request.system_message, /nao exponha codigos brutos/);
   assert.match(request.system_message, /plano revisado como pronto/);
@@ -683,5 +684,11 @@ test("buildHermesResponsesRequest does not combine conversation with previous_re
 
   assert.equal("conversation" in request, false);
 
+});
+
+test("NEXUS_MARKETING_OPS_OPERATOR_CONTRACT forbids chat execution and instructs waiting for trusted product card", () => {
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /card confiavel|interface/i);
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Nunca chame marketing_ops_execute_plan_v1/i);
+  assert.doesNotMatch(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Use marketing_ops_execute_plan_v1 somente/i);
 });
 

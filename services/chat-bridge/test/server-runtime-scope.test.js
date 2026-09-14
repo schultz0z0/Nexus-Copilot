@@ -122,7 +122,7 @@ test("Hermes headers forward tenant and user context for memory MCP routing", ()
   const headersBlock = extractBlock(
     source,
     "buildHermesHeaders(accept, run)",
-    "async resolveRunMarketingOpsDecision",
+    "createRunsClient",
   );
 
   assert.match(headersBlock, /"X-Tenant-Id": run\.tenant_id/);
@@ -150,13 +150,14 @@ test("Hermes request builders receive Nexus role context", () => {
   assert.match(source, /userRole: run\.user_role/);
 });
 
-test("Bridge gets the contextual decision before signing a Marketing Ops delegation", () => {
+test("Bridge does not depend on private Hermes decision classifier", () => {
   const executeRunBlock = extractBlock(source, "async executeRun(runId)", "const store = new RunStore");
   const delegationBlock = extractBlock(source, "const issueRunMarketingOpsDelegation", "const issueRunPictureDelegation");
 
-  assert.match(executeRunBlock, /resolveRunMarketingOpsDecision\(run, hermesBaseUrl\)/);
-  assert.match(delegationBlock, /confirmationIntentForMarketingOpsDecision\(run\.marketing_ops_decision\)/);
-  assert.match(source, /\/v1\/internal\/marketing-ops-decision/);
+  assert.doesNotMatch(executeRunBlock, /resolveRunMarketingOpsDecision/);
+  assert.match(delegationBlock, /confirmationIntent:\s*false/);
+  assert.doesNotMatch(source, /\/v1\/internal\/marketing-ops-decision/);
+  assert.doesNotMatch(source, /marketing[_A-Z]?[oO]ps[_A-Z]?[dD]ecision/);
   assert.doesNotMatch(source, /isExplicitMarketingOpsConfirmation/);
 });
 
