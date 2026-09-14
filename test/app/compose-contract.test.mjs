@@ -43,6 +43,24 @@ test("compose.production.yaml configures Traefik labels and external networks", 
   assert.match(content, /external:\s*true/, "Production networks/volumes must be external");
 });
 
+test("marketing-ops optional RAG probe times out before Docker readiness", () => {
+  const composePath = path.resolve("infra/app/compose.yaml");
+  const content = readFileSync(composePath, "utf8");
+  const ragTimeout = content.match(
+    /MARKETING_OPS_RAG_TIMEOUT_MS:\s*\$\{MARKETING_OPS_RAG_TIMEOUT_MS:-(\d+)\}/,
+  );
+  const healthcheckTimeout = content.match(
+    /marketing-ops:[\s\S]*?healthcheck:[\s\S]*?timeout:\s*(\d+)s/,
+  );
+
+  assert.ok(ragTimeout, "marketing-ops must configure the optional RAG timeout");
+  assert.ok(healthcheckTimeout, "marketing-ops healthcheck timeout must be configured");
+  assert.ok(
+    Number(ragTimeout[1]) < Number(healthcheckTimeout[1]) * 1_000,
+    "optional RAG timeout must leave time for /ready to return degraded readiness",
+  );
+});
+
 test("chat-web nginx.conf proxies /api/ to app-api with SSE buffering disabled", () => {
   const nginxPath = path.resolve("apps/chat-web/nginx.conf");
   const content = readFileSync(nginxPath, "utf8");
