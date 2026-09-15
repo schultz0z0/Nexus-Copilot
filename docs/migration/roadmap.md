@@ -271,7 +271,10 @@ inerte com a mesma chave e comprovou 1 plano, 1 approval pendente, 0 decisões e
 0 ações externas. O Hermes oficial descobriu as 10 ferramentas na rede
 descartável; o Playwright real validou o card persistido, enquanto 7 cenários
 controlados provaram o clique sem segunda Run. O checkpoint produtivo pelo operador
-ainda é obrigatório; até sua validação, M6 permanece **não concluído**.
+ainda é obrigatório; até sua validação, M6 permanece **não concluído**. O
+procedimento completo está preparado como Checkpoint 5 no
+[runbook de cutover](../operations/m6-marketing-ops-cutover.md), sem autorização
+para execução automática na VPS.
 
 ## M7 — Hardening e retirada do legado
 

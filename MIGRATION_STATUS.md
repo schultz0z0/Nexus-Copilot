@@ -278,6 +278,12 @@ permanece não concluído até o operador executar o checkpoint de produção e
 devolver as evidências sanitizadas para validação independente. Crédito atual:
 9% dos 10% do M6, elevando a estimativa global a 93%.
 
+O procedimento operator-only está registrado como **Checkpoint 5** no
+[runbook de cutover](docs/operations/m6-marketing-ops-cutover.md), ancorado no
+commit de código localmente aprovado
+`e9e3e3c2da1de51c1e13bffaeade30b0bd2f290e`. Sua preparação documental não
+autoriza deploy nem altera o estado do M6.
+
 
 ## Dívida de dependências herdada
 

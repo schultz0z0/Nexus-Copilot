@@ -254,3 +254,310 @@ O Docker Desktop comprovou:
 O novo checkpoint deve novamente declarar impacto, resultado esperado, condição
 de parada e rollback. Nenhuma credencial deve ser copiada para documentação ou
 logs.
+
+## Checkpoint 5 — execução estruturada em produção (preparado, não executado)
+
+Este é o único checkpoint ainda aberto do M6. Ele deve ser executado pelo
+responsável humano na VPS, uma etapa por vez, com validação entre etapas. O
+commit de código aprovado pelo gate local é
+`e9e3e3c2da1de51c1e13bffaeade30b0bd2f290e`. Um commit posterior que altere
+somente esta documentação pode ser usado, desde que o commit aprovado continue
+ancestral de `HEAD`.
+
+### 5.0 — preflight de fonte e configuração
+
+**Impacto:** somente leitura de Git, arquivos e configuração renderizada. Não
+reinicia containers e não imprime valores de secrets.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+approved_code_commit=e9e3e3c2da1de51c1e13bffaeade30b0bd2f290e
+test "$(git branch --show-current)" = "main"
+test -z "$(git status --porcelain)"
+git fetch origin main
+test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+git merge-base --is-ancestor "$approved_code_commit" HEAD
+
+test -f /etc/ens/app.env
+test -f /etc/ens/postgres.env
+test -f /etc/ens/hermes.env
+test -f infra/postgres/migrations/0017_marketing_ops_prepared_plans.sql
+
+docker compose \
+  --env-file /etc/ens/app.env \
+  -f infra/app/compose.yaml \
+  -f infra/app/compose.production.yaml \
+  config --quiet
+
+docker compose \
+  --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  -f infra/postgres/compose.production.yaml \
+  config --quiet
+
+docker compose \
+  --env-file /etc/ens/hermes.env \
+  -f infra/hermes/compose.yaml \
+  -f infra/hermes/compose.production.yaml \
+  config --quiet
+
+printf 'release_commit=%s\n' "$(git rev-parse HEAD)"
+printf 'approved_code_commit=%s\n' "$approved_code_commit"
+printf 'checkpoint_5_preflight=passed\n'
+```
+
+**Resultado esperado:** branch `main`, árvore limpa, `HEAD` igual a
+`origin/main`, commit aprovado presente no histórico e os três arquivos Compose
+válidos.
+
+**Pare** se qualquer teste falhar, se aparecer conteúdo de secret, se houver
+mudança local ou se o commit aprovado não for ancestral. Não use `reset`, não
+force merge e não prossiga com um checkout divergente.
+
+### 5.1 — backup e migration aditiva `0017`
+
+**Impacto:** cria um snapshot lógico, reconstrói somente o migrator e cria a
+tabela/políticas/índices aditivos de planos preparados. Os serviços atuais
+continuam ativos e as flags estruturadas continuam desligadas.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+postgres_compose=(
+  docker compose
+  --env-file /etc/ens/postgres.env
+  --profile tools
+  -f infra/postgres/compose.yaml
+  -f infra/postgres/compose.production.yaml
+)
+
+docker compose \
+  --env-file /etc/ens/postgres.env \
+  --profile ops \
+  -f infra/postgres/compose.yaml \
+  -f infra/postgres/compose.production.yaml \
+  run --rm --no-deps postgres-backup
+
+"${postgres_compose[@]}" build --pull postgres-migrate
+"${postgres_compose[@]}" run --rm --no-deps postgres-migrate
+"${postgres_compose[@]}" run --rm --no-deps postgres-migrate
+
+migration_versions="$(docker compose \
+  --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  -f infra/postgres/compose.production.yaml \
+  exec -T postgres psql -U nexus_bootstrap -d nexus -Atc \
+  "SELECT string_agg(version, ',' ORDER BY version) FROM infra.schema_migrations;")"
+
+test "$migration_versions" = "0001,0002,0003,0004,0005,0006,0007,0008,0009,0010,0011,0012,0013,0014,0015,0016,0017"
+printf 'migration_versions=%s\n' "$migration_versions"
+printf 'checkpoint_5_migration=passed\n'
+```
+
+**Resultado esperado:** backup com status `ok`; primeira execução aplica apenas
+`0017` (ou a pula pelo mesmo checksum); segunda execução pula `0001`–`0017`; o
+ledger contém exatamente `0001`–`0017`.
+
+**Pare** em falha de backup, checksum divergente, SQLSTATE, ledger diferente ou
+PostgreSQL não saudável. A migration é transacional e aditiva: não execute
+`DROP`, não edite o ledger e não restaure sobre produção. Preserve o snapshot e
+mantenha as flags desligadas enquanto a causa é analisada.
+
+### 5.2 — imagens de rollback, flags e atualização controlada
+
+**Impacto:** constrói as quatro imagens afetadas e recria, em sequência,
+Marketing Ops, App API, Chat Bridge e Chat Web. A indisponibilidade esperada é
+restrita às pequenas janelas de recriação de cada serviço. PostgreSQL, Artifact
+Server e volumes não são recriados.
+
+Antes do bloco, confirme que as duas chaves abaixo estão ausentes ou com valor
+`false` em `/etc/ens/app.env`. O bloco não mostra nenhum valor secreto.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+app_env=/etc/ens/app.env
+release_short="$(git rev-parse --short HEAD)"
+env_backup="${app_env}.pre-m6-structured-${release_short}-$(date -u +%Y%m%dT%H%M%SZ)"
+cp --preserve=mode,ownership,timestamps -- "$app_env" "$env_backup"
+
+app_compose=(
+  docker compose
+  --env-file "$app_env"
+  -f infra/app/compose.yaml
+  -f infra/app/compose.production.yaml
+)
+
+for service in marketing-ops app-api chat-bridge chat-web; do
+  container_id="$("${app_compose[@]}" ps -q "$service")"
+  test -n "$container_id"
+  test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")" = healthy
+  docker image tag "$(docker inspect --format '{{.Image}}' "$container_id")" \
+    "ens-rollback/${service}:pre-structured-${release_short}"
+done
+
+candidate="$(mktemp /etc/ens/app.env.structured.XXXXXX)"
+trap 'rm -f -- "$candidate"' EXIT
+cp -- "$app_env" "$candidate"
+for key in MARKETING_OPS_STRUCTURED_PLAN_EXECUTION MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION; do
+  current="$(awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1 } END { if (!found) print "absent" }' "$candidate")"
+  test "$current" = false || test "$current" = absent
+  if [ "$current" = absent ]; then
+    printf '%s=false\n' "$key" >> "$candidate"
+  fi
+  sed -i "s/^${key}=false$/${key}=true/" "$candidate"
+  test "$(grep -c "^${key}=true$" "$candidate")" -eq 1
+done
+chown --reference="$app_env" "$candidate"
+chmod --reference="$app_env" "$candidate"
+mv -- "$candidate" "$app_env"
+trap - EXIT
+
+"${app_compose[@]}" build --pull marketing-ops app-api chat-bridge chat-web
+
+for service in marketing-ops app-api chat-bridge chat-web; do
+  "${app_compose[@]}" up -d --no-build --no-deps --force-recreate \
+    --wait --wait-timeout 180 "$service"
+done
+
+for service in artifact-server marketing-ops app-api chat-bridge chat-web; do
+  container_id="$("${app_compose[@]}" ps -q "$service")"
+  test -n "$container_id"
+  test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")" = healthy
+  test -z "$(docker port "$container_id")"
+  printf 'service=%s health=healthy published_ports=none\n' "$service"
+done
+
+printf 'app_env_backup=%s\n' "$env_backup"
+printf 'checkpoint_5_application=passed\n'
+```
+
+**Resultado esperado:** quatro tags `ens-rollback/*`, flags estruturadas `true`,
+imagens construídas e cinco serviços saudáveis sem portas publicadas. O Traefik
+continua expondo somente o Chat Web pela rede Docker, não por `docker port`.
+
+**Pare** no primeiro build/healthcheck malsucedido, em porta publicada, erro de
+configuração ou resposta 5xx. Não avance ao Hermes nem ao navegador.
+
+### 5.3 — profile ENS no Hermes oficial
+
+**Impacto:** atualiza idempotentemente apenas o profile persistido em
+`agents/ens`, recria o container oficial do Hermes e mantém seu volume. Não
+modifica nem faz fork do core Hermes.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+hermes_compose=(
+  docker compose
+  --env-file /etc/ens/hermes.env
+  -f infra/hermes/compose.yaml
+  -f infra/hermes/compose.production.yaml
+)
+
+"${hermes_compose[@]}" run --rm --no-deps hermes-profile-init
+"${hermes_compose[@]}" run --rm --no-deps --entrypoint hermes \
+  hermes-profile-init profile info ens
+"${hermes_compose[@]}" up -d --no-build --no-deps --force-recreate \
+  --wait --wait-timeout 180 hermes
+
+hermes_id="$("${hermes_compose[@]}" ps -q hermes)"
+test -n "$hermes_id"
+test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$hermes_id")" = healthy
+docker exec "$hermes_id" hermes -p ens mcp test nexus_marketing_ops
+printf 'checkpoint_5_hermes=passed\n'
+```
+
+**Resultado esperado:** profile ENS instalado/atualizado, Hermes saudável, MCP
+conectado em `http://marketing-ops:8091/mcp` e exatamente 10 ferramentas
+descobertas.
+
+**Pare** se o profile pedir alteração no core, se a URL/porta divergir, se o
+MCP não conectar ou se o número de ferramentas não for 10. Não altere arquivos
+dentro da imagem ou do repositório público do Hermes.
+
+### 5.4 — homologação autenticada no navegador
+
+Use a conta administrativa descartável já destinada à homologação, sem copiar
+senha, cookie ou token para terminal, documentação ou chat. No navegador:
+
+1. abra `https://app.solucoes-nexus.tech/` e confirme a sessão autenticada;
+2. abra a campanha de homologação criada do zero;
+3. peça ao Hermes um plano operacional **inerte**, limitado a criar uma
+   solicitação de approval, sem publicação, envio, upload ou integração externa;
+4. confirme que aparece um card estruturado persistido, com ações legíveis,
+   validade e o botão explícito **Executar plano**;
+5. clique uma única vez e confirme que o botão entra em estado ocupado, sem
+   pedir que a confirmação seja digitada no chat;
+6. recarregue a página e confirme o resultado persistido;
+7. consulte a campanha pelo Hermes e confirme que há exatamente uma solicitação
+   de approval `pending`, ainda sem decisão;
+8. não aprove nem execute qualquer efeito externo neste checkpoint.
+
+**Resultado esperado:** o clique chama App API/BFF diretamente, não cria uma
+segunda Run do Hermes, não expõe tokens no navegador e produz exatamente um
+plano e um approval pendente mesmo após repetição técnica com a mesma chave.
+
+**Pare** se o card vier de texto livre, se o botão não existir, se surgir nova
+Run, se houver duplicidade, autorização cruzada, erro 5xx, mutação externa ou
+qualquer token/secret na UI/log. Não tente contornar o bloqueio digitando uma
+confirmação.
+
+### 5.5 — evidência sanitizada e decisão
+
+Devolva somente:
+
+- `release_commit`, `approved_code_commit` e ledger `0001`–`0017`;
+- status/health dos serviços e ausência de portas publicadas;
+- status final do backup e idade/RPO, sem paths sensíveis;
+- `profile info ens`, MCP conectado e contagem de 10 ferramentas;
+- captura do card sem e-mail, cookie, token, IDs de sessão ou conteúdo privado;
+- contagens: planos, approvals pendentes, decisões, ações externas e Runs do
+  Bridge antes/depois do clique;
+- logs redigidos por correlation ID, nunca headers ou payloads completos.
+
+O M6 só pode ser marcado **Concluído** após revisão dessa evidência. Ausência de
+erro visual, isoladamente, não fecha o gate.
+
+### Rollback do Checkpoint 5
+
+O rollback preferencial é desligar somente as duas flags, reconstruir o Chat Web
+e recriar Marketing Ops e Chat Web. Isso preserva tabela, planos e trilha de
+auditoria:
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+app_env=/etc/ens/app.env
+app_compose=(
+  docker compose
+  --env-file "$app_env"
+  -f infra/app/compose.yaml
+  -f infra/app/compose.production.yaml
+)
+
+sed -i \
+  -e 's/^MARKETING_OPS_STRUCTURED_PLAN_EXECUTION=true$/MARKETING_OPS_STRUCTURED_PLAN_EXECUTION=false/' \
+  -e 's/^MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION=true$/MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION=false/' \
+  "$app_env"
+
+test "$(grep -c '^MARKETING_OPS_STRUCTURED_PLAN_EXECUTION=false$' "$app_env")" -eq 1
+test "$(grep -c '^MARKETING_OPS_FRONTEND_STRUCTURED_PLAN_EXECUTION=false$' "$app_env")" -eq 1
+
+"${app_compose[@]}" build chat-web
+"${app_compose[@]}" up -d --no-build --no-deps --force-recreate \
+  --wait --wait-timeout 180 marketing-ops chat-web
+printf 'checkpoint_5_flag_rollback=passed\n'
+```
+
+Se houver regressão binária fora da feature, pare o tráfego de homologação,
+restaure o backup de `/etc/ens/app.env` indicado pelo bloco 5.2, reaplique as
+tags `ens-rollback/<serviço>:pre-structured-<release_short>` como imagens locais
+e recrie somente os serviços afetados. Não remova a migration `0017`, não apague
+registros de plano/approval e não execute `down --volumes`. Restauração de banco
+só pode ocorrer em destino isolado após diagnóstico e autorização humana.
