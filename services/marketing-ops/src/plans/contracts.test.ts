@@ -122,6 +122,39 @@ describe('phase 4 plan contracts', () => {
     ])).toThrow(/due_at/);
   });
 
+  it('rejects credential-like keys recursively inside flexible action payloads', () => {
+    for (const metadata of [
+      { plan_token: 'must-not-reach-browser' },
+      { nested: { delegationToken: 'must-not-reach-browser' } },
+      { nested: [{ api_key: 'must-not-reach-browser' }] }
+    ]) {
+      expect(marketingOpsPlanActionsSchema.safeParse([{
+        type: 'campaign_item.create', campaign_id: campaignId, kind: 'post',
+        title: 'Post seguro', metadata
+      }]).success).toBe(false);
+    }
+  });
+
+  it('normalizes approval risk as an explicit server-owned field', () => {
+    const actions = marketingOpsPlanActionsSchema.parse([{
+      type: 'approval.submit_editorial', campaign_id: campaignId,
+      asset_id: assetId, version_number: 1, reason: 'Revisão',
+      expires_at: '2026-08-10T13:00:00.000Z'
+    }, {
+      type: 'approval.submit_operational', campaign_id: campaignId,
+      reason: 'Autorizar envio', risk_level: 'critical',
+      expires_at: '2026-08-10T13:00:00.000Z',
+      action_package: {
+        actionType: 'campaign.channel_dispatch', channel: 'email',
+        audienceSnapshot: {}, scheduledFor: null, timeZone: 'UTC',
+        configuration: {}, payload: {}
+      }
+    }]);
+
+    expect(actions[0]).not.toHaveProperty('risk_level');
+    expect(actions[1]).toMatchObject({ risk_level: 'critical' });
+  });
+
   it('validates content.create_draft with email_html asset_kind and string/number version when wrapped in z.object schema', () => {
     import('zod/v4').then(({ z }) => {
       const inputSchema = z.object({

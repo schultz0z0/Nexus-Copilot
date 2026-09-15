@@ -240,10 +240,43 @@ e possui um
 [prompt de handoff](docs/handoffs/2026-09-14-structured-marketing-ops-plan-execution-agent-prompt.md)
 para execução por outro agente sem ampliar o escopo.
 
-Crédito de planejamento atual: 8% dos 10% do M6, elevando a estimativa global a
-92%. Isso não representa aceite do marco. O M6 só será concluído após a
-implementação TDD, gate no Docker Desktop e homologação produtiva do botão pelo
-operador.
+## M6 — gate local da execução estruturada aprovado (2026-09-15)
+
+Os lotes 1–12 do plano TDD foram implementados e validados na branch
+`codex/m6-structured-plan-execution`. O gate descartável do Docker Desktop agora
+cria seu próprio PostgreSQL, redes, volumes, credenciais sintéticas e stack de
+aplicação, sem reutilizar estado ou DNS de outros projetos locais.
+
+Evidência sanitizada do gate:
+
+- ledger `0001`–`0017` completo e segunda execução das migrations integralmente
+  idempotente;
+- testes de repositório: frontend 193/193, Marketing Ops 275/275, Chat Bridge
+  127/127, Artifact Server 13/13 e App API 87/87;
+- Hermes oficial v2026.8.27 conectado ao MCP da stack descartável, com as 10
+  ferramentas do profile ENS descobertas;
+- Playwright contra a stack real confirmou login, escopo de ator e card
+  persistido; um gate controlado separado passou 7 cenários do clique e 1 do
+  kill switch;
+- smoke autenticado da stack real 14/14, incluindo frontend/App API/BFF e o
+  plano operacional inerte;
+- mesma execução repetida com a mesma chave resultou em exatamente 1 plano e
+  1 approval `pending`, com 0 decisões e 0 ações externas;
+- rollback local desligou somente as flags estruturadas, recriou somente
+  Marketing Ops e Chat Web e preservou a leitura autenticada;
+- scans não encontraram tokens de plano/delegação no bundle, rota do navegador
+  para Hermes/PostgreSQL ou serviço privado publicado no Compose de produção;
+- o ensaio encontrou e corrigiu por TDD uma consulta legada de revisores:
+  `marketing_ops.memberships` foi substituída pela autoridade canônica
+  `iam.memberships.principal_id`.
+- a revisão de segurança foi resolvida com rejeição recursiva de credenciais,
+  RLS por tenant+ator, preparo concorrente serializado, imutabilidade terminal e
+  catálogo frontend/backend alinhado.
+
+Estado atual: **gate local aprovado; checkpoint produtivo pendente**. O M6
+permanece não concluído até o operador executar o checkpoint de produção e
+devolver as evidências sanitizadas para validação independente. Crédito atual:
+9% dos 10% do M6, elevando a estimativa global a 93%.
 
 
 ## Dívida de dependências herdada

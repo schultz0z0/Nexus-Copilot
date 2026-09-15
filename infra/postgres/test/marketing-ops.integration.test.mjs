@@ -8,6 +8,7 @@ const ids = {
   tenantB: '71000000-0000-4000-8000-000000000002',
   userA: '72000000-0000-4000-8000-000000000001',
   userB: '72000000-0000-4000-8000-000000000002',
+  userC: '72000000-0000-4000-8000-000000000003',
   campaignA: '73000000-0000-4000-8000-000000000001',
   campaignB: '73000000-0000-4000-8000-000000000002',
 };
@@ -16,7 +17,7 @@ describe(
   'Marketing Ops RLS against the Docker runtime',
   { skip: dockerComposeAvailable() ? false : 'Docker Compose is unavailable' },
   () => {
-    const harness = new PostgresComposeHarness({ port: 55449 });
+    const harness = new PostgresComposeHarness({ port: 55550 });
     let bootstrap;
     let app;
 
@@ -32,13 +33,13 @@ describe(
       );
       await bootstrap.query(
         `INSERT INTO iam.principals (id, external_subject) VALUES
-          ($1, 'mops-user-a'), ($2, 'mops-user-b')`,
-        [ids.userA, ids.userB],
+          ($1, 'mops-user-a'), ($2, 'mops-user-b'), ($3, 'mops-user-c')`,
+        [ids.userA, ids.userB, ids.userC],
       );
       await bootstrap.query(
         `INSERT INTO iam.memberships (tenant_id, principal_id, role) VALUES
-          ($1, $3, 'admin'), ($2, $4, 'admin')`,
-        [ids.tenantA, ids.tenantB, ids.userA, ids.userB],
+          ($1, $3, 'admin'), ($2, $4, 'admin'), ($1, $5, 'member')`,
+        [ids.tenantA, ids.tenantB, ids.userA, ids.userB, ids.userC],
       );
       await bootstrap.query(
         `INSERT INTO marketing_ops.campaigns
@@ -67,6 +68,28 @@ describe(
       await app.query("SELECT set_config('app.actor_role', 'admin', true)");
       const visible = await app.query('SELECT id, tenant_id FROM marketing_ops.campaigns');
       assert.deepEqual(visible.rows, [{ id: ids.campaignA, tenant_id: ids.tenantA }]);
+      await app.query('ROLLBACK');
+    });
+
+    test('isolates prepared plans from another actor in the same tenant', async () => {
+      const plan = '74000000-0000-4000-8000-000000000088';
+      await bootstrap.query(
+        `INSERT INTO marketing_ops.prepared_agent_plans
+          (id, tenant_id, prepared_by, chat_session_id, source_run_id, plan_hash, actions, expires_at)
+         VALUES ($1, $2, $3, gen_random_uuid(), gen_random_uuid(), $4, $5::jsonb, now() + interval '30 minutes')`,
+        [plan, ids.tenantA, ids.userA, '8'.repeat(64), JSON.stringify([{ type: 'campaign.create_draft', ref: 'private', name: 'Private' }])]
+      );
+
+      await app.query('BEGIN');
+      await app.query("SELECT set_config('app.user_id', $1, true)", [ids.userC]);
+      await app.query("SELECT set_config('app.tenant_id', $1, true)", [ids.tenantA]);
+      await app.query("SELECT set_config('app.actor_role', 'member', true)");
+      assert.equal((await app.query(
+        'SELECT count(*)::int AS count FROM marketing_ops.prepared_agent_plans WHERE id = $1', [plan]
+      )).rows[0].count, 0);
+      assert.equal((await app.query(
+        `UPDATE marketing_ops.prepared_agent_plans SET status = 'invalidated' WHERE id = $1 RETURNING id`, [plan]
+      )).rows.length, 0);
       await app.query('ROLLBACK');
     });
 
@@ -166,6 +189,19 @@ describe(
       );
       await app.query('ROLLBACK TO SAVEPOINT sp_terminal_transition');
 
+      // A stale worker cannot overwrite the terminal result without changing status.
+      await app.query('SAVEPOINT sp_terminal_result');
+      await assert.rejects(
+        app.query(
+          `UPDATE marketing_ops.prepared_agent_plans
+              SET result = '{"success":false,"stale":true}'::jsonb
+            WHERE id = $1`,
+          [planA],
+        ),
+        (error) => error.code === '23514',
+      );
+      await app.query('ROLLBACK TO SAVEPOINT sp_terminal_result');
+
       // Duplicate execution key on same tenant rejected
       const planA2 = '74000000-0000-4000-8000-000000000002';
       await app.query('SAVEPOINT sp_duplicate_key');
@@ -191,12 +227,14 @@ describe(
 
       // Also reject delete for bootstrap / nexus_owner on existing row (trigger reject_append_only_change -> 55000)
       const sentinelPlan = '74000000-0000-4000-8000-000000000099';
+      const sentinelRun = '76000000-0000-4000-8000-000000000099';
+      const sentinelHash = '9'.repeat(64);
       await bootstrap.query(
         `INSERT INTO marketing_ops.prepared_agent_plans
           (id, tenant_id, prepared_by, chat_session_id, source_run_id, plan_hash, actions, required_scopes, status, expires_at)
          VALUES
           ($1, $2, $3, $4, $5, $6, $7::jsonb, ARRAY['campaign:write'], 'pending', now() + interval '30 minutes')`,
-        [sentinelPlan, ids.tenantA, ids.userA, sessionA, runA, planHashA, actionsA],
+        [sentinelPlan, ids.tenantA, ids.userA, sessionA, sentinelRun, sentinelHash, actionsA],
       );
       await assert.rejects(
         bootstrap.query('DELETE FROM marketing_ops.prepared_agent_plans WHERE id = $1', [sentinelPlan]),

@@ -3,8 +3,9 @@ import type { Actor } from '../auth/actor.js';
 import { appError } from '../errors.js';
 import type { ArtifactClient } from '../integrations/artifactClient.js';
 import type { MetricsRegistry } from '../observability/metrics.js';
-import type {
-  MarketingOpsPlanAction,
+import {
+  marketingOpsPlanActionsSchema,
+  type MarketingOpsPlanAction,
   PreparedAgentPlanRecord,
   PreparedAgentPlanStatus,
   PreparedAgentPlanSummaryDTO
@@ -51,7 +52,7 @@ export function toSummaryDTO(record: PreparedAgentPlanRecord): PreparedAgentPlan
     planHash: record.planHash,
     status: record.status,
     expiresAt: record.expiresAt,
-    actions: record.actions,
+    actions: marketingOpsPlanActionsSchema.parse(record.actions),
     requiredScopes: record.requiredScopes,
     createdAt: record.createdAt
   };

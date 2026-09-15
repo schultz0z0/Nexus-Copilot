@@ -7,6 +7,8 @@
     "build:chat-web": "npm --prefix apps/chat-web run build",
     "build:marketing-ops": "npm --prefix services/marketing-ops run build",
     "test": "npm run test:chat-web && npm run test:marketing-ops && npm run test:chat-bridge && npm run test:artifact-server && npm run test:app-api",
+    "test:isolated": "node scripts/test-repository-with-postgres.mjs",
+    "test:stack:isolated": "node scripts/test-repository-with-postgres.mjs --stack-rehearsal",
     "test:cut": "node --test test/cut/*.test.mjs",
     "test:hermes": "node --test test/hermes/*.test.mjs",
     "test:postgres:contract": "node --test test/postgres/*.test.mjs",

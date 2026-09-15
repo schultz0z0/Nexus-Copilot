@@ -572,12 +572,13 @@ export type MarketingOpsPlanAction =
   | { type: 'campaign.create_draft'; ref: string; name: string; course_slug?: string }
   | { type: 'campaign.update'; campaign_id: string; expected_version: number; patch: Record<string, unknown> }
   | { type: 'campaign_item.create'; kind: string; title: string; campaign_id?: string; campaign_ref?: string; priority?: string; channel?: string; description?: string }
-  | { type: 'campaign_item.patch'; item_id: string; expected_version: number; patch: Record<string, unknown> }
-  | { type: 'campaign_item.transition'; item_id: string; expected_version: number; to: string }
-  | { type: 'content.create_draft'; ref: string; item_id: string; kind: string; title: string }
-  | { type: 'content.version_create'; asset_id?: string; asset_ref?: string; body: string }
-  | { type: 'approval.submit_editorial'; campaign_id: string; asset_id: string; version_number: number; reason: string; expires_at?: string }
-  | { type: 'approval.submit_operational'; campaign_id: string; action_package: Record<string, unknown>; reason: string; expires_at?: string }
+  | { type: 'campaign_item.reschedule'; item_id: string; expected_version: number; starts_at?: string | null; due_at?: string | null }
+  | { type: 'content.create_draft'; ref: string; item_id: string; expected_item_version: number; asset_kind: string; title: string }
+  | { type: 'content.version_create'; asset_id?: string; asset_ref?: string; expected_asset_version: number; body: string | null; metadata: Record<string, unknown>; freeze: boolean }
+  | { type: 'artifact.link_existing'; item_id: string; expected_item_version: number; artifact_id: string; asset_id?: string }
+  | { type: 'campaign.note_add'; campaign_id: string; expected_version: number; note: string }
+  | { type: 'approval.submit_editorial'; campaign_id: string; asset_id: string; version_number: number; reason: string; risk_level?: MarketingOpsApprovalRisk; expires_at: string }
+  | { type: 'approval.submit_operational'; campaign_id: string; action_package: MarketingOpsCanonicalActionPackageInput; reason: string; risk_level?: MarketingOpsApprovalRisk; expires_at: string }
   | { type: string; [key: string]: unknown };
 
 export interface MarketingOpsPreparedPlanSummary {
@@ -610,4 +611,3 @@ export interface MarketingOpsPlanExecutionResult {
   }>;
   deep_links: string[];
 }
-

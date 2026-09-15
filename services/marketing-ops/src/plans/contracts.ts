@@ -15,6 +15,38 @@ const channel = z.enum([
 ]);
 const itemKind = z.enum(['task', 'email', 'whatsapp', 'post', 'creative', 'review', 'milestone']);
 const priority = z.enum(['low', 'normal', 'high', 'urgent']);
+const approvalRisk = z.enum(['low', 'medium', 'high', 'critical']);
+
+const CREDENTIAL_KEY_SUFFIX = /(?:token|secret|password|privatekey|apikey|authorization|cookie)$/;
+
+function findCredentialPath(value: unknown, path: Array<string | number> = []): Array<string | number> | null {
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) {
+      const found = findCredentialPath(item, [...path, index]);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== 'object') return null;
+  for (const [key, item] of Object.entries(value)) {
+    const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (CREDENTIAL_KEY_SUFFIX.test(normalized)) return [...path, key];
+    const found = findCredentialPath(item, [...path, key]);
+    if (found) return found;
+  }
+  return null;
+}
+
+const safeJsonRecord = z.record(z.string(), z.unknown()).superRefine((value, context) => {
+  const path = findCredentialPath(value);
+  if (path) {
+    context.addIssue({
+      code: 'custom',
+      path,
+      message: 'Credential-like fields are forbidden in plan actions'
+    });
+  }
+});
 
 const createCampaignAction = z.object({
   type: z.literal('campaign.create_draft'),
@@ -75,7 +107,7 @@ const createItemAction = z.object({
   description: nullableText(10_000).optional(),
   starts_at: instant.nullable().optional(),
   due_at: instant.nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional()
+  metadata: safeJsonRecord.optional()
 }).strict().superRefine((action, context) => {
   const selector = campaignSelector.safeParse(action);
   if (!selector.success) {
@@ -116,7 +148,7 @@ const createContentVersionAction = z.object({
   asset_ref: planRef.optional(),
   expected_asset_version: positiveInteger,
   body: z.string().max(1_048_576).nullable(),
-  metadata: z.record(z.string(), z.unknown()),
+  metadata: safeJsonRecord,
   freeze: z.boolean().default(false)
 }).strict().superRefine((action, context) => {
   if (Boolean(action.asset_id) === Boolean(action.asset_ref)) {
@@ -145,13 +177,13 @@ const addCampaignNoteAction = z.object({
 const canonicalActionPackage = z.object({
   actionType: z.string().trim().min(1).max(100),
   channel: z.string().trim().min(1).max(64),
-  audienceSnapshot: z.record(z.string(), z.unknown()),
+  audienceSnapshot: safeJsonRecord,
   scheduledFor: instant.nullable().default(null),
   timeZone: z.string().trim().min(1).max(100),
-  configuration: z.record(z.string(), z.unknown()),
+  configuration: safeJsonRecord,
   successCriteria: z.string().trim().max(2000).nullable().default(null),
   riskSummary: z.string().trim().max(2000).nullable().default(null),
-  payload: z.record(z.string(), z.unknown())
+  payload: safeJsonRecord
 }).strict();
 
 const submitEditorialApprovalAction = z.object({
@@ -160,6 +192,7 @@ const submitEditorialApprovalAction = z.object({
   asset_id: uuid,
   version_number: positiveInteger,
   reason: z.string().trim().min(1).max(4000),
+  risk_level: approvalRisk.optional(),
   expires_at: instant
 }).strict();
 
@@ -168,6 +201,7 @@ const submitOperationalApprovalAction = z.object({
   campaign_id: uuid,
   action_package: canonicalActionPackage,
   reason: z.string().trim().min(1).max(4000),
+  risk_level: approvalRisk.optional(),
   expires_at: instant
 }).strict();
 

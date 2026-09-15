@@ -78,7 +78,7 @@ describe('Marketing Ops plan executor', () => {
       },
       {
         type: 'approval.submit_operational', campaign_id: ids.campaign,
-        reason: 'Autorizar envio', expires_at: '2026-08-10T13:00:00.000Z',
+        reason: 'Autorizar envio', risk_level: 'critical', expires_at: '2026-08-10T13:00:00.000Z',
         action_package: {
           actionType: 'campaign.channel_dispatch', channel: 'email',
           audienceSnapshot: {}, scheduledFor: null, timeZone: 'UTC',
@@ -89,11 +89,11 @@ describe('Marketing Ops plan executor', () => {
 
     expect(deps.submitEditorialApproval).toHaveBeenCalledWith(
       expect.objectContaining({ planActionIndex: 0 }),
-      expect.objectContaining({ assetId: ids.asset, versionNumber: 2 })
+      expect.objectContaining({ assetId: ids.asset, versionNumber: 2, riskLevel: 'low' })
     );
     expect(deps.submitOperationalApproval).toHaveBeenCalledWith(
       expect.objectContaining({ planActionIndex: 1 }),
-      expect.objectContaining({ campaignId: ids.campaign })
+      expect.objectContaining({ campaignId: ids.campaign, riskLevel: 'critical' })
     );
     expect(result.deep_links).toEqual(expect.arrayContaining([
       expect.objectContaining({ resource_type: 'approval_request' })

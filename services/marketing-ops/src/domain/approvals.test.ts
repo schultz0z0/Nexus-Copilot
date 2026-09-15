@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   ApprovalDecisionCommandSchema,
   ApprovalDecisionInputSchema,
@@ -9,10 +9,36 @@ import {
   assertApprovalDecisionEligible,
   assertValidApprovalSupersession,
   decodeApprovalCursor,
-  encodeApprovalCursor
+  encodeApprovalCursor,
+  notifyReviewers
 } from './approvals.js';
 
 describe('approval contracts', () => {
+  it('projects reviewer notifications from canonical IAM memberships', async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [] });
+    await notifyReviewers({ query } as never, {
+      actor: {
+        userId: '11111111-1111-4111-8111-111111111111',
+        tenantId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        tenantSlug: 'ens',
+        role: 'member'
+      },
+      correlationId: 'correlation',
+      origin: 'rest',
+      pool: {} as never
+    }, {
+      id: '55555555-5555-4555-8555-555555555555',
+      campaignId: '66666666-6666-4666-8666-666666666666',
+      kind: 'operational',
+      requestedBy: '11111111-1111-4111-8111-111111111111'
+    } as never);
+
+    const sql = query.mock.calls[0]?.[0] as string;
+    expect(sql).toContain('from iam.memberships as membership');
+    expect(sql).toContain('membership.principal_id');
+    expect(sql).not.toContain('marketing_ops.memberships');
+  });
+
   it('accepts the server-owned idempotency envelope without weakening strict payloads', () => {
     expect(EditorialApprovalCommandSchema.parse({
       campaignId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',

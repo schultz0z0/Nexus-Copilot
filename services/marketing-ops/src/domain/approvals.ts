@@ -352,19 +352,19 @@ export function assertValidApprovalSupersession(input: {
   }
 }
 
-async function notifyReviewers(client: PoolClient, context: CommandContext, request: ApprovalRequest) {
+export async function notifyReviewers(client: PoolClient, context: CommandContext, request: ApprovalRequest) {
   await client.query(`
     insert into marketing_ops.in_app_notifications (
       tenant_id, user_id, event_key, notification_type, campaign_id,
       item_id, approval_request_id, label, payload, occurred_at
     )
-    select $1, membership.user_id, 'approval-review:' || $2::text,
+    select $1, membership.principal_id, 'approval-review:' || $2::text,
       'approval_review', $3, null, $2::uuid, 'Aprovação aguardando decisão',
       jsonb_build_object('campaignId', $3::uuid, 'approvalRequestId', $2::uuid), now()
-    from marketing_ops.memberships as membership
+    from iam.memberships as membership
     where membership.tenant_id = $1 and membership.active
       and membership.role in ('manager', 'admin')
-      and ($4::marketing_ops.approval_kind = 'editorial' or membership.user_id <> $5::uuid)
+      and ($4::marketing_ops.approval_kind = 'editorial' or membership.principal_id <> $5::uuid)
   `, [context.actor.tenantId, request.id, request.campaignId, request.kind, request.requestedBy]);
 }
 

@@ -1,8 +1,8 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** Checkpoints produtivos executados parcialmente; gate complementar bloqueia o fechamento  
-**Último ensaio local:** 2026-09-14  
+**Estado:** Gate local aprovado; checkpoint produtivo da execução estruturada pendente
+**Último ensaio local:** 2026-09-15
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
 ## Objetivo e fronteiras
@@ -30,10 +30,11 @@ partir de um agente.
   endpoint privado ausente no Hermes oficial e perdeu o `plan_token` entre
   turnos. O bloqueio falhou fechado, sem mutação ou approval criado.
 
-O próximo checkpoint de produção só poderá ser escrito após o gate local do
-[plano estruturado com botão Executar plano](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md).
-Até lá, não repetir confirmações textuais, não fazer fork do Hermes e não criar
-um substituto ad hoc para `/v1/internal/marketing-ops-decision`.
+O gate local do
+[plano estruturado com botão Executar plano](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md)
+foi aprovado. O próximo passo é somente o checkpoint produtivo operado pelo
+responsável humano. Não repetir confirmações textuais, não fazer fork do Hermes
+e não criar substituto para `/v1/internal/marketing-ops-decision`.
 
 ## Evidência local aprovada
 
@@ -54,6 +55,27 @@ O ensaio isolado em Docker Desktop comprovou:
   aprovados; typechecks e builds de produção aprovados;
 - no Compose de produção, App API, Artifact Server, Chat Bridge e Marketing Ops
   não publicam portas no host; Marketing Ops não possui router Traefik.
+
+O gate complementar descartável de 2026-09-15 comprovou adicionalmente:
+
+- migration `0017` aplicada e ledger `0001`–`0017` idempotente na segunda run;
+- frontend 193/193, Marketing Ops 275/275, Chat Bridge 127/127, Artifact Server
+  13/13 e App API 87/87;
+- Hermes oficial v2026.8.27 conectado ao MCP privado e 10 ferramentas
+  descobertas na rede descartável;
+- Playwright contra a stack real validou login, sessão, isolamento de ator e o
+  card persistido; separadamente, o fake determinístico do Hermes passou 7/7
+  cenários do clique e 1/1 do kill switch;
+- smoke autenticado da stack real 14/14;
+- plano operacional inerte executado e repetido com a mesma chave: 1 plano,
+  1 approval `pending`, 0 decisões e 0 ações externas;
+- rollback por flags com recriação exclusiva de Marketing Ops e Chat Web,
+  preservando a sessão e a leitura autenticada;
+- correção TDD da projeção de revisores para a tabela canônica
+  `iam.memberships`.
+- review de segurança resolvido: rejeição recursiva de credenciais, RLS por
+  tenant+ator, preparo concorrente serializado, estado terminal imutável e
+  catálogo do card alinhado ao servidor.
 
 Nenhum dado, dump, credencial ou artefato temporário do ensaio foi versionado.
 Os projetos Docker e volumes descartáveis `ens-m6-cutover-*` foram removidos.
@@ -219,9 +241,9 @@ copiloto valida o Gate P1 e somente então prepara o Checkpoint 2.
 - Checkpoint 4 comprovou leitura e preparação, mas não a execução. As flags
   foram ativadas com sucesso técnico, porém isso não fecha o gate funcional.
 
-### Condição de retomada
+### Condição de retomada — atendida localmente
 
-Somente liberar novo comando para a VPS quando o Docker Desktop comprovar:
+O Docker Desktop comprovou:
 
 1. migration do plano durável e rollback por flag;
 2. card vindo de resposta estruturada, sem parsing do texto do Hermes;

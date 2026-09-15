@@ -265,7 +265,10 @@ const run = async () => {
         const approvalId = first?.completed?.find(
           (entry) => entry?.action_type === 'approval.submit_operational',
         )?.resource?.id;
-        assert(approvalId, 'Expected the operational approval identifier');
+        assert(
+          approvalId,
+          `Expected the operational approval identifier; failures=${JSON.stringify(first?.failed ?? [])}`,
+        );
         const approvalResponse = await fetch(
           `${APP_URL}/api/marketing/approval-requests/${encodeURIComponent(approvalId)}`,
           { headers: { Cookie: sessionCookie }, signal: AbortSignal.timeout(10000) },

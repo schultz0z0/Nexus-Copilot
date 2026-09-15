@@ -74,27 +74,19 @@ export function presentPlanAction(action: MarketingOpsPlanAction): PresentedActi
       };
     }
 
-    case 'campaign_item.patch': {
-      const patchKeys = Object.keys(action.patch ?? {}).join(', ');
+    case 'campaign_item.reschedule': {
+      const schedule = [action.starts_at ? `Início: ${action.starts_at}` : '', action.due_at ? `Prazo: ${action.due_at}` : ''].filter(Boolean);
       return {
         supported: true,
-        title: 'Atualizar item de campanha',
-        description: `Item: ${formatShortId(action.item_id)} | versão ${action.expected_version} | Campos: ${patchKeys || '—'}`
-      };
-    }
-
-    case 'campaign_item.transition': {
-      return {
-        supported: true,
-        title: `Transicionar item para ${action.to}`,
-        description: `Item: ${formatShortId(action.item_id)} | versão esperada ${action.expected_version}`
+        title: 'Reagendar item de campanha',
+        description: `Item: ${formatShortId(action.item_id)} | versão ${action.expected_version} | ${schedule.join(' | ')}`
       };
     }
 
     case 'content.create_draft': {
       return {
         supported: true,
-        title: `Criar rascunho de conteúdo (${action.kind})`,
+        title: `Criar rascunho de conteúdo (${action.asset_kind})`,
         description: `Título: "${action.title}" | Item: ${formatShortId(action.item_id)} | Ref: ${action.ref}`
       };
     }
@@ -108,6 +100,20 @@ export function presentPlanAction(action: MarketingOpsPlanAction): PresentedActi
         description: `${ref} | Conteúdo: "${preview}"`
       };
     }
+
+    case 'artifact.link_existing':
+      return {
+        supported: true,
+        title: 'Vincular artefato existente',
+        description: `Artefato: ${formatShortId(action.artifact_id)} | Item: ${formatShortId(action.item_id)} | versão ${action.expected_item_version}`
+      };
+
+    case 'campaign.note_add':
+      return {
+        supported: true,
+        title: 'Adicionar nota à campanha',
+        description: `Campanha: ${formatShortId(action.campaign_id)} | Nota: "${action.note}"`
+      };
 
     case 'approval.submit_editorial': {
       const parts = [
@@ -149,7 +155,7 @@ export function hasUnsupportedActions(actions: MarketingOpsPlanAction[]): boolea
 
 export function hasCriticalRisk(actions: MarketingOpsPlanAction[]): boolean {
   return actions.some((action) => {
-    const raw = action as Record<string, unknown>;
-    return raw.risk_level === 'critical' || (raw.action_package as Record<string, unknown> | undefined)?.riskLevel === 'critical';
+    return (action.type === 'approval.submit_editorial' || action.type === 'approval.submit_operational')
+      && action.risk_level === 'critical';
   });
 }

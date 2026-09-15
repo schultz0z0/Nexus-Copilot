@@ -91,6 +91,11 @@ export class PreparedPlanRepository {
     const ttlSeconds = Math.max(60, Math.min(MAX_PLAN_TTL_SECONDS, input.ttlSeconds ?? DEFAULT_PLAN_TTL_SECONDS));
 
     return this.withClient(context.actor, correlationId, async (client) => {
+      await client.query(
+        `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
+        [[context.actor.tenantId, context.actor.userId, context.chatSessionId, context.sourceRunId].join(':')]
+      );
+
       // Check for exact existing pending plan with same run and hash
       const existing = await client.query(
         `SELECT *
@@ -339,6 +344,7 @@ export class PreparedPlanRepository {
           WHERE id = $4
             AND tenant_id = $5
             AND execution_key = $6
+            AND status = 'executing'
           RETURNING *`,
         [
           outcome.status,

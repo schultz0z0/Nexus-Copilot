@@ -95,6 +95,10 @@ describe('PreparedPlanRepository', () => {
     expect(plan.status).toBe('pending');
     expect(plan.planHash).toMatch(/^[a-f0-9]{64}$/);
     expect(plan.requiredScopes).toEqual(['campaign:write', 'item:write']);
+    const statements = fakeClient.query.mock.calls.map(([sql]) => String(sql));
+    expect(statements.findIndex((sql) => sql.includes('pg_advisory_xact_lock'))).toBeGreaterThanOrEqual(0);
+    expect(statements.findIndex((sql) => sql.includes('pg_advisory_xact_lock')))
+      .toBeLessThan(statements.findIndex((sql) => sql.includes('FROM marketing_ops.prepared_agent_plans')));
   });
 
   it('returns existing pending plan for same run id and same hash (idempotent prepare)', async () => {
@@ -406,5 +410,25 @@ describe('PreparedPlanRepository', () => {
     expect(finalized.status).toBe('completed');
     expect(finalized.result).toEqual({ summary: 'Created 1 campaign' });
     expect(finalized.executedBy).toBe(actorA.userId);
+    expect(fakeClient.query).toHaveBeenCalledWith(
+      expect.stringContaining("AND status = 'executing'"),
+      expect.any(Array)
+    );
+  });
+
+  it('fails closed when a stale worker attempts to finalize a terminal plan', async () => {
+    const fakeClient = {
+      release: vi.fn(),
+      query: vi.fn(async () => ({ rows: [] }))
+    };
+    const pool = { connect: vi.fn(async () => fakeClient) } as unknown as Pool;
+    const repository = new PreparedPlanRepository(pool);
+
+    await expect(repository.finalizeExecution(
+      { actor: actorA, correlationId: 'corr-stale' },
+      'plan-id',
+      'idemp-key-1',
+      { status: 'completed', result: { stale: true }, executedBy: actorA.userId }
+    )).rejects.toMatchObject({ code: 'plan_finalize_failed', status: 409 });
   });
 });

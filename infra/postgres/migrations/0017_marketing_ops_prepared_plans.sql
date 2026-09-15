@@ -40,6 +40,11 @@ CREATE INDEX idx_prepared_agent_plans_pending
 CREATE INDEX idx_prepared_agent_plans_source_run
   ON marketing_ops.prepared_agent_plans (tenant_id, prepared_by, source_run_id, plan_hash);
 
+CREATE UNIQUE INDEX uq_prepared_agent_plans_pending_source_run
+  ON marketing_ops.prepared_agent_plans
+    (tenant_id, prepared_by, chat_session_id, source_run_id, plan_hash)
+  WHERE status = 'pending';
+
 ALTER TABLE marketing_ops.prepared_agent_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketing_ops.prepared_agent_plans FORCE ROW LEVEL SECURITY;
 
@@ -51,8 +56,14 @@ CREATE POLICY nexus_owner_all ON marketing_ops.prepared_agent_plans
 
 CREATE POLICY prepared_agent_plans_tenant_all ON marketing_ops.prepared_agent_plans
   FOR ALL TO nexus_app
-  USING (marketing_ops_private.row_visible(tenant_id))
-  WITH CHECK (marketing_ops_private.row_visible(tenant_id));
+  USING (
+    marketing_ops_private.row_visible(tenant_id)
+    AND prepared_by = app_private.request_user_id()
+  )
+  WITH CHECK (
+    marketing_ops_private.row_visible(tenant_id)
+    AND prepared_by = app_private.request_user_id()
+  );
 
 CREATE FUNCTION marketing_ops_private.enforce_prepared_agent_plan_integrity()
 RETURNS trigger
@@ -60,6 +71,11 @@ LANGUAGE plpgsql
 SET search_path = pg_catalog
 AS $$
 BEGIN
+  IF OLD.status IN ('completed', 'partial', 'failed', 'expired', 'invalidated') THEN
+    RAISE EXCEPTION 'prepared plan in terminal state % is immutable', OLD.status
+      USING ERRCODE = '23514';
+  END IF;
+
   IF NEW.id IS DISTINCT FROM OLD.id
      OR NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
      OR NEW.prepared_by IS DISTINCT FROM OLD.prepared_by

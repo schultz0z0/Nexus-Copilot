@@ -244,6 +244,7 @@ export async function executeMarketingOpsPlan(
           assetId: action.asset_id,
           versionNumber: action.version_number,
           reason: action.reason,
+          riskLevel: action.risk_level ?? 'low',
           expiresAt: action.expires_at,
           idempotencyKey
         });
@@ -252,6 +253,7 @@ export async function executeMarketingOpsPlan(
           campaignId: action.campaign_id,
           actionPackage: action.action_package,
           reason: action.reason,
+          riskLevel: action.risk_level ?? 'low',
           expiresAt: action.expires_at,
           idempotencyKey
         });

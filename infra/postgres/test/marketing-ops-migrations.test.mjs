@@ -116,9 +116,13 @@ test('0017 creates durable prepared agent plans with forced tenant RLS and immut
   assert.match(sql, /references iam\.tenants\s*\(id\)/);
   assert.match(sql, /references iam\.principals\s*\(id\)/);
   assert.match(sql, /force row level security/);
+  assert.match(sql, /prepared_by\s*=\s*app_private\.request_user_id\(\)/);
   assert.match(sql, /grant (?:select|insert|update).*on(?: table)? marketing_ops\.prepared_agent_plans to nexus_app/);
   assert.doesNotMatch(sql, /grant delete on(?: table)? marketing_ops\.prepared_agent_plans to nexus_app/);
   assert.doesNotMatch(sql, /\b(plan_token|delegation_token)\b/);
   assert.match(sql, /idx_prepared_agent_plans_pending/);
+  assert.match(sql, /create unique index uq_prepared_agent_plans_pending_source_run/);
+  assert.match(sql, /where status = 'pending'/);
+  assert.match(sql, /old\.status in \('completed', 'partial', 'failed', 'expired', 'invalidated'\)/);
   assert.match(sql, /prepared_agent_plans_execution_key_unique|unique\s*\(tenant_id,\s*execution_key\)/);
 });

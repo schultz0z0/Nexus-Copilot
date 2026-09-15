@@ -88,6 +88,28 @@ describe('AgentPlanService', () => {
       expect((result[0] as any).preparedDelegationJti).toBeUndefined();
       expect((result[0] as any).executionKey).toBeUndefined();
     });
+
+    it('fails closed when a legacy stored action contains a nested credential field', async () => {
+      const record = createSampleRecord({
+        actions: [{
+          type: 'campaign_item.create',
+          campaign_id: '22222222-2222-4222-8222-222222222222',
+          kind: 'post',
+          title: 'Unsafe legacy plan',
+          metadata: { nested: { plan_token: 'must-not-reach-browser' } }
+        } as unknown as MarketingOpsPlanAction]
+      });
+      const mockRepo = {
+        listPending: vi.fn().mockResolvedValue([record])
+      } as unknown as PreparedPlanRepository;
+      const service = new AgentPlanService({
+        pool: {} as Pool,
+        planRepository: mockRepo,
+        features: { read: true, write: true, structuredPlanExecution: true }
+      });
+
+      await expect(service.listPlans(actorA)).rejects.toThrow(/Credential-like fields/);
+    });
   });
 
   describe('executePlan', () => {

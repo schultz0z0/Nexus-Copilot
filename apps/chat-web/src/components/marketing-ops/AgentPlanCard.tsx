@@ -115,6 +115,7 @@ export function AgentPlanCard({
 
   return (
     <article
+      data-testid={`agent-plan-${plan.id}`}
       className={`rounded-xl border border-border bg-card/90 shadow-sm p-4 text-card-foreground backdrop-blur-sm transition-all ${className}`}
       aria-labelledby={`plan-title-${plan.id}`}
       aria-busy={isBusy}

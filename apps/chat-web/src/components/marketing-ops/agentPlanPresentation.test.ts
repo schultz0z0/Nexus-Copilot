@@ -68,28 +68,16 @@ describe('agentPlanPresentation', () => {
     expect(presented.description).toContain('E-mail de boas-vindas');
   });
 
-  it('presents campaign_item.patch action', () => {
+  it('presents campaign_item.reschedule action', () => {
     const action: MarketingOpsPlanAction = {
-      type: 'campaign_item.patch',
+      type: 'campaign_item.reschedule',
       item_id: '22222222-2222-2222-2222-222222222222',
       expected_version: 1,
-      patch: { priority: 'urgent' }
+      due_at: '2026-09-20T12:00:00.000Z'
     };
     const presented = presentPlanAction(action);
     expect(presented.supported).toBe(true);
-    expect(presented.title).toBe('Atualizar item de campanha');
-  });
-
-  it('presents campaign_item.transition action', () => {
-    const action: MarketingOpsPlanAction = {
-      type: 'campaign_item.transition',
-      item_id: '22222222-2222-2222-2222-222222222222',
-      expected_version: 2,
-      to: 'ready'
-    };
-    const presented = presentPlanAction(action);
-    expect(presented.supported).toBe(true);
-    expect(presented.title).toBe('Transicionar item para ready');
+    expect(presented.title).toBe('Reagendar item de campanha');
   });
 
   it('presents content.create_draft action', () => {
@@ -97,7 +85,8 @@ describe('agentPlanPresentation', () => {
       type: 'content.create_draft',
       ref: 'content-1',
       item_id: '22222222-2222-2222-2222-222222222222',
-      kind: 'copy',
+      expected_item_version: 1,
+      asset_kind: 'copy',
       title: 'Texto do e-mail'
     };
     const presented = presentPlanAction(action);
@@ -110,7 +99,10 @@ describe('agentPlanPresentation', () => {
     const action: MarketingOpsPlanAction = {
       type: 'content.version_create',
       asset_ref: 'content-1',
-      body: 'Texto da nova versão de conteúdo'
+      expected_asset_version: 1,
+      body: 'Texto da nova versão de conteúdo',
+      metadata: {},
+      freeze: false
     };
     const presented = presentPlanAction(action);
     expect(presented.supported).toBe(true);
@@ -123,7 +115,8 @@ describe('agentPlanPresentation', () => {
       campaign_id: '11111111-1111-1111-1111-111111111111',
       asset_id: '33333333-3333-3333-3333-333333333333',
       version_number: 1,
-      reason: 'Revisão textual necessária'
+      reason: 'Revisão textual necessária',
+      expires_at: '2026-09-20T12:00:00.000Z'
     };
     const presented = presentPlanAction(action);
     expect(presented.supported).toBe(true);
@@ -135,8 +128,9 @@ describe('agentPlanPresentation', () => {
     const action: MarketingOpsPlanAction = {
       type: 'approval.submit_operational',
       campaign_id: '11111111-1111-1111-1111-111111111111',
-      action_package: { actionType: 'send_broadcast_email' },
-      reason: 'Envio em lote'
+      action_package: { actionType: 'send_broadcast_email', channel: 'email', audienceSnapshot: {}, scheduledFor: null, timeZone: 'UTC', configuration: {}, successCriteria: null, riskSummary: null, payload: {} },
+      reason: 'Envio em lote',
+      expires_at: '2026-09-20T12:00:00.000Z'
     };
     const presented = presentPlanAction(action);
     expect(presented.supported).toBe(true);
