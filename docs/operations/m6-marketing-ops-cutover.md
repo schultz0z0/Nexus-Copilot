@@ -78,7 +78,9 @@ O gate complementar descartável de 2026-09-15 comprovou adicionalmente:
   catálogo do card alinhado ao servidor.
 
 Nenhum dado, dump, credencial ou artefato temporário do ensaio foi versionado.
-Os projetos Docker e volumes descartáveis `ens-m6-cutover-*` foram removidos.
+Os containers, redes e volumes criados especificamente pelo ensaio corrente
+foram removidos; recursos locais preexistentes com prefixo semelhante não foram
+alterados.
 
 ## Checkpoint 1 — backup, migrations e validação do ledger (executado)
 
