@@ -32,6 +32,11 @@ export interface AppConfig {
     internalKey: string;
     timeoutMs: number;
   };
+  delegationResolve: {
+    url: string;
+    internalKey: string;
+    timeoutMs: number;
+  };
   artifact: {
     url: string;
     internalKey: string;
@@ -95,6 +100,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     env,
     'MARKETING_OPS_DELEGATION_REFRESH_URL',
     'http://127.0.0.1:8081/internal/marketing-ops/delegations/refresh',
+    production
+  );
+  const delegationResolveUrl = requiredProductionValue(
+    env,
+    'MARKETING_OPS_DELEGATION_RESOLVE_URL',
+    'http://127.0.0.1:8081/internal/marketing-ops/delegations/resolve',
     production
   );
   const artifactUrl = requiredProductionValue(
@@ -169,6 +180,11 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
       url: z.string().url().parse(delegationRefreshUrl),
       internalKey,
       timeoutMs: z.coerce.number().int().min(100).max(10_000).parse(env.MARKETING_OPS_DELEGATION_REFRESH_TIMEOUT_MS ?? 2_000)
+    },
+    delegationResolve: {
+      url: z.string().url().parse(delegationResolveUrl),
+      internalKey,
+      timeoutMs: z.coerce.number().int().min(100).max(10_000).parse(env.MARKETING_OPS_DELEGATION_RESOLVE_TIMEOUT_MS ?? 2_000)
     },
     artifact: {
       url: z.string().url().parse(artifactUrl),

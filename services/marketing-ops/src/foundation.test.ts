@@ -48,7 +48,8 @@ describe('runtime foundation', () => {
       MARKETING_OPS_INTERNAL_KEY: 'production-internal-key-at-least-32-bytes',
       MARKETING_OPS_DELEGATION_ACTIVE_KID: 'v1',
       MARKETING_OPS_DELEGATION_ACTIVE_KEY: 'production-delegation-key-at-least-32-bytes',
-      MARKETING_OPS_DELEGATION_REFRESH_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/refresh'
+      MARKETING_OPS_DELEGATION_REFRESH_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/refresh',
+      MARKETING_OPS_DELEGATION_RESOLVE_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/resolve'
     };
     expect(() => loadConfig(production)).toThrow(/MARKETING_OPS_ARTIFACT_URL/);
     expect(() => loadConfig({
@@ -66,6 +67,7 @@ describe('runtime foundation', () => {
       MARKETING_OPS_DELEGATION_ACTIVE_KID: 'v1',
       MARKETING_OPS_DELEGATION_ACTIVE_KEY: 'production-delegation-key-at-least-32-bytes',
       MARKETING_OPS_DELEGATION_REFRESH_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/refresh',
+      MARKETING_OPS_DELEGATION_RESOLVE_URL: 'http://app-bridge:8080/internal/marketing-ops/delegations/resolve',
       MARKETING_OPS_ARTIFACT_URL: 'http://artifact-server:8095',
       MARKETING_OPS_ARTIFACT_INTERNAL_KEY: 'production-artifact-key-at-least-32-bytes',
       MARKETING_OPS_RAG_URL: 'http://rag-mcp:8000/mcp',
@@ -92,6 +94,20 @@ describe('runtime foundation', () => {
     const config = loadConfig({ NODE_ENV: 'test' });
     expect(config.port).toBe(8091);
     expect(config.features).toEqual({ read: false, write: false, approvals: false, structuredPlanExecution: false });
+  });
+
+  it('configures the private delegation reference resolver', () => {
+    const config = loadConfig({
+      NODE_ENV: 'test',
+      MARKETING_OPS_INTERNAL_KEY: 'internal-resolution-test-key-at-least-32-bytes',
+      MARKETING_OPS_DELEGATION_RESOLVE_URL: 'http://chat-bridge:8080/internal/marketing-ops/delegations/resolve',
+      MARKETING_OPS_DELEGATION_RESOLVE_TIMEOUT_MS: '1750'
+    });
+    expect(config.delegationResolve).toEqual({
+      url: 'http://chat-bridge:8080/internal/marketing-ops/delegations/resolve',
+      internalKey: 'internal-resolution-test-key-at-least-32-bytes',
+      timeoutMs: 1750
+    });
   });
 
   it('logs only bounded boolean feature markers at startup', () => {
