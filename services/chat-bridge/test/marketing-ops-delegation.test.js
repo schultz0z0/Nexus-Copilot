@@ -5,6 +5,7 @@ import { decodeProtectedHeader, decodeJwt, jwtVerify, SignJWT } from "jose";
 import { validateBridgeRuntimeConfig } from "../src/runtime-config.js";
 import {
   buildMarketingOpsDelegationSystemMessage,
+  createMarketingOpsDelegationReferenceRegistry,
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
   withMarketingOpsDelegation,
@@ -145,6 +146,44 @@ test("local auth fallback requires an explicit flag", () => {
   assert.throws(() => validateBridgeRuntimeConfig({ NODE_ENV: "development" }), /BRIDGE_ALLOW_INSECURE_LOCAL_AUTH/);
   const config = validateBridgeRuntimeConfig({ NODE_ENV: "development", BRIDGE_ALLOW_INSECURE_LOCAL_AUTH: "true" });
   assert.equal(config.allowInsecureLocalAuth, true);
+});
+
+test("opaque marketing ops delegation reference is short, stable and bound to one run", () => {
+  let now = 1_789_517_035_000;
+  let seed = 0;
+  const registry = createMarketingOpsDelegationReferenceRegistry({
+    ttlSeconds: 90,
+    now: () => now,
+    randomBytes: (size) => Buffer.alloc(size, ++seed),
+  });
+
+  const reference = registry.issue(activeRun.id);
+  assert.match(reference, /^mopref_[A-Za-z0-9_-]{24}$/);
+  assert.ok(reference.length < 80);
+  assert.equal(reference.includes(activeRun.id), false);
+  assert.equal(reference.split(".").length, 1);
+  assert.equal(registry.issue(activeRun.id), reference);
+  assert.equal(registry.resolve(reference), activeRun.id);
+
+  const altered = `${reference.slice(0, -1)}${reference.endsWith("A") ? "B" : "A"}`;
+  assert.throws(() => registry.resolve(altered), /delegation_reference_invalid/);
+  assert.throws(() => registry.resolve("mopref_not-valid"), /delegation_reference_invalid/);
+
+  now += 91_000;
+  assert.throws(() => registry.resolve(reference), /delegation_reference_expired/);
+});
+
+test("opaque marketing ops delegation reference is revoked with its parent run", () => {
+  const registry = createMarketingOpsDelegationReferenceRegistry({
+    ttlSeconds: 90,
+    now: () => 1_789_517_035_000,
+    randomBytes: (size) => Buffer.alloc(size, 7),
+  });
+  const reference = registry.issue(activeRun.id);
+
+  assert.equal(registry.revokeRun(activeRun.id), true);
+  assert.equal(registry.revokeRun(activeRun.id), false);
+  assert.throws(() => registry.resolve(reference), /delegation_reference_invalid/);
 });
 
 test("delegation has exact short-lived claims and active kid", async () => {

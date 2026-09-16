@@ -1,4 +1,4 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { decodeJwt, decodeProtectedHeader, jwtVerify, SignJWT } from "jose";
 
 const BLOCK_PATTERN = /\n*\[MARKETING_OPS_DELEGATION\][\s\S]*?\[\/MARKETING_OPS_DELEGATION\]\n*/g;
@@ -17,6 +17,71 @@ const defaultConfig = () => ({
 });
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const delegationReferencePattern = /^mopref_[A-Za-z0-9_-]{24}$/;
+
+export const createMarketingOpsDelegationReferenceRegistry = ({
+  ttlSeconds = 900,
+  now = Date.now,
+  randomBytes: randomBytesFn = randomBytes,
+} = {}) => {
+  const lifetimeMs = Math.max(15, Math.min(3600, Number(ttlSeconds || 900))) * 1000;
+  const referenceKey = randomBytesFn(32);
+  const byDigest = new Map();
+  const byRunId = new Map();
+
+  const digest = (reference) => createHash("sha256").update(reference).digest("hex");
+  const cleanupExpired = () => {
+    const currentTime = now();
+    for (const [referenceDigest, entry] of byDigest.entries()) {
+      if (entry.expiresAt > currentTime) continue;
+      byDigest.delete(referenceDigest);
+      if (byRunId.get(entry.runId) === referenceDigest) byRunId.delete(entry.runId);
+    }
+  };
+
+  return {
+    issue(runId) {
+      if (typeof runId !== "string" || !uuidPattern.test(runId)) {
+        throw new Error("delegation_reference_run_invalid");
+      }
+      cleanupExpired();
+      const existingDigest = byRunId.get(runId);
+      const existing = existingDigest ? byDigest.get(existingDigest) : null;
+      if (existing) return existing.reference;
+
+      const reference = `mopref_${createHmac("sha256", referenceKey)
+        .update(runId)
+        .digest("base64url")
+        .slice(0, 24)}`;
+      const referenceDigest = digest(reference);
+      byDigest.set(referenceDigest, { reference, runId, expiresAt: now() + lifetimeMs });
+      byRunId.set(runId, referenceDigest);
+      return reference;
+    },
+
+    resolve(reference) {
+      if (typeof reference !== "string" || !delegationReferencePattern.test(reference)) {
+        throw new Error("delegation_reference_invalid");
+      }
+      const referenceDigest = digest(reference);
+      const entry = byDigest.get(referenceDigest);
+      if (!entry) throw new Error("delegation_reference_invalid");
+      if (entry.expiresAt <= now()) {
+        byDigest.delete(referenceDigest);
+        if (byRunId.get(entry.runId) === referenceDigest) byRunId.delete(entry.runId);
+        throw new Error("delegation_reference_expired");
+      }
+      return entry.runId;
+    },
+
+    revokeRun(runId) {
+      const referenceDigest = byRunId.get(runId);
+      if (!referenceDigest) return false;
+      byRunId.delete(runId);
+      return byDigest.delete(referenceDigest);
+    },
+  };
+};
 
 const validateDelegationClaims = (claims) => {
   const valid =
