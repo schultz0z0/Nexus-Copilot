@@ -8,6 +8,7 @@ import {
   createMarketingOpsDelegationReferenceRegistry,
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
+  resolveMarketingOpsDelegationRequest,
   withMarketingOpsDelegation,
 } from "../src/marketing-ops-delegation.js";
 import * as marketingOpsDelegation from "../src/marketing-ops-delegation.js";
@@ -184,6 +185,77 @@ test("opaque marketing ops delegation reference is revoked with its parent run",
   assert.equal(registry.revokeRun(activeRun.id), true);
   assert.equal(registry.revokeRun(activeRun.id), false);
   assert.throws(() => registry.resolve(reference), /delegation_reference_invalid/);
+});
+
+test("authenticated resolution issues a verifiable JWT only for an active run", async () => {
+  const registry = createMarketingOpsDelegationReferenceRegistry({
+    ttlSeconds: 90,
+    now: () => Date.now(),
+    randomBytes: (size) => Buffer.alloc(size, 9),
+  });
+  const reference = registry.issue(activeRun.id);
+  const internalKey = "production-refresh-key-at-least-32-bytes";
+  const loadRun = async (runId) => runId === activeRun.id ? activeRun : null;
+  const issueDelegation = (run) => issueMarketingOpsDelegation({
+    userId: run.user_id,
+    tenantId: run.tenant_id,
+    role: run.user_role,
+    chatSessionId: run.chat_session_id,
+    runId: run.id,
+    correlationId: run.id,
+    confirmationIntent: false,
+  }, ["campaign:read"], refreshKeyring);
+
+  await assert.rejects(() => resolveMarketingOpsDelegationRequest({
+    providedInternalKey: "",
+    expectedInternalKey: internalKey,
+    reference,
+    registry,
+    loadRun,
+    issueDelegation,
+  }), /delegation_resolution_unauthorized/);
+  await assert.rejects(() => resolveMarketingOpsDelegationRequest({
+    providedInternalKey: `${internalKey}-wrong`,
+    expectedInternalKey: internalKey,
+    reference,
+    registry,
+    loadRun,
+    issueDelegation,
+  }), /delegation_resolution_unauthorized/);
+
+  const signed = await resolveMarketingOpsDelegationRequest({
+    providedInternalKey: internalKey,
+    expectedInternalKey: internalKey,
+    reference,
+    registry,
+    loadRun,
+    issueDelegation,
+  });
+  const verified = await jwtVerify(signed, new TextEncoder().encode(refreshKeyring.activeKey), {
+    issuer: refreshKeyring.issuer,
+    audience: refreshKeyring.audience,
+  });
+  assert.equal(verified.payload.run_id, activeRun.id);
+  assert.equal(signed.includes(reference), false);
+
+  await assert.rejects(() => resolveMarketingOpsDelegationRequest({
+    providedInternalKey: internalKey,
+    expectedInternalKey: internalKey,
+    reference,
+    registry,
+    loadRun: async () => ({ ...activeRun, status: "completed" }),
+    issueDelegation,
+  }), /delegation_parent_run_not_active/);
+
+  registry.revokeRun(activeRun.id);
+  await assert.rejects(() => resolveMarketingOpsDelegationRequest({
+    providedInternalKey: internalKey,
+    expectedInternalKey: internalKey,
+    reference,
+    registry,
+    loadRun,
+    issueDelegation,
+  }), /delegation_reference_invalid/);
 });
 
 test("delegation has exact short-lived claims and active kid", async () => {

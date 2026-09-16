@@ -40,6 +40,7 @@ import {
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
   refreshMarketingOpsDelegation,
+  resolveMarketingOpsDelegationRequest,
 } from "./marketing-ops-delegation.js";
 import { prepareHermesAttachments, CHAT_ATTACHMENT_BUCKET } from "./attachments.js";
 import {
@@ -1849,30 +1850,30 @@ const handleRequest = async (req, res) => {
       jsonResponse(res, 503, { error: "delegation_resolution_not_configured" });
       return;
     }
-    if (!isValidDelegationRefreshKey(
-      req.headers["x-internal-key"],
-      config.marketingOpsDelegationRefreshKey,
-    )) {
-      jsonResponse(res, 401, { error: "unauthorized" });
-      return;
-    }
-
     const payload = await readJsonBody(req, 4_096);
     const reference = typeof payload.delegation_reference === "string"
       ? payload.delegation_reference
       : "";
     try {
-      const runId = marketingOpsDelegationReferences.resolve(reference);
-      const run = await store.get(runId);
-      if (!run || run.status !== "running") throw new Error("delegation_parent_run_not_active");
-      const resolved = await issueRunMarketingOpsDelegation(run);
+      const resolved = await resolveMarketingOpsDelegationRequest({
+        providedInternalKey: req.headers["x-internal-key"],
+        expectedInternalKey: config.marketingOpsDelegationRefreshKey,
+        reference,
+        registry: marketingOpsDelegationReferences,
+        loadRun: (runId) => store.get(runId),
+        issueDelegation: issueRunMarketingOpsDelegation,
+      });
       const resolvedClaims = decodeJwt(resolved);
       jsonResponse(res, 200, {
         delegation_token: resolved,
         expires_at: new Date(resolvedClaims.exp * 1000).toISOString(),
       });
-    } catch {
-      jsonResponse(res, 401, { error: "delegation_resolution_denied" });
+    } catch (error) {
+      jsonResponse(res, 401, {
+        error: error?.message === "delegation_resolution_unauthorized"
+          ? "unauthorized"
+          : "delegation_resolution_denied",
+      });
     }
     return;
   }

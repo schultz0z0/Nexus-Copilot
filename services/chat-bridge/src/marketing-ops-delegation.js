@@ -30,6 +30,10 @@ export const createMarketingOpsDelegationReferenceRegistry = ({
   const byRunId = new Map();
 
   const digest = (reference) => createHash("sha256").update(reference).digest("hex");
+  const referenceForRun = (runId) => `mopref_${createHmac("sha256", referenceKey)
+    .update(runId)
+    .digest("base64url")
+    .slice(0, 24)}`;
   const cleanupExpired = () => {
     const currentTime = now();
     for (const [referenceDigest, entry] of byDigest.entries()) {
@@ -47,14 +51,11 @@ export const createMarketingOpsDelegationReferenceRegistry = ({
       cleanupExpired();
       const existingDigest = byRunId.get(runId);
       const existing = existingDigest ? byDigest.get(existingDigest) : null;
-      if (existing) return existing.reference;
+      if (existing) return referenceForRun(runId);
 
-      const reference = `mopref_${createHmac("sha256", referenceKey)
-        .update(runId)
-        .digest("base64url")
-        .slice(0, 24)}`;
+      const reference = referenceForRun(runId);
       const referenceDigest = digest(reference);
-      byDigest.set(referenceDigest, { reference, runId, expiresAt: now() + lifetimeMs });
+      byDigest.set(referenceDigest, { runId, expiresAt: now() + lifetimeMs });
       byRunId.set(runId, referenceDigest);
       return reference;
     },
@@ -193,6 +194,23 @@ export const isValidDelegationRefreshKey = (provided, expected) => {
   return expectedValue.length > 0 &&
     providedValue.length === expectedValue.length &&
     timingSafeEqual(providedDigest, expectedDigest);
+};
+
+export const resolveMarketingOpsDelegationRequest = async ({
+  providedInternalKey,
+  expectedInternalKey,
+  reference,
+  registry,
+  loadRun,
+  issueDelegation,
+}) => {
+  if (!isValidDelegationRefreshKey(providedInternalKey, expectedInternalKey)) {
+    throw new Error("delegation_resolution_unauthorized");
+  }
+  const runId = registry.resolve(reference);
+  const run = await loadRun(runId);
+  if (!run || run.status !== "running") throw new Error("delegation_parent_run_not_active");
+  return issueDelegation(run);
 };
 
 export const withMarketingOpsDelegation = (message, token) => {

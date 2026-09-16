@@ -92,8 +92,11 @@ Um módulo isolado mantém dois índices em memória:
 - hash SHA-256 da referência para `{runId, expiresAt}`;
 - `runId` para o hash atual, tornando emissão idempotente por Run.
 
-A referência usa 18 bytes aleatórios em base64url com prefixo `mopref_`. O
-valor bruto nunca aparece em logs. O registro:
+A referência usa os primeiros 18 bytes de um HMAC-SHA256 sobre o Run ID, com
+chave aleatória exclusiva do processo, codificados em base64url e prefixados
+por `mopref_`. Isso permite reemissão idempotente sem armazenar o valor bruto;
+somente seu hash SHA-256 fica no índice. O valor bruto nunca aparece em logs. O
+registro:
 
 - aceita apenas o formato canônico;
 - expira no máximo na janela de refresh configurada;

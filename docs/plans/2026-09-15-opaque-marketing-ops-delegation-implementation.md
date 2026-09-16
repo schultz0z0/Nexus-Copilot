@@ -8,10 +8,11 @@
 
 **Tech Stack:** Node.js 22, JavaScript `node:test`, TypeScript, Vitest, JOSE, Docker Compose, native Hermes MCP profile.
 
-**Status em 2026-09-16:** Tasks 1–5 implementadas em TDD. Registro opaco,
-resolução interna, verificação JWT posterior, Compose e profile `ens@0.1.2`
-passaram nos testes focados. Task 6 (documentação) está concluída neste lote;
-Task 7 (suítes integrais, review, integração em `main` e push) permanece aberta.
+**Status em 2026-09-16:** Tasks 1–6 implementadas em TDD. Registro opaco sem
+retenção do valor bruto, resolução interna autenticada, leitura de resposta com
+limite durante o streaming, verificação JWT posterior, Compose, profile
+`ens@0.1.2` e documentação passaram nos testes focados. Task 7 (suítes
+integrais, integração em `main` e push) permanece aberta.
 
 ---
 

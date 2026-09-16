@@ -8,6 +8,34 @@ export interface DelegationResolveConfig {
 
 const MAX_RESPONSE_BYTES = 16_384;
 
+async function readBoundedResponse(response: Response): Promise<string> {
+  const contentLength = Number(response.headers.get('content-length'));
+  if (Number.isFinite(contentLength) && contentLength > MAX_RESPONSE_BYTES) {
+    await response.body?.cancel();
+    throw appError('dependency_unavailable', 503, 'Delegation resolution returned an invalid response');
+  }
+  if (!response.body) return '';
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw appError('dependency_unavailable', 503, 'Delegation resolution returned an invalid response');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), totalBytes).toString('utf8');
+}
+
 export function createDelegationResolver(
   config: DelegationResolveConfig,
   deps: { fetch: typeof globalThis.fetch } = { fetch: globalThis.fetch }
@@ -29,10 +57,7 @@ export function createDelegationResolver(
       if (!response.ok) {
         throw appError('dependency_unavailable', 503, 'Delegation resolution is unavailable');
       }
-      const rawPayload = await response.text();
-      if (Buffer.byteLength(rawPayload, 'utf8') > MAX_RESPONSE_BYTES) {
-        throw appError('dependency_unavailable', 503, 'Delegation resolution returned an invalid response');
-      }
+      const rawPayload = await readBoundedResponse(response);
       const payload = JSON.parse(rawPayload) as { delegation_token?: unknown };
       if (typeof payload.delegation_token !== 'string' || payload.delegation_token.length < 20) {
         throw appError('dependency_unavailable', 503, 'Delegation resolution returned an invalid response');

@@ -202,12 +202,11 @@ test("bridge resolves opaque delegation references only for active stored runs",
   );
   const executeRunBlock = extractBlock(source, "async executeRun(runId)", "const store = new RunStore");
 
-  assert.match(resolveRouteBlock, /isValidDelegationRefreshKey/);
+  assert.match(resolveRouteBlock, /resolveMarketingOpsDelegationRequest/);
   assert.match(resolveRouteBlock, /req\.headers\["x-internal-key"\]/);
-  assert.match(resolveRouteBlock, /marketingOpsDelegationReferences\.resolve/);
-  assert.match(resolveRouteBlock, /store\.get\(runId\)/);
-  assert.match(resolveRouteBlock, /run\.status !== "running"/);
-  assert.match(resolveRouteBlock, /issueRunMarketingOpsDelegation\(run\)/);
+  assert.match(resolveRouteBlock, /registry: marketingOpsDelegationReferences/);
+  assert.match(resolveRouteBlock, /loadRun: \(runId\) => store\.get\(runId\)/);
+  assert.match(resolveRouteBlock, /issueDelegation: issueRunMarketingOpsDelegation/);
   assert.match(resolveRouteBlock, /delegation_token: resolved/);
   assert.doesNotMatch(resolveRouteBlock, /delegation_reference.*jsonResponse/);
 
