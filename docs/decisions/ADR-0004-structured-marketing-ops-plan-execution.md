@@ -66,6 +66,28 @@ Adotar a opção A.
 - `marketing_ops_execute_plan_v1` pode continuar disponível a canais futuros
   que entreguem confirmação estruturada, mas não é a confirmação do navegador.
 
+### Adendo de segurança — referência opaca por Run (2026-09-16)
+
+A homologação do botão revelou uma segunda fronteira: o JWT curto de delegação
+era incluído no contexto do Hermes para ser passado como argumento MCP. O modelo
+reconstruiu o valor com outro `jti` e outro conjunto de escopos, invalidando a
+assinatura. O serviço falhou fechado, mas a preparação deixou de ser operável.
+
+Fica decidido que o Chat Bridge entrega ao Hermes apenas uma referência
+`mopref_...`, curta, aleatória ao observador, estável durante uma única Run e
+revogada ao seu término. O Bridge mantém somente o vínculo hash-indexado entre
+referência e Run; ele não funciona como cofre de JWT. Quando o Marketing Ops
+recebe a referência, usa uma rota interna autenticada para resolvê-la; o Bridge
+confirma que a Run ainda está ativa e emite um JWT novo servidor a servidor. O
+verificador JWT, os escopos, a membership e as regras de replay permanecem
+inalterados. JWT assinado direto continua aceito apenas para automações
+compatíveis.
+
+A opção B original continua rejeitada: não há persistência ou recuperação de
+token pelo adaptador conversacional. O registro opaco guarda identidade de Run,
+tem expiração curta, vive somente em memória e nunca concede autoridade sem a
+emissão e verificação criptográfica normais.
+
 ## Consequências
 
 ### Positivas
@@ -87,6 +109,8 @@ Adotar a opção A.
 ## Invariantes de segurança
 
 - Não persistir nem retornar `delegation_token` ou `plan_token` ao navegador.
+- Não colocar o JWT de delegação no contexto, histórico ou mensagens do Hermes;
+  somente a referência opaca pode atravessar a fronteira do modelo.
 - Não registrar tokens, ações sensíveis completas ou segredos em logs.
 - Um plano pertence a um único tenant, usuário e sessão de chat.
 - `plan_hash` é SHA-256 do payload canônico e nunca pode ser alterado.
@@ -106,6 +130,8 @@ acima. A mera disponibilidade de classificação de texto não é suficiente.
 ## Referências
 
 - [Desenho da melhoria](../plans/2026-09-14-structured-marketing-ops-plan-execution-design.md)
+- [Desenho da delegação opaca](../plans/2026-09-15-opaque-marketing-ops-delegation-design.md)
+- [Plano TDD da delegação opaca](../plans/2026-09-15-opaque-marketing-ops-delegation-implementation.md)
 - [Desenho original do M6](../plans/2026-09-13-m6-marketing-ops-and-cutover-design.md)
 - [ADR-0001 — Hermes oficial](ADR-0001-official-hermes-container-and-ens-profile.md)
 - [ADR-0003 — App API/BFF](ADR-0003-auth-sessions-and-app-api.md)

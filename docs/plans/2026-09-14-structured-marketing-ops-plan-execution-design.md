@@ -1,6 +1,6 @@
 # M6 — Execução estruturada de planos do Marketing Ops
 
-**Estado:** Aceito; implementação pendente  
+**Estado:** Aceito e implementado; homologação bloqueada pela correção de delegação opaca  
 **Data:** 2026-09-14  
 **Marco:** M6 — gate complementar obrigatório  
 **Decisão:** [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md)
@@ -15,6 +15,14 @@ novo turno do Hermes e sem pedir ao modelo que interprete a intenção novamente
 
 Esta melhoria faz parte do M6. O marco permanece incompleto até que o fluxo seja
 implementado, testado no Docker Desktop e homologado na VPS pelo operador.
+
+> **Adendo de 2026-09-16:** o card e o botão foram implantados, mas a preparação
+> produtiva expôs o JWT de delegação ao contexto do modelo. A assinatura falhou
+> depois que o modelo reconstruiu o valor. A execução estruturada permanece a
+> decisão vigente; sua homologação agora depende da
+> [referência opaca por Run](2026-09-15-opaque-marketing-ops-delegation-design.md),
+> que remove o JWT da fronteira do Hermes sem mudar o clique ou a autoridade do
+> plano persistido.
 
 ## 2. Evidência e causa-raiz
 

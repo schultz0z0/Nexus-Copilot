@@ -8,6 +8,11 @@
 
 **Tech Stack:** Node.js 22, JavaScript `node:test`, TypeScript, Vitest, JOSE, Docker Compose, native Hermes MCP profile.
 
+**Status em 2026-09-16:** Tasks 1–5 implementadas em TDD. Registro opaco,
+resolução interna, verificação JWT posterior, Compose e profile `ens@0.1.2`
+passaram nos testes focados. Task 6 (documentação) está concluída neste lote;
+Task 7 (suítes integrais, review, integração em `main` e push) permanece aberta.
+
 ---
 
 ### Task 1: Add the ephemeral reference registry

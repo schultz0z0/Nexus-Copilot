@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-15
+**Atualizado em:** 2026-09-16
 
 ## Regra de progressão
 
@@ -17,7 +17,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
-| M6 — dados e cutover | Gate local aprovado; checkpoint produtivo pendente | execução estruturada sem fork e rollback aprovados no Docker Desktop |
+| M6 — dados e cutover | Correção de delegação opaca em validação | execução estruturada implantada; homologação bloqueada antes da mutação por credencial reconstruída pelo modelo |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
 ## Estimativa de progresso global
@@ -34,7 +34,7 @@ do legado sem aceite no alvo não conta como concluído.
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
-| M6 | 10% | 9% | schema/backup/cutover técnico e execução estruturada aprovados localmente; checkpoint produtivo pendente |
+| M6 | 10% | 9% | schema/backup/cutover técnico e execução estruturada implantados; correção opaca ainda exige gate local integral e nova homologação produtiva |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
 | **Total** | **100%** | **93% de crédito estimado / 7% restante** | M6 não concluído; estimativa em 2026-09-15 |
 
@@ -275,6 +275,25 @@ ainda é obrigatório; até sua validação, M6 permanece **não concluído**. O
 procedimento completo está preparado como Checkpoint 5 no
 [runbook de cutover](../operations/m6-marketing-ops-cutover.md), sem autorização
 para execução automática na VPS.
+
+**Incidente de homologação em 2026-09-15:** o Checkpoint 5 implantou a release
+`f2a598f`, a migration `0017`, as flags estruturadas e o profile ENS. Todos os
+serviços e o MCP ficaram saudáveis. A leitura autenticada funcionou, mas a
+preparação do plano falhou fechado com `401 delegation_invalid`. A análise
+sanitizada da sessão comprovou que o JWT oficial emitido para a Run tinha
+fingerprint `8d8aa0d20c32f2f2`, enquanto o argumento enviado pelo modelo tinha
+fingerprint `ea9e310df5df11a3`, comprimento diferente, outro `jti` e um escopo a
+menos. `iat`, `exp` e vínculo da Run permaneciam iguais. Portanto, não houve
+falha de relógio, TTL, chave, OAuth ou refresh: o modelo reconstruiu uma
+credencial assinada que deveria ter sido copiada byte a byte. Nenhum plano,
+approval ou efeito externo foi criado.
+
+A correção aprovada está no
+[desenho de delegação opaca](../plans/2026-09-15-opaque-marketing-ops-delegation-design.md):
+o Chat Bridge entrega ao Hermes somente `mopref_...`, resolve a referência por
+canal interno autenticado e emite o JWT real apenas servidor a servidor. O
+Hermes oficial e o fluxo do botão permanecem inalterados. O gate produtivo só
+pode reabrir depois da suíte local integral e do novo Checkpoint 6 do runbook.
 
 ## M7 — Hardening e retirada do legado
 

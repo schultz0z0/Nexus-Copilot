@@ -18,6 +18,13 @@ O M6 termina quando campanhas, produção, calendário, conteúdo, aprovações 
 > [desenho complementar](2026-09-14-structured-marketing-ops-plan-execution-design.md)
 > e na [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md).
 
+> **Extensão aprovada em 2026-09-16:** a primeira homologação do botão falhou
+> fechado antes de persistir o plano porque o JWT de delegação atravessava o
+> contexto do modelo e foi reconstruído. O M6 também exige a
+> [delegação opaca por Run](2026-09-15-opaque-marketing-ops-delegation-design.md),
+> mantendo JWTs somente no canal servidor a servidor e sem alterar o core do
+> Hermes.
+
 ## 2. Restrições invariantes
 
 - O core do Hermes não será vendorizado nem modificado. Toda integração ficará em `agents/ens`, no Chat Bridge e no serviço `services/marketing-ops`.

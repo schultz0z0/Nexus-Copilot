@@ -1,6 +1,6 @@
 # M6 — Referência opaca de delegação do Marketing Ops
 
-**Estado:** Aceito  
+**Estado:** Aceito; implementação concluída, gate integral pendente  
 **Data:** 2026-09-15  
 **Marco:** M6 — gate complementar obrigatório  
 **Decisão relacionada:** [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md)
@@ -19,7 +19,7 @@ podem enviar um JWT assinado diretamente.
 
 ## 2. Incidente que motivou a correção
 
-Na homologação produtiva de 2026-09-16, uma leitura autenticada passou, mas a
+Na homologação produtiva de 2026-09-15, uma leitura autenticada passou, mas a
 preparação do plano falhou com `delegation_invalid`. A coleta sanitizada
 comprovou:
 

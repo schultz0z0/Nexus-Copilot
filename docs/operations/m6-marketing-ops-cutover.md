@@ -1,8 +1,8 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** Gate local aprovado; checkpoint produtivo da execução estruturada pendente
-**Último ensaio local:** 2026-09-15
+**Estado:** Checkpoint estruturado implantado; correção de delegação opaca pendente de gate e homologação
+**Última homologação produtiva:** 2026-09-15
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
 ## Objetivo e fronteiras
@@ -35,6 +35,16 @@ O gate local do
 foi aprovado. O próximo passo é somente o checkpoint produtivo operado pelo
 responsável humano. Não repetir confirmações textuais, não fazer fork do Hermes
 e não criar substituto para `/v1/internal/marketing-ops-decision`.
+
+### Bloqueio observado após a implantação estruturada
+
+O Checkpoint 5.0–5.3 foi executado na release `f2a598f`; o início do 5.4 parou
+corretamente antes de qualquer escrita. A credencial oficial e o argumento MCP
+tinham fingerprints, comprimentos, `jti` e escopos diferentes, embora
+mantivessem `iat`, `exp` e Run. A causa é reconstrução do JWT pelo modelo, não
+OAuth, clock, TTL, chaves ou refresh. Não reutilize a conversa da falha e não
+aumente TTL como contorno. O próximo procedimento autorizado é o Checkpoint 6,
+após aprovação do gate local da correção.
 
 ## Evidência local aprovada
 
@@ -563,3 +573,189 @@ tags `ens-rollback/<serviço>:pre-structured-<release_short>` como imagens locai
 e recrie somente os serviços afetados. Não remova a migration `0017`, não apague
 registros de plano/approval e não execute `down --volumes`. Restauração de banco
 só pode ocorrer em destino isolado após diagnóstico e autorização humana.
+
+## Checkpoint 6 — delegação opaca por Run (preparado; aguarda gate local)
+
+Este checkpoint substitui somente a passagem da credencial entre Chat Bridge,
+Hermes e Marketing Ops. Não altera banco, migration `0017`, App API, Chat Web,
+card ou semântica do botão. O commit candidato de código é
+`4ffdc5c9ecbd70c9cb86a85c4457a67c7846c639`; ele só passa a ser aprovado para
+produção depois que as suítes integrais registradas no plano TDD estiverem
+verdes e o commit estiver em `main`/`origin/main`.
+
+### 6.0 — preflight do candidato
+
+**Impacto:** somente leitura. Não reinicia containers nem imprime secrets.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+opaque_code_commit=4ffdc5c9ecbd70c9cb86a85c4457a67c7846c639
+test "$(git branch --show-current)" = main
+test -z "$(git status --porcelain)"
+git fetch origin main
+test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+git merge-base --is-ancestor "$opaque_code_commit" HEAD
+
+test "$(awk -F: '/^version:/ { gsub(/[[:space:]]/, "", $2); print $2 }' agents/ens/distribution.yaml)" = 0.1.2
+
+docker compose \
+  --env-file /etc/ens/app.env \
+  -f infra/app/compose.yaml \
+  -f infra/app/compose.production.yaml \
+  config --quiet
+
+printf 'release_commit=%s\n' "$(git rev-parse HEAD)"
+printf 'opaque_code_commit=%s\n' "$opaque_code_commit"
+printf 'checkpoint_6_preflight=passed\n'
+```
+
+**Resultado esperado:** `main` limpa e sincronizada, commit candidato ancestral,
+profile `ens@0.1.2` e Compose válido.
+
+**Pare** em qualquer divergência, árvore suja, falha de fetch, commit ausente ou
+configuração inválida. Não use `reset`, merge forçado ou edição manual dentro de
+container.
+
+### 6.1 — rollback local e atualização dos dois serviços
+
+**Impacto:** constrói Chat Bridge e Marketing Ops e os recria sequencialmente.
+Há duas janelas curtas de indisponibilidade interna; PostgreSQL, App API, Chat
+Web, Artifact Server, Hermes e volumes não são recriados.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+app_compose=(
+  docker compose
+  --env-file /etc/ens/app.env
+  -f infra/app/compose.yaml
+  -f infra/app/compose.production.yaml
+)
+release_short="$(git rev-parse --short HEAD)"
+
+for service in chat-bridge marketing-ops; do
+  container_id="$("${app_compose[@]}" ps -q "$service")"
+  test -n "$container_id"
+  test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")" = healthy
+  docker image tag "$(docker inspect --format '{{.Image}}' "$container_id")" \
+    "ens-rollback/${service}:pre-opaque-${release_short}"
+done
+
+"${app_compose[@]}" build --pull chat-bridge marketing-ops
+
+for service in chat-bridge marketing-ops; do
+  "${app_compose[@]}" up -d --no-build --no-deps --force-recreate \
+    --wait --wait-timeout 180 "$service"
+done
+
+for service in artifact-server marketing-ops app-api chat-bridge chat-web; do
+  container_id="$("${app_compose[@]}" ps -q "$service")"
+  test -n "$container_id"
+  test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")" = healthy
+  test -z "$(docker port "$container_id")"
+  printf 'service=%s health=healthy published_ports=none\n' "$service"
+done
+
+printf 'checkpoint_6_application=passed\n'
+```
+
+**Resultado esperado:** duas tags de rollback, imagens novas e todos os cinco
+serviços saudáveis e privados.
+
+**Pare** no primeiro build/healthcheck malsucedido, em porta publicada ou 5xx.
+Não abra o navegador e não repita uma Run antiga.
+
+### 6.2 — atualização do profile ENS
+
+**Impacto:** atualiza somente a distribuição ENS persistida para `0.1.2` e
+recria o container oficial preservando o volume. Não altera o core Hermes.
+
+```bash
+set -euo pipefail
+cd /opt/prometeus-marketing
+
+hermes_compose=(
+  docker compose
+  --env-file /etc/ens/hermes.env
+  -f infra/hermes/compose.yaml
+  -f infra/hermes/compose.production.yaml
+)
+
+"${hermes_compose[@]}" run --rm --no-deps hermes-profile-init
+"${hermes_compose[@]}" run --rm --no-deps --entrypoint hermes \
+  hermes-profile-init profile info ens
+"${hermes_compose[@]}" up -d --no-build --no-deps --force-recreate \
+  --wait --wait-timeout 180 hermes
+
+hermes_id="$("${hermes_compose[@]}" ps -q hermes)"
+test -n "$hermes_id"
+test "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$hermes_id")" = healthy
+docker exec "$hermes_id" hermes -p ens mcp test nexus_marketing_ops
+printf 'checkpoint_6_hermes=passed\n'
+```
+
+**Resultado esperado:** `ens@0.1.2`, Hermes saudável, MCP conectado na porta
+8091 e 10 ferramentas descobertas.
+
+**Pare** se a versão divergir, se houver pedido de patch no core, MCP offline ou
+contagem diferente de 10.
+
+### 6.3 — smoke técnico antes do navegador
+
+**Impacto:** somente requisições de leitura e testes negativos. Não prepara nem
+executa plano.
+
+Execute o smoke consolidado já usado no Checkpoint 5 e confirme, adicionalmente:
+
+- Chat Bridge e Marketing Ops saudáveis após pelo menos dois healthchecks;
+- `MARKETING_OPS_DELEGATION_RESOLVE_URL` existe dentro do Marketing Ops e aponta
+  para `http://chat-bridge:8080/internal/marketing-ops/delegations/resolve`;
+- a rota de resolução não está publicada pelo Traefik ou por porta do host;
+- o MCP continua com 10 ferramentas.
+
+**Resultado esperado:** smoke integral verde, nenhuma mutação e nenhuma
+credencial exibida.
+
+**Pare** em falha, degradação nova, rota pública, restart de container ou log
+contendo credencial. Não imprima o valor de `MARKETING_OPS_INTERNAL_KEY`.
+
+### 6.4 — homologação autenticada em conversa nova
+
+Uma referência vive somente durante uma Run. Portanto, abra uma conversa nova;
+não reutilize a sessão da falha nem qualquer Run anterior ao deploy.
+
+1. Faça a consulta somente-leitura das campanhas e confirme a campanha de
+   homologação.
+2. Peça um plano operacional inerte com exatamente uma solicitação de approval,
+   sem publicação, envio, upload ou integração externa.
+3. Confirme que a preparação termina sem `delegation_invalid` e que surge o card
+   estruturado persistido com **Executar plano**.
+4. Antes do clique, registre somente contagens sanitizadas: uma referência
+   `mopref_...` presente no histórico interno da Run e zero strings com formato
+   JWT. Não imprima a referência.
+5. Clique uma vez. Confirme estado ocupado, ausência de nova Run e resultado
+   persistido após recarregar.
+6. Confirme exatamente um plano executado, um approval `pending`, zero decisões
+   e zero ações externas.
+
+**Resultado esperado:** o modelo só transporta a referência opaca; o JWT nasce
+e é validado servidor a servidor; o clique chama apenas App API/BFF e é
+idempotente.
+
+**Pare** se houver `delegation_invalid`, JWT no histórico do Hermes, referência
+em UI/log, ausência do card, nova Run no clique, duplicidade, decisão automática
+ou efeito externo. Não aumente TTL, não edite token e não tente confirmar por
+texto.
+
+### Rollback do Checkpoint 6
+
+Interrompa a homologação. Reaponte localmente as imagens dos dois serviços para
+as tags `ens-rollback/<serviço>:pre-opaque-<release_short>` e recrie apenas
+Chat Bridge e Marketing Ops com `--no-build --no-deps --force-recreate --wait`.
+Mantenha migration `0017`, flags, dados e volumes. O profile `0.1.2` pode
+permanecer instalado durante a investigação, mas nenhuma escrita deve ser
+homologada com os serviços revertidos. Não execute `down --volumes`, não apague
+planos/approvals e não restaure banco em produção.
