@@ -15,8 +15,11 @@ export interface DelegationVerifierDependencies {
   pool: Pool;
   keyring: DelegationKeyring;
   operation?: MutationUse;
+  resolveDelegation?: (reference: string) => Promise<string>;
   refreshDelegation?: (token: string) => Promise<string>;
 }
+
+const opaqueDelegationReference = /^mopref_[A-Za-z0-9_-]{24}$/;
 
 export async function consumeDelegationUse(
   pool: Pool,
@@ -40,7 +43,14 @@ export async function verifyDelegation(
   deps: DelegationVerifierDependencies
 ): Promise<DelegatedActor> {
   try {
-    const header = decodeProtectedHeader(token);
+    let signedToken = token;
+    if (token.startsWith('mopref_')) {
+      if (!opaqueDelegationReference.test(token) || !deps.resolveDelegation) {
+        throw appError('delegation_invalid', 401, 'Delegation reference is invalid');
+      }
+      signedToken = await deps.resolveDelegation(token);
+    }
+    const header = decodeProtectedHeader(signedToken);
     if (header.alg !== 'HS256' || typeof header.kid !== 'string') throw appError('delegation_invalid', 401, 'Delegation header is invalid');
     let rawKey: string | undefined;
     if (header.kid === deps.keyring.activeKid) rawKey = deps.keyring.activeKey;
@@ -48,13 +58,13 @@ export async function verifyDelegation(
     if (!rawKey) throw appError('delegation_invalid', 401, 'Delegation key id is unknown');
     let verified;
     try {
-      verified = await jwtVerify(token, new TextEncoder().encode(rawKey), {
+      verified = await jwtVerify(signedToken, new TextEncoder().encode(rawKey), {
         algorithms: ['HS256'], issuer: deps.keyring.issuer, audience: deps.keyring.audience,
         clockTolerance: 2, requiredClaims: ['sub', 'jti', 'iat', 'nbf', 'exp']
       });
     } catch (error) {
       if (error instanceof joseErrors.JWTExpired && deps.refreshDelegation) {
-        const refreshed = await deps.refreshDelegation(token);
+        const refreshed = await deps.refreshDelegation(signedToken);
         const { refreshDelegation: _refreshDelegation, ...singleAttemptDeps } = deps;
         return verifyDelegation(refreshed, requiredScopes, singleAttemptDeps);
       }

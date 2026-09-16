@@ -31,6 +31,7 @@ export interface ApiRouterDependencies {
   artifactClient: ArtifactClient;
   ragCourseClient: RagCourseClient;
   keyring?: DelegationKeyring;
+  resolveDelegation?: (reference: string) => Promise<string>;
   refreshDelegation?: (token: string) => Promise<string>;
   tenantTimeZone?: string;
   metrics?: Pick<MetricsRegistry, 'increment'>;
@@ -72,6 +73,7 @@ export function createApiRouter(deps: ApiRouterDependencies): Router {
     keyring: deps.keyring,
     artifactClient: deps.artifactClient,
     ...(deps.metrics ? { metrics: deps.metrics } : {}),
+    ...(deps.resolveDelegation ? { resolveDelegation: deps.resolveDelegation } : {}),
     ...(deps.refreshDelegation ? { refreshDelegation: deps.refreshDelegation } : {})
   }));
   return router;

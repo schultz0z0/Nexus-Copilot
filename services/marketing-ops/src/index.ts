@@ -9,6 +9,7 @@ import { createMetrics } from './observability/metrics.js';
 import { createReadinessProbe } from './observability/readiness.js';
 import { collectWorkspaceMetrics } from './observability/workspaceMetrics.js';
 import { createDelegationRefresher } from './delegation/refresher.js';
+import { createDelegationResolver } from './delegation/resolver.js';
 import { ArtifactClient } from './integrations/artifactClient.js';
 import { RagCourseClient } from './integrations/ragCourseClient.js';
 import { startApprovalExpiryWorker } from './domain/approvalExpiryWorker.js';
@@ -33,6 +34,7 @@ const router = createApiRouter({
   tenantTimeZone: config.tenantTimeZone,
   metrics,
   keyring: config.delegation,
+  resolveDelegation: createDelegationResolver(config.delegationResolve),
   refreshDelegation: createDelegationRefresher(config.delegationRefresh),
   verifyAssertion: (token, method, path) => verifyBffAssertion(
     token, method, path, config.bffAssertion

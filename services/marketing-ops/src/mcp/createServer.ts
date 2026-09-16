@@ -44,6 +44,7 @@ function normalizeMiniMaxActionArray(value: unknown): unknown {
 
 export interface MarketingOpsMcpDependencies {
   pool: Pool; features: { read: boolean; write: boolean; approvals?: boolean }; keyring: DelegationKeyring;
+  resolveDelegation?: (reference: string) => Promise<string>;
   refreshDelegation?: (token: string) => Promise<string>;
   rateLimiter?: ReturnType<typeof createMcpRateLimiter>;
   artifactClient?: ArtifactClient;
