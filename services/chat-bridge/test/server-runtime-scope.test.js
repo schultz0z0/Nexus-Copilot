@@ -184,7 +184,7 @@ test("bridge exposes an authenticated delegation refresh only for active stored 
   const refreshRouteBlock = extractBlock(
     source,
     'url.pathname === "/internal/marketing-ops/delegations/refresh"',
-    'url.pathname === "/api/memory/diagnostics"',
+    'url.pathname === "/internal/marketing-ops/delegations/resolve"',
   );
 
   assert.match(refreshRouteBlock, /isValidDelegationRefreshKey/);
@@ -192,6 +192,27 @@ test("bridge exposes an authenticated delegation refresh only for active stored 
   assert.match(refreshRouteBlock, /store\.get\(claims\.run_id\)/);
   assert.match(refreshRouteBlock, /refreshMarketingOpsDelegation/);
   assert.match(refreshRouteBlock, /delegation_token: refreshed/);
+});
+
+test("bridge resolves opaque delegation references only for active stored runs", () => {
+  const resolveRouteBlock = extractBlock(
+    source,
+    'url.pathname === "/internal/marketing-ops/delegations/resolve"',
+    'url.pathname === "/internal/picture/delegations/refresh"',
+  );
+  const executeRunBlock = extractBlock(source, "async executeRun(runId)", "const store = new RunStore");
+
+  assert.match(resolveRouteBlock, /isValidDelegationRefreshKey/);
+  assert.match(resolveRouteBlock, /req\.headers\["x-internal-key"\]/);
+  assert.match(resolveRouteBlock, /marketingOpsDelegationReferences\.resolve/);
+  assert.match(resolveRouteBlock, /store\.get\(runId\)/);
+  assert.match(resolveRouteBlock, /run\.status !== "running"/);
+  assert.match(resolveRouteBlock, /issueRunMarketingOpsDelegation\(run\)/);
+  assert.match(resolveRouteBlock, /delegation_token: resolved/);
+  assert.doesNotMatch(resolveRouteBlock, /delegation_reference.*jsonResponse/);
+
+  assert.match(source, /marketingOpsDelegationReferences\.issue\(run\.id\)/);
+  assert.match(executeRunBlock, /marketingOpsDelegationReferences\.revokeRun\(run\.id\)/);
 });
 
 test("run events update memory diagnostics from Hermes tool metadata", () => {

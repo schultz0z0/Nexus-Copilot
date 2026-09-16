@@ -220,11 +220,13 @@ test("all browser-originated delegations remain confirmation_intent=false", asyn
 });
 
 test("prompt text tells the model to wait for the product card after preparation", () => {
-  const systemMessage = buildMarketingOpsDelegationSystemMessage("delegation-token");
+  const systemMessage = buildMarketingOpsDelegationSystemMessage("mopref_AQIDBAUGBwgJCgsMDQ4PEBES");
+  assert.match(systemMessage, /referencia opaca/i);
   assert.match(systemMessage, /card confiavel|interface/i);
   assert.match(systemMessage, /nao chame marketing_ops_execute_plan_v1/i);
 
-  const embedded = withMarketingOpsDelegation("Mensagem", "delegation-token");
+  const embedded = withMarketingOpsDelegation("Mensagem", "mopref_AQIDBAUGBwgJCgsMDQ4PEBES");
+  assert.match(embedded, /opaque reference/i);
   assert.match(embedded, /product UI card|interface/i);
   assert.match(embedded, /do not call marketing_ops_execute_plan_v1/i);
 });

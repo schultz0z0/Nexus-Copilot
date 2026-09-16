@@ -227,8 +227,8 @@ test("Picture session preloads only the Picture planner and ENS brand contract",
   assert.doesNotMatch(request.system_message, /use.*pptx/i);
 });
 
-test("buildHermesSessionChatRequest keeps delegation out of persisted user history", () => {
-  const delegation = "header.payload.signature";
+test("buildHermesSessionChatRequest keeps the opaque delegation reference out of persisted user history", () => {
+  const delegation = "mopref_AQIDBAUGBwgJCgsMDQ4PEBES";
   const request = buildHermesSessionChatRequest({
     messageText: "liste minhas campanhas",
     attachments: [],
@@ -238,8 +238,9 @@ test("buildHermesSessionChatRequest keeps delegation out of persisted user histo
   assert.doesNotMatch(request.message, /MARKETING_OPS_DELEGATION/);
   assert.doesNotMatch(request.message, new RegExp(delegation.replaceAll(".", "\\.")));
   assert.match(request.system_message, /MARKETING_OPS_DELEGATION/);
-  assert.match(request.system_message, /Use apenas a delegacao deste turno/);
+  assert.match(request.system_message, /referencia opaca.*Copie-o exatamente/i);
   assert.match(request.system_message, new RegExp(delegation.replaceAll(".", "\\.")));
+  assert.doesNotMatch(request.system_message, /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/);
 });
 
 test("normal image generation payload remains identical when experience is omitted", () => {
@@ -691,4 +692,3 @@ test("NEXUS_MARKETING_OPS_OPERATOR_CONTRACT forbids chat execution and instructs
   assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Nunca chame marketing_ops_execute_plan_v1/i);
   assert.doesNotMatch(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Use marketing_ops_execute_plan_v1 somente/i);
 });
-

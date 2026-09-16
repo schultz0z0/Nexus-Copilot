@@ -198,7 +198,7 @@ export const isValidDelegationRefreshKey = (provided, expected) => {
 export const withMarketingOpsDelegation = (message, token) => {
   const normalized = String(message ?? "").trim();
   if (!token) return normalized;
-  return `${normalized}\n\n[MARKETING_OPS_DELEGATION]\ndelegation_token: ${token}\nUse this token only as the delegation_token argument for nexus_marketing_ops tools.\nAfter preparing a plan, instruct the user to review and execute via the product UI card in the interface.\nDo not ask for text confirmation in chat and do not call marketing_ops_execute_plan_v1.\n[/MARKETING_OPS_DELEGATION]`;
+  return `${normalized}\n\n[MARKETING_OPS_DELEGATION]\ndelegation_token: ${token}\nThis is an opaque reference. Copy it exactly as the delegation_token argument for nexus_marketing_ops tools; never inspect or rewrite it.\nAfter preparing a plan, instruct the user to review and execute via the product UI card in the interface.\nDo not ask for text confirmation in chat and do not call marketing_ops_execute_plan_v1.\n[/MARKETING_OPS_DELEGATION]`;
 };
 
 export const buildMarketingOpsDelegationSystemMessage = (token) => {
@@ -206,7 +206,7 @@ export const buildMarketingOpsDelegationSystemMessage = (token) => {
   return [
     "[MARKETING_OPS_DELEGATION]",
     `delegation_token: ${token}`,
-    "Use apenas a delegacao deste turno como delegation_token nas tools nexus_marketing_ops.",
+    "Este valor e uma referencia opaca. Copie-o exatamente como delegation_token nas tools nexus_marketing_ops; nunca inspecione nem reescreva seu conteudo.",
     "Nunca reutilize delegation_token de tool calls ou do historico; valores redigidos sao invalidos.",
     "Apos preparar o plano com marketing_ops_prepare_plan_v1, oriente o usuario a revisar e executar atraves do card confiavel da interface.",
     "Nao peca confirmacao textual no chat e nao chame marketing_ops_execute_plan_v1.",

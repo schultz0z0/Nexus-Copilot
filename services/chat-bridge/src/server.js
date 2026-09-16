@@ -35,6 +35,7 @@ import {
   validateChatExperience,
 } from "./picture-mode.js";
 import {
+  createMarketingOpsDelegationReferenceRegistry,
   isValidDelegationRefreshKey,
   issueMarketingOpsDelegation,
   redactMarketingOpsDelegation,
@@ -885,6 +886,11 @@ const issueRunMarketingOpsDelegation = async (run) => {
   }, scopes, config.marketingOpsDelegation);
 };
 
+const issueRunMarketingOpsDelegationReference = (run) => {
+  if (!config.marketingOpsDelegation.activeKey) return "";
+  return marketingOpsDelegationReferences.issue(run.id);
+};
+
 const issueRunPictureDelegation = async (run) => {
   if (run.experience !== "picture") return "";
   return issuePictureDelegation({
@@ -1333,7 +1339,7 @@ class HermesBridge {
 
     try {
       const client = this.createRunsClient(run, hermesBaseUrl);
-      const marketingOpsDelegation = await issueRunMarketingOpsDelegation(run);
+      const marketingOpsDelegation = issueRunMarketingOpsDelegationReference(run);
       const requestPayload = buildHermesRunRequest({
         sessionId: run.hermes_session_id,
         messageText: run.message_text,
@@ -1396,7 +1402,7 @@ class HermesBridge {
 
 
     while (!terminalStatuses.has(run.status)) {
-      const marketingOpsDelegation = run.experience === "picture" ? "" : await issueRunMarketingOpsDelegation(run);
+      const marketingOpsDelegation = run.experience === "picture" ? "" : issueRunMarketingOpsDelegationReference(run);
       const pictureDelegation = await issueRunPictureDelegation(run);
 
       const requestPayload = buildHermesSessionChatRequest({
@@ -1580,7 +1586,7 @@ class HermesBridge {
 
 
   async fetchHermesResponse(run, hermesBaseUrl, routingState, imageTransport) {
-    const marketingOpsDelegation = await issueRunMarketingOpsDelegation(run);
+    const marketingOpsDelegation = issueRunMarketingOpsDelegationReference(run);
     const requestPayload = buildHermesResponsesRequest({
       modelName: config.hermesModelName,
       userId: run.user_id,
@@ -1712,14 +1718,16 @@ class HermesBridge {
     this.appendEvent(run, { event: "status", data: { text: "Hermes iniciou a tarefa.", tone: "info" } });
     await this.store.save(run);
 
-    if (run.mode === "session") {
-
-      await this.executeSessionApi(run, hermesBaseUrl, state);
-
-    } else if (run.mode === "responses") {
-      await this.executeResponsesApi(run, hermesBaseUrl, state);
-    } else {
-      await this.executeRunsApi(run, hermesBaseUrl);
+    try {
+      if (run.mode === "session") {
+        await this.executeSessionApi(run, hermesBaseUrl, state);
+      } else if (run.mode === "responses") {
+        await this.executeResponsesApi(run, hermesBaseUrl, state);
+      } else {
+        await this.executeRunsApi(run, hermesBaseUrl);
+      }
+    } finally {
+      marketingOpsDelegationReferences.revokeRun(run.id);
     }
   }
 }
@@ -1729,6 +1737,9 @@ const store = new RunStore({
   serviceRoleKey: config.supabaseServiceRoleKey 
 });
 const approvalRegistry = new HermesApprovalRegistry();
+const marketingOpsDelegationReferences = createMarketingOpsDelegationReferenceRegistry({
+  ttlSeconds: config.marketingOpsDelegation.refreshWindowSeconds,
+});
 const hermesStateRepository = config.supabaseUrl && config.supabaseServiceRoleKey
   ? createSupabaseHermesStateRepository({
       supabaseUrl: config.supabaseUrl,
@@ -1829,6 +1840,39 @@ const handleRequest = async (req, res) => {
       });
     } catch {
       jsonResponse(res, 401, { error: "delegation_refresh_denied" });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/internal/marketing-ops/delegations/resolve") {
+    if (!config.marketingOpsDelegationRefreshKey) {
+      jsonResponse(res, 503, { error: "delegation_resolution_not_configured" });
+      return;
+    }
+    if (!isValidDelegationRefreshKey(
+      req.headers["x-internal-key"],
+      config.marketingOpsDelegationRefreshKey,
+    )) {
+      jsonResponse(res, 401, { error: "unauthorized" });
+      return;
+    }
+
+    const payload = await readJsonBody(req, 4_096);
+    const reference = typeof payload.delegation_reference === "string"
+      ? payload.delegation_reference
+      : "";
+    try {
+      const runId = marketingOpsDelegationReferences.resolve(reference);
+      const run = await store.get(runId);
+      if (!run || run.status !== "running") throw new Error("delegation_parent_run_not_active");
+      const resolved = await issueRunMarketingOpsDelegation(run);
+      const resolvedClaims = decodeJwt(resolved);
+      jsonResponse(res, 200, {
+        delegation_token: resolved,
+        expires_at: new Date(resolvedClaims.exp * 1000).toISOString(),
+      });
+    } catch {
+      jsonResponse(res, 401, { error: "delegation_resolution_denied" });
     }
     return;
   }
