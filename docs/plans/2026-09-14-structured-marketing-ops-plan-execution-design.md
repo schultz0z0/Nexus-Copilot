@@ -1,6 +1,6 @@
 # M6 — Execução estruturada de planos do Marketing Ops
 
-**Estado:** Aceito e implementado; homologação bloqueada pela correção de delegação opaca  
+**Estado:** Aceito e implementado; homologação bloqueada pela correção de delegação opaca
 **Data:** 2026-09-14  
 **Marco:** M6 — gate complementar obrigatório  
 **Decisão:** [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md)
