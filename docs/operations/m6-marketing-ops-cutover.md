@@ -579,7 +579,7 @@ só pode ocorrer em destino isolado após diagnóstico e autorização humana.
 Este checkpoint substitui somente a passagem da credencial entre Chat Bridge,
 Hermes e Marketing Ops. Não altera banco, migration `0017`, App API, Chat Web,
 card ou semântica do botão. O commit candidato de código é
-`4ffdc5c9ecbd70c9cb86a85c4457a67c7846c639`; ele só passa a ser aprovado para
+`5b6d0b68266bc7b70cfd57a08bbdfafb4a397a32`; ele só passa a ser aprovado para
 produção depois que as suítes integrais registradas no plano TDD estiverem
 verdes e o commit estiver em `main`/`origin/main`.
 
@@ -591,7 +591,7 @@ verdes e o commit estiver em `main`/`origin/main`.
 set -euo pipefail
 cd /opt/prometeus-marketing
 
-opaque_code_commit=4ffdc5c9ecbd70c9cb86a85c4457a67c7846c639
+opaque_code_commit=5b6d0b68266bc7b70cfd57a08bbdfafb4a397a32
 test "$(git branch --show-current)" = main
 test -z "$(git status --porcelain)"
 git fetch origin main
