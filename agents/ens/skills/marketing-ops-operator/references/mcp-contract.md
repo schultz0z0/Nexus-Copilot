@@ -2,8 +2,11 @@
 
 Use this reference before preparing a write, mapping a user request to an
 action, or diagnosing a rejected payload. Marketing Ops remains the only
-transactional source of truth. The Bridge injects short-lived authorization;
-never request, copy, or disclose delegation or plan tokens.
+transactional source of truth. The Bridge injects a short opaque authorization
+reference for the current Run. Pass that reference unchanged only in the
+`delegation_token` tool argument; never inspect, reconstruct, retain, request,
+or disclose it. A value beginning with `mopref_` is not a JWT and must never be
+decoded or modified.
 
 ## Tool boundary
 

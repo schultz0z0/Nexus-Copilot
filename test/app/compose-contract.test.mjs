@@ -62,6 +62,22 @@ test("marketing-ops optional RAG probe times out before Docker readiness", () =>
   );
 });
 
+test("marketing-ops resolves opaque delegation references only through the private bridge", () => {
+  const composePath = path.resolve("infra/app/compose.yaml");
+  const content = readFileSync(composePath, "utf8");
+
+  assert.match(
+    content,
+    /MARKETING_OPS_DELEGATION_RESOLVE_URL:\s*http:\/\/chat-bridge:8080\/internal\/marketing-ops\/delegations\/resolve/,
+    "marketing-ops must resolve opaque references through the private chat bridge route",
+  );
+  assert.match(
+    content,
+    /MARKETING_OPS_INTERNAL_KEY:\s*\$\{MARKETING_OPS_DELEGATION_REFRESH_KEY:-\}/,
+    "delegation resolution must reuse the authenticated internal bridge key",
+  );
+});
+
 test("structured plan execution is wired behind explicit backend and frontend flags", () => {
   const baseCompose = readFileSync(path.resolve("infra/app/compose.yaml"), "utf8");
   const developmentCompose = readFileSync(
