@@ -1,6 +1,6 @@
 # M6 — Referência opaca de delegação do Marketing Ops
 
-**Estado:** Aceito; implementação concluída, gate integral pendente  
+**Estado:** Aceito; implementação e gate local concluídos, VPS pendente
 **Data:** 2026-09-15  
 **Marco:** M6 — gate complementar obrigatório  
 **Decisão relacionada:** [ADR-0004](../decisions/ADR-0004-structured-marketing-ops-plan-execution.md)

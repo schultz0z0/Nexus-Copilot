@@ -1,7 +1,8 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** Checkpoint estruturado implantado; correção de delegação opaca pendente de gate e homologação
+**Estado:** Gate opaco local aprovado; Checkpoint 6 produtivo pendente
+**Último gate local:** 2026-09-16
 **Última homologação produtiva:** 2026-09-15
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
@@ -574,14 +575,25 @@ e recrie somente os serviços afetados. Não remova a migration `0017`, não apa
 registros de plano/approval e não execute `down --volumes`. Restauração de banco
 só pode ocorrer em destino isolado após diagnóstico e autorização humana.
 
-## Checkpoint 6 — delegação opaca por Run (preparado; aguarda gate local)
+## Checkpoint 6 — delegação opaca por Run (gate local aprovado; não executado na VPS)
 
 Este checkpoint substitui somente a passagem da credencial entre Chat Bridge,
 Hermes e Marketing Ops. Não altera banco, migration `0017`, App API, Chat Web,
 card ou semântica do botão. O commit candidato de código é
-`5b6d0b68266bc7b70cfd57a08bbdfafb4a397a32`; ele só passa a ser aprovado para
-produção depois que as suítes integrais registradas no plano TDD estiverem
-verdes e o commit estiver em `main`/`origin/main`.
+`5b6d0b68266bc7b70cfd57a08bbdfafb4a397a32`. As suítes integrais registradas no
+plano TDD estão verdes; a execução produtiva só é autorizada depois que esse
+commit estiver em `main`/`origin/main`.
+
+### Evidência local da correção
+
+- frontend 193/193;
+- Marketing Ops 291 aprovados e 2 E2E deliberadamente ignorados;
+- Chat Bridge 131/131, Artifact Server 13/13 e App API 87/87;
+- typechecks e builds de produção aprovados;
+- contratos App 11/11, Hermes 22/22 e profile ENS válido;
+- stack descartável: MCP com 10 ferramentas, Playwright real aprovado, smoke
+  14/14, 1 plano, 1 approval `pending`, 0 decisões, 0 ações externas e rollback
+  por flags aprovado.
 
 ### 6.0 — preflight do candidato
 

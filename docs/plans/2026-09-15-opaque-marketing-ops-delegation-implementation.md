@@ -11,8 +11,9 @@
 **Status em 2026-09-16:** Tasks 1–6 implementadas em TDD. Registro opaco sem
 retenção do valor bruto, resolução interna autenticada, leitura de resposta com
 limite durante o streaming, verificação JWT posterior, Compose, profile
-`ens@0.1.2` e documentação passaram nos testes focados. Task 7 (suítes
-integrais, integração em `main` e push) permanece aberta.
+`ens@0.1.2` e documentação passaram nos testes focados. As suítes integrais,
+builds e ensaio descartável da Task 7 passaram; restam somente integração em
+`main`, push e homologação humana pelo Checkpoint 6.
 
 ---
 

@@ -17,7 +17,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
-| M6 — dados e cutover | Correção de delegação opaca em validação | execução estruturada implantada; homologação bloqueada antes da mutação por credencial reconstruída pelo modelo |
+| M6 — dados e cutover | Gate opaco local aprovado; VPS pendente | execução estruturada implantada; correção que retira o JWT do contexto do modelo aprovada localmente |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
 ## Estimativa de progresso global
@@ -34,7 +34,7 @@ do legado sem aceite no alvo não conta como concluído.
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
-| M6 | 10% | 9% | schema/backup/cutover técnico e execução estruturada implantados; correção opaca ainda exige gate local integral e nova homologação produtiva |
+| M6 | 10% | 9% | schema/backup/cutover técnico e execução estruturada implantados; correção opaca aprovada localmente e nova homologação produtiva pendente |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
 | **Total** | **100%** | **93% de crédito estimado / 7% restante** | M6 não concluído; estimativa em 2026-09-15 |
 
@@ -294,6 +294,15 @@ o Chat Bridge entrega ao Hermes somente `mopref_...`, resolve a referência por
 canal interno autenticado e emite o JWT real apenas servidor a servidor. O
 Hermes oficial e o fluxo do botão permanecem inalterados. O gate produtivo só
 pode reabrir depois da suíte local integral e do novo Checkpoint 6 do runbook.
+
+**Gate local da correção aprovado em 2026-09-16:** o runner PostgreSQL isolado
+validou frontend 193/193, Marketing Ops 291 testes aprovados com 2 E2E
+deliberadamente ignorados, Chat Bridge 131/131, Artifact Server 13/13 e App API
+87/87. Typechecks, builds, contratos App 11/11, contratos Hermes 22/22 e profile
+ENS também passaram. O ensaio integral da stack descobriu 10 ferramentas no
+Hermes oficial, passou Playwright real, smoke autenticado 14/14, comprovou 1
+plano, 1 approval pendente, 0 decisões, 0 ações externas e rollback por flags.
+O próximo gate é exclusivamente o Checkpoint 6 operado pelo responsável na VPS.
 
 ## M7 — Hardening e retirada do legado
 

@@ -28,7 +28,7 @@ nova.
 | Fundação PostgreSQL (M3) | Concluído na VPS | [desenho M3](plans/2026-09-10-postgresql-foundation-design.md), [ADR-0002](decisions/ADR-0002-postgresql-runtime-roles-and-rls.md), [runbook](operations/postgresql-foundation.md) e [guia VPS](operations/vps-architecture-and-layout.md) |
 | Auth, Sessões e App API (M4) | Concluído na VPS | [ADR-0003](decisions/ADR-0003-auth-sessions-and-app-api.md) e [desenho de arquitetura M4](plans/2026-09-11-m4-auth-bff-architecture-design.md) |
 | Capacidades locais substitutas (M5) | Concluído na VPS | [desenho M5](plans/2026-09-13-m5-local-capabilities-design.md) |
-| Marketing Ops e cutover (M6) | Em homologação; correção de delegação opaca em validação | [desenho M6](plans/2026-09-13-m6-marketing-ops-and-cutover-design.md), [execução estruturada](plans/2026-09-14-structured-marketing-ops-plan-execution-design.md), [delegação opaca](plans/2026-09-15-opaque-marketing-ops-delegation-design.md), [plano TDD da correção](plans/2026-09-15-opaque-marketing-ops-delegation-implementation.md), [runbook](operations/m6-marketing-ops-cutover.md) e [ADR-0004](decisions/ADR-0004-structured-marketing-ops-plan-execution.md) |
+| Marketing Ops e cutover (M6) | Gate opaco local aprovado; nova homologação VPS pendente | [desenho M6](plans/2026-09-13-m6-marketing-ops-and-cutover-design.md), [execução estruturada](plans/2026-09-14-structured-marketing-ops-plan-execution-design.md), [delegação opaca](plans/2026-09-15-opaque-marketing-ops-delegation-design.md), [plano TDD da correção](plans/2026-09-15-opaque-marketing-ops-delegation-implementation.md), [runbook](operations/m6-marketing-ops-cutover.md) e [ADR-0004](decisions/ADR-0004-structured-marketing-ops-plan-execution.md) |
 | Migração de Supabase | Em execução; inventário inicial registrado | [desenho da migração](plans/2026-08-27-supabase-to-local-services-migration-design.md) e [inventário de capacidades](migration/supabase-capability-inventory.md) |
 | Ledger DDL do Supabase | Implementação e scan local concluídos | [relatório](migration/supabase-ledger/supabase-object-ledger.md) e [plano/evidências](plans/2026-09-10-supabase-ddl-ledger-implementation.md) |
 | Migração inicial do monorepo | Baseline concluída | [desenho](plans/2026-08-27-initial-monorepo-migration-design.md) e [plano](plans/2026-08-27-initial-monorepo-migration.md) |
@@ -37,8 +37,8 @@ M1–M5 estão concluídos. O card estruturado e o botão **Executar plano** já
 implantados no checkpoint produtivo do M6, mas a homologação revelou que o JWT
 de delegação atravessava o contexto do modelo e foi reconstruído de forma
 inválida. A correção mantém o JWT fora do Hermes por meio de uma referência
-opaca por Run. O M6 permanece não concluído até a validação local integral e a
-nova homologação assistida na VPS.
+opaca por Run. O gate local integral dessa correção foi aprovado em 2026-09-16.
+O M6 permanece não concluído até a nova homologação assistida na VPS.
 
 ## Mapa da documentação
 
