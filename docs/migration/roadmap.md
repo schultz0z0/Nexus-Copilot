@@ -313,9 +313,14 @@ pelo painel falhou fechada com PostgreSQL `42501` em `iam.principals`. O
 diagnóstico confirmou App API conectada como `nexus_app`, grants presentes e a
 ausência, no banco histórico, das políticas RLS de escrita/leitura administrativa
 para `iam.principals` e `iam.memberships`. A correção versionada é a migration
-`0018_iam_admin_tenant_rls.sql`, acompanhada de contexto transacional na App API;
-ela ainda precisa ser liberada e validada na VPS antes da decisão humana e do
-encerramento de M6.
+`0018_iam_admin_tenant_rls.sql`, acompanhada de contexto transacional na App API.
+Após sua aplicação, a listagem funcionou, mas a criação continuou negada porque o
+`INSERT ... RETURNING` exigia uma política `SELECT` antes de a membership do novo
+principal existir. A correção complementar remove esse `RETURNING`, preserva a
+transação principal/credencial/membership e possui teste de regressão. Ela requer
+somente rebuild/recreate da App API na VPS; a decisão humana e o encerramento de
+M6 continuam bloqueados até a criação do segundo gestor e a decisão do pacote
+inerte serem homologadas.
 
 ## M7 — Hardening e retirada do legado
 

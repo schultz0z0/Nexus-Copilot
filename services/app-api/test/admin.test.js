@@ -12,6 +12,7 @@ function createMockAdminDb() {
   const sessions = [];
   const integrations = [];
   const contexts = [];
+  const principalInsertStatements = [];
 
   const db = {
     tenants,
@@ -21,6 +22,7 @@ function createMockAdminDb() {
     sessions,
     integrations,
     contexts,
+    principalInsertStatements,
     async withTransaction(cb) {
       return cb(db);
     },
@@ -155,6 +157,7 @@ function createMockAdminDb() {
 
       // INSERT INTO iam.principals
       if (normalizedSql.includes("insert into iam.principals")) {
+        principalInsertStatements.push(normalizedSql);
         let id, email, fullName;
         if (params.length === 3) {
           [id, email, fullName] = params;
@@ -371,6 +374,10 @@ test("Admin Routes & Authorization", async (t) => {
     assert.strictEqual(body.user.email, "newuser@ens.local");
     assert.strictEqual(body.user.full_name, "Novo Usuário");
     assert.strictEqual(body.user.role, "manager");
+    assert.ok(
+      db.principalInsertStatements.every((sql) => !sql.includes("returning")),
+      "a principal is inserted before its membership exists and must not require a tenant-scoped SELECT policy via RETURNING",
+    );
     createdUserId = body.user.id;
   });
 

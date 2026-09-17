@@ -775,6 +775,17 @@ listar e gerir apenas os principals/memberships do tenant corrente. Não crie
 usuários por SQL manual, não altere políticas diretamente na VPS e não reutilize
 o solicitante como aprovador.
 
+**Regressão identificada em 2026-09-17:** mesmo com `0018` aplicada, a primeira
+tentativa de criar o segundo gestor retornou `42501` em `iam.principals`. A causa
+não é falta de contexto nem de grants: PostgreSQL aplica a política `SELECT` ao
+`INSERT ... RETURNING`; naquele ponto a membership ainda não existe e a política
+tenant-scoped não pode enxergar o principal recém-inserido. A correção na App API
+remove o `RETURNING`, usa o UUID já gerado pela aplicação e só devolve o objeto
+após concluir, na mesma transação, principal, credencial e membership. O teste de
+regressão falha se o insert voltar a depender de `RETURNING`. Esta correção exige
+apenas rebuild/recreate da App API; não requer migration adicional nem alteração
+manual de RLS na VPS.
+
 Depois de aplicar a release que contém a migration `0018` e recriar a App API:
 
 1. Como admin, confira que `/admin/users` lista os membros do tenant e crie o

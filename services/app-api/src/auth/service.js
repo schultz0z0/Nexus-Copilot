@@ -224,40 +224,38 @@ export async function createAdminUser(db, tenantId, { email, password, fullName,
     const cleanName = fullName ? fullName.trim() : null;
     const userId = randomUUID();
 
-    const pRes = await client.query(
+    await client.query(
       `INSERT INTO iam.principals (id, email, full_name)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, full_name, avatar_url, created_at, updated_at`,
+       VALUES ($1, $2, $3)`,
       [userId, normalizedEmail, cleanName]
     );
-    const principal = pRes.rows[0];
 
     const passwordHash = await hashPassword(password);
     await client.query(
       `INSERT INTO iam.user_credentials (user_id, password_hash)
        VALUES ($1, $2)`,
-      [principal.id, passwordHash]
+      [userId, passwordHash]
     );
 
     if (tenantId) {
       await client.query(
         `INSERT INTO iam.memberships (tenant_id, principal_id, role, active)
          VALUES ($1, $2, $3, true)`,
-        [tenantId, principal.id, role]
+        [tenantId, userId, role]
       );
     }
 
     return {
-      id: principal.id,
-      email: principal.email,
-      full_name: principal.full_name,
+      id: userId,
+      email: normalizedEmail,
+      full_name: cleanName,
       avatar_url: null,
       role,
       active: true,
       hermes_enabled: false,
       hermes_base_url: null,
-      created_at: principal.created_at,
-      updated_at: principal.updated_at,
+      created_at: null,
+      updated_at: null,
     };
   };
 
