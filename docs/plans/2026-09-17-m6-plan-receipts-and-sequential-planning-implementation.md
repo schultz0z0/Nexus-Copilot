@@ -1,5 +1,8 @@
 # M6 Plan Receipts and Sequential Planning Implementation Plan
 
+**Estado:** Implementação local concluída em 2026-09-17; homologação produtiva
+do Checkpoint 7 pendente.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Keep executed Marketing Ops plans as durable receipts in chat and allow a new independently authorized plan later in the same chat without textual reauthorization.

@@ -1,5 +1,8 @@
 # M6: recibos de plano e planejamento sequencial no mesmo chat
 
+**Estado:** Implementado e validado localmente em 2026-09-17; Checkpoint 7 VPS
+pendente.
+
 ## Contexto
 
 A homologação manual do M6 confirmou o fluxo completo de leitura, preparação,

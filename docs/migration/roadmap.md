@@ -1,7 +1,7 @@
 # Roadmap da migração ENS
 
 **Estado geral:** Em execução  
-**Atualizado em:** 2026-09-16
+**Atualizado em:** 2026-09-17
 
 ## Regra de progressão
 
@@ -17,7 +17,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
-| M6 — dados e cutover | Gate opaco local aprovado; VPS pendente | execução estruturada implantada; correção que retira o JWT do contexto do modelo aprovada localmente |
+| M6 — dados e cutover | Gate funcional VPS aprovado; Checkpoint 7 pendente | recibos persistentes e novos planos sequenciais aprovados localmente |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
 ## Estimativa de progresso global
@@ -34,9 +34,9 @@ do legado sem aceite no alvo não conta como concluído.
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
-| M6 | 10% | 9% | schema/backup/cutover técnico e execução estruturada implantados; correção opaca aprovada localmente e nova homologação produtiva pendente |
+| M6 | 10% | 9% | fluxo funcional homologado; recibos e planos sequenciais aprovados localmente, com Checkpoint 7 produtivo pendente |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **93% de crédito estimado / 7% restante** | M6 não concluído; estimativa em 2026-09-15 |
+| **Total** | **100%** | **93% de crédito estimado / 7% restante** | M6 não concluído; estimativa em 2026-09-17 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -330,6 +330,30 @@ solicitação `approved` e uma decisão `approved`, sem efeito externo. A
 segregação de funções, o botão explícito de execução e a decisão humana estão
 homologados. M6 ainda **não está concluído**: falta implementar e homologar o
 recibo persistente de resultado no chat, solicitado como etapa final de UX.
+
+**Gate local final aprovado em 2026-09-17:** o
+[desenho de recibos e planejamento sequencial](../plans/2026-09-17-m6-plan-receipts-and-sequential-planning-design.md)
+e o respectivo
+[plano TDD](../plans/2026-09-17-m6-plan-receipts-and-sequential-planning-implementation.md)
+foram implementados sem alterar o core do Hermes, a emissão de credenciais, o
+TTL, a separação de funções ou o caminho BFF. O Chat Web consulta uma visão
+recente limitada e segura de planos, preservando estados terminais como recibos
+depois do clique e do reload. O backend serializa a preparação por tenant, ator
+e chat e invalida a versão pendente anterior, mantendo no máximo um card
+executável por conversa. Um plano continua podendo conter várias ações; somente
+um novo pedido posterior cria uma nova Run, nova referência opaca e novo card,
+sem herdar autorização do histórico nem exigir que o usuário escreva uma nova
+frase de autorização.
+
+O runner PostgreSQL isolado validou migrations `0001`–`0018` e sua repetição
+idempotente, frontend 197/197, Marketing Ops 296 testes aprovados com 2 E2E
+deliberadamente ignorados, Chat Bridge 131/131, Artifact Server 13/13 e App API
+88/88. Typechecks, builds, contratos App 11/11, contratos Hermes 23/23 e profile
+ENS `0.1.3` também passaram. A nova UX distingue conclusão total, parcial,
+falha, expiração e substituição, informa que um approval criado está
+**pendente** e só publica deep links internos reconhecidos. O M6 continua
+**não concluído** até o Checkpoint 7 reproduzir na VPS o recibo após reload e um
+segundo plano no mesmo chat.
 
 ## M7 — Hardening e retirada do legado
 

@@ -1,9 +1,9 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** Gate opaco local aprovado; Checkpoint 6 produtivo pendente
-**Último gate local:** 2026-09-16
-**Última homologação produtiva:** 2026-09-15
+**Estado:** Gate funcional produtivo aprovado; Checkpoint 7 pendente
+**Último gate local:** 2026-09-17
+**Última homologação produtiva:** 2026-09-17
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
 ## Objetivo e fronteiras
@@ -824,3 +824,156 @@ Mantenha migration `0017`, flags, dados e volumes. O profile `0.1.2` pode
 permanecer instalado durante a investigação, mas nenhuma escrita deve ser
 homologada com os serviços revertidos. Não execute `down --volumes`, não apague
 planos/approvals e não restaure banco em produção.
+
+## Checkpoint 7 — recibos persistentes e planos sequenciais no mesmo chat
+
+Este é o último checkpoint aberto do M6. Ele implanta somente a melhoria descrita
+no [desenho de recibos e planejamento sequencial](../plans/2026-09-17-m6-plan-receipts-and-sequential-planning-design.md)
+e no [plano TDD](../plans/2026-09-17-m6-plan-receipts-and-sequential-planning-implementation.md).
+Um plano continua sendo um único card e pode conter várias ações. O objetivo é
+preservar esse card como recibo terminal e permitir que um pedido posterior gere
+outro plano independente na mesma conversa.
+
+### Evidência local do Checkpoint 7
+
+- profile ENS `0.1.3` e contrato do Chat Bridge exigem nova Run e nova referência
+  opaca para um novo pedido, sem herdar autorização do histórico;
+- a preparação é serializada por tenant, ator e chat; uma nova versão invalida o
+  plano pendente anterior e somente um card permanece executável;
+- a leitura de planos recentes é actor-scoped, limitada e sanitizada; não expõe
+  credenciais, chaves de idempotência, payload interno nem referências opacas;
+- o card terminal diferencia `completed`, `partial`, `failed`, `expired` e
+  `invalidated`, sobrevive ao reload e nunca reexibe **Executar plano**;
+- a criação de approval é apresentada como **pendente**, não como decisão
+  aprovada; deep links desconhecidos ou externos são descartados;
+- migrations `0001`–`0018` e replay idempotente passaram no PostgreSQL isolado;
+- frontend 197/197, Marketing Ops 296 aprovados + 2 E2E ignorados, Chat Bridge
+  131/131, Artifact Server 13/13, App API 88/88, contratos App 11/11 e Hermes
+  23/23 passaram; typechecks, builds e validação do profile também passaram.
+
+### 7.0 — pré-condições e sincronização da release
+
+**Impacto:** atualiza somente o checkout Git. Não altera containers, banco,
+profile ou tráfego.
+
+1. O operador deve receber o SHA completo anunciado para a release e atribuí-lo
+   a `target_commit`; não use um SHA abreviado nem aceite outro `origin/main`.
+2. Confirme branch `main`, árvore limpa e commit atual conhecido.
+3. Execute `git fetch origin main`, compare `origin/main` ao SHA anunciado e faça
+   somente `git merge --ff-only origin/main`.
+4. Confirme `agents/ens/distribution.yaml` em `0.1.3` e a presença dos dois
+   documentos do Checkpoint 7.
+
+**Resultado esperado:** árvore limpa, `HEAD` exatamente no SHA anunciado e
+profile `0.1.3` presente.
+
+**Pare** em árvore suja, branch divergente, merge não fast-forward, SHA diferente
+ou arquivo ausente. Não faça reset, checkout destrutivo ou stash automático.
+
+### 7.1 — rollback images e build dos serviços afetados
+
+**Impacto:** cria tags locais de rollback e reconstrói imagens sem reiniciar os
+containers ativos. PostgreSQL e dados não são alterados.
+
+1. Confirme `healthy` para `marketing-ops`, `chat-bridge` e `chat-web`.
+2. Marque as imagens atuais como
+   `ens-rollback/<serviço>:pre-plan-receipts-<release_short>`.
+3. Construa `marketing-ops`, `chat-bridge` e `chat-web` com os mesmos arquivos
+   Compose de produção e `--pull`.
+4. Confirme que as três imagens novas existem antes de recriar qualquer serviço.
+
+**Resultado esperado:** três tags de rollback válidas e três imagens novas,
+enquanto a stack antiga continua saudável.
+
+**Pare** se um serviço não estiver saudável, uma imagem/tag não existir ou o
+build falhar. Não execute `down`, não remova volumes e não faça prune.
+
+### 7.2 — recriação progressiva e atualização do profile
+
+**Impacto:** pequenas interrupções isoladas por serviço. Não reinicia PostgreSQL,
+Artifact Server ou App API e não publica portas novas.
+
+1. Recrie primeiro `marketing-ops`, depois `chat-bridge` e por último `chat-web`,
+   sempre com `--no-build --no-deps --force-recreate --wait`.
+2. Após cada recriação, confirme container `running` e `healthy`; confirme também
+   que todos os demais serviços continuam saudáveis e sem portas publicadas.
+3. Execute `hermes-profile-init`, confirme `ens@0.1.3`, recrie somente `hermes`
+   e rode `hermes -p ens mcp test nexus_marketing_ops`.
+4. Confirme exatamente 10 ferramentas MCP e nenhum restart inesperado.
+
+**Resultado esperado:** serviços afetados e Hermes saudáveis, profile `0.1.3`,
+MCP privado conectado e 10 ferramentas descobertas.
+
+**Pare** no primeiro healthcheck vermelho, porta pública, versão divergente,
+contagem diferente de ferramentas ou pedido de alteração no core do Hermes.
+
+### 7.3 — smoke técnico antes do navegador
+
+**Impacto:** apenas leituras e testes negativos; não prepara nem executa plano.
+
+1. Rode o smoke consolidado da stack e confirme todos os serviços saudáveis.
+2. Confirme que `GET /v1/agent-plans?status=all&limit=10` continua protegido por
+   autenticação e que o navegador o acessa somente pela App API/BFF.
+3. Confirme que Chat Bridge e Marketing Ops não publicam portas nem rotas
+   Traefik e que nenhum log contém JWT, `mopref_`, secret ou chave de execução.
+
+**Resultado esperado:** smoke integral verde, nenhuma escrita e nenhuma
+credencial exposta.
+
+**Pare** em 5xx, restart, rota pública, bypass do BFF ou dado sensível em log.
+
+### 7.4 — homologação manual autenticada
+
+Use uma conversa já capaz de executar planos e mantenha as ações em sandbox ou
+de baixo risco durante este checkpoint.
+
+1. Peça um plano único com uma ou mais ações relacionadas. Confirme somente um
+   card pendente e um único botão **Executar plano**.
+2. Clique uma vez. Confirme estado ocupado e, ao terminar, um recibo explícito:
+   conclusão total, parcial, falha ou approval criado como **pendente**.
+3. Recarregue a página. O mesmo card deve continuar visível como recibo terminal,
+   sem botão de execução e sem criar nova Run.
+4. No **mesmo chat**, faça um pedido posterior e diferente. Não escreva “autorizo
+   novamente”. O Hermes deve abrir uma nova Run, usar somente a nova referência
+   opaca e preparar outro card normalmente.
+5. Antes de executar o novo card, peça uma revisão dele. A versão anterior deve
+   aparecer como **Substituído** e somente a versão mais nova pode ter botão.
+6. Execute a versão nova uma única vez. Confirme que o recibo anterior permanece,
+   o novo recibo é persistido e nenhum card terminal volta a ser executável.
+7. Se houver approval, valide a decisão humana pelo segundo gestor já criado; o
+   chat não deve afirmar que a solicitação foi aprovada no momento da criação.
+
+**Resultado esperado:** vários planos históricos podem coexistir no chat, cada
+qual em um card; no máximo um fica pendente/executável. Cada pedido posterior usa
+nova Run/ref, não herda autorização e não exige confirmação textual interpretada
+pelo modelo.
+
+**Pare** se houver dois botões executáveis, desaparecimento do recibo após reload,
+recusa indevida de novo planejamento, reutilização da Run/ref, nova Run causada
+pelo clique, duplicidade, status falso de aprovação ou qualquer efeito externo
+não revisado no card.
+
+### 7.5 — evidência sanitizada e critério de fechamento
+
+Registre sem payloads ou credenciais:
+
+- contagem e status dos planos da conversa, ordenados por criação;
+- `max(execution_attempts)` por plano terminal, que deve ser `1`;
+- no máximo um plano `pending` para tenant, ator e chat;
+- contagem de approvals e decisões, quando aplicável;
+- ausência de JWT e referência opaca no histórico visível e nos logs coletados;
+- saúde final dos serviços e SHA integral implantado.
+
+O M6 só muda para **Concluído** após todas as evidências acima e a percepção de
+UX serem aprovadas pelo responsável. Até lá, o estado permanece Checkpoint 7
+pendente.
+
+### Rollback do Checkpoint 7
+
+Interrompa novos testes. Reaponte as imagens `marketing-ops`, `chat-bridge` e
+`chat-web` para `ens-rollback/<serviço>:pre-plan-receipts-<release_short>` e
+recrie apenas esses serviços, um por vez, com espera de saúde. Reinstale o profile
+ENS anterior somente se o contrato `0.1.3` estiver implicado; não modifique o core
+do Hermes. Preserve migrations `0017`/`0018`, planos, approvals, decisões,
+volumes e banco. Não execute `down --volumes`, restore ou exclusão manual de
+registros. Depois do rollback, mantenha escrita/approvals suspensos até análise.
