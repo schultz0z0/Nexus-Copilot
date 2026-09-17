@@ -762,6 +762,34 @@ em UI/log, ausência do card, nova Run no clique, duplicidade, decisão automát
 ou efeito externo. Não aumente TTL, não edite token e não tente confirmar por
 texto.
 
+### 6.5 — aprovação humana por segundo gestor
+
+Uma solicitação operacional não pode ser decidida pelo mesmo ator que a criou.
+Isso é uma separação de funções deliberada: para validar a decisão humana, use
+um segundo usuário `manager` ou `admin` do **mesmo tenant**.
+
+O painel administrativo depende da App API executar as consultas em contexto
+transacional (`app.user_id` e `app.tenant_id`). A migration
+`0018_iam_admin_tenant_rls.sql` completa as políticas de RLS necessárias para
+listar e gerir apenas os principals/memberships do tenant corrente. Não crie
+usuários por SQL manual, não altere políticas diretamente na VPS e não reutilize
+o solicitante como aprovador.
+
+Depois de aplicar a release que contém a migration `0018` e recriar a App API:
+
+1. Como admin, confira que `/admin/users` lista os membros do tenant e crie o
+   segundo manager pelo próprio painel.
+2. Faça login como esse segundo manager, abra a solicitação pendente e confira
+   que ela continua `operational`, `low`, `sandbox`, inerte e sem alvos externos.
+3. Decida uma única vez e registre somente as contagens sanitizadas: um plano
+   `completed`, um approval `approved`, uma decisão e zero ações externas.
+
+**Pare** se o painel não listar os usuários do tenant, se a criação retornar
+5xx, se o aprovador for o solicitante, se a solicitação divergir do pacote
+inerte ou se houver qualquer efeito externo. O rollback da correção é reverter
+somente a App API para a imagem marcada antes do deploy; a migration é
+aditiva e não deve ser removida em produção.
+
 ### Rollback do Checkpoint 6
 
 Interrompa a homologação. Reaponte localmente as imagens dos dois serviços para

@@ -23,6 +23,17 @@ export async function adminRoutes(fastify, options) {
   const { db, config } = options;
   const cookieName = config?.cookieName || "ens_session";
 
+  const withAdminContext = async (user, callback) => {
+    if (typeof db.withUserContext !== "function") {
+      return callback(db);
+    }
+
+    return db.withUserContext(
+      { userId: user.id, tenantId: user.tenant_id },
+      callback,
+    );
+  };
+
   // Authorization pre-handler: requires valid session and role === 'admin'
   fastify.addHook("preHandler", async (request, reply) => {
     let token = request.cookies?.[cookieName];
@@ -52,8 +63,10 @@ export async function adminRoutes(fastify, options) {
 
   // GET /api/admin/users
   fastify.get("/api/admin/users", async (request, reply) => {
-    const users = await listAdminUsers(db, request.user.tenant_id);
-    return { users };
+    return withAdminContext(request.user, async (scopedDb) => {
+      const users = await listAdminUsers(scopedDb, request.user.tenant_id);
+      return { users };
+    });
   });
 
   // POST /api/admin/users
@@ -74,12 +87,14 @@ export async function adminRoutes(fastify, options) {
     }
 
     try {
-      const user = await createAdminUser(db, request.user.tenant_id, {
-        email,
-        password,
-        fullName: fullName || full_name,
-        role: assignedRole,
-      });
+      const user = await withAdminContext(request.user, (scopedDb) =>
+        createAdminUser(scopedDb, request.user.tenant_id, {
+          email,
+          password,
+          fullName: fullName || full_name,
+          role: assignedRole,
+        }),
+      );
 
       return reply.code(201).send({ user });
     } catch (err) {
@@ -117,7 +132,9 @@ export async function adminRoutes(fastify, options) {
     }
 
     try {
-      const updated = await updateAdminUser(db, request.user.tenant_id, id, body);
+      const updated = await withAdminContext(request.user, (scopedDb) =>
+        updateAdminUser(scopedDb, request.user.tenant_id, id, body),
+      );
       if (!updated) {
         return reply.code(404).send({ error: "User not found" });
       }
@@ -141,7 +158,9 @@ export async function adminRoutes(fastify, options) {
     }
 
     try {
-      await resetAdminUserPassword(db, id, password);
+      await withAdminContext(request.user, (scopedDb) =>
+        resetAdminUserPassword(scopedDb, id, password),
+      );
       return { ok: true };
     } catch (err) {
       request.log?.error(err);
@@ -161,7 +180,9 @@ export async function adminRoutes(fastify, options) {
     }
 
     try {
-      await deleteAdminUser(db, request.user.tenant_id, id);
+      await withAdminContext(request.user, (scopedDb) =>
+        deleteAdminUser(scopedDb, request.user.tenant_id, id),
+      );
       return { ok: true };
     } catch (err) {
       request.log?.error(err);

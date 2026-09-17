@@ -304,6 +304,19 @@ Hermes oficial, passou Playwright real, smoke autenticado 14/14, comprovou 1
 plano, 1 approval pendente, 0 decisões, 0 ações externas e rollback por flags.
 O próximo gate é exclusivamente o Checkpoint 6 operado pelo responsável na VPS.
 
+**Incidente de homologação em 2026-09-17:** o botão **Executar plano** concluiu
+uma vez o pacote inerte e criou exatamente uma solicitação operacional pendente,
+sem decisão nem ação externa. A ausência de botão para o solicitante foi
+confirmada como separação de funções: uma solicitação operacional exige um
+manager/admin diferente para decidir. A tentativa de criar esse segundo gestor
+pelo painel falhou fechada com PostgreSQL `42501` em `iam.principals`. O
+diagnóstico confirmou App API conectada como `nexus_app`, grants presentes e a
+ausência, no banco histórico, das políticas RLS de escrita/leitura administrativa
+para `iam.principals` e `iam.memberships`. A correção versionada é a migration
+`0018_iam_admin_tenant_rls.sql`, acompanhada de contexto transacional na App API;
+ela ainda precisa ser liberada e validada na VPS antes da decisão humana e do
+encerramento de M6.
+
 ## M7 — Hardening e retirada do legado
 
 **Objetivo:** operar a nova plataforma como sistema oficial e remover acessos

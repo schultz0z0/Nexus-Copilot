@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -74,3 +74,12 @@ test('rejects duplicate numeric versions before connecting to PostgreSQL', () =>
   );
 });
 
+test('includes a follow-up migration that scopes IAM administration writes to the current tenant', () => {
+  const migrationsDirectory = new URL('../migrations/', import.meta.url);
+  const migrationFiles = readdirSync(migrationsDirectory).sort();
+
+  assert.ok(
+    migrationFiles.includes('0018_iam_admin_tenant_rls.sql'),
+    'the IAM administration RLS migration must be present',
+  );
+});

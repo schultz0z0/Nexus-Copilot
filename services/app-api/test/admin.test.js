@@ -11,6 +11,7 @@ function createMockAdminDb() {
   const memberships = [];
   const sessions = [];
   const integrations = [];
+  const contexts = [];
 
   const db = {
     tenants,
@@ -19,7 +20,12 @@ function createMockAdminDb() {
     memberships,
     sessions,
     integrations,
+    contexts,
     async withTransaction(cb) {
+      return cb(db);
+    },
+    async withUserContext(context, cb) {
+      contexts.push(context);
       return cb(db);
     },
     async query(sql, params = []) {
@@ -321,6 +327,19 @@ test("Admin Routes & Authorization", async (t) => {
     assert.strictEqual(body.users.length, 2);
     assert.ok(body.users.some((u) => u.email === "admin@ens.local" && u.role === "admin"));
     assert.ok(body.users.some((u) => u.email === "member@ens.local" && u.role === "member"));
+  });
+
+  await t.test("GET /api/admin/users scopes the database query to the authenticated admin tenant", async () => {
+    const priorContextCount = db.contexts.length;
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/admin/users",
+      cookies: { ens_session: adminToken },
+    });
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(db.contexts.length, priorContextCount + 1);
+    assert.deepEqual(db.contexts.at(-1), { userId: adminId, tenantId });
   });
 
   await t.test("POST /api/admin/users validates input parameters", async () => {
