@@ -322,6 +322,15 @@ somente rebuild/recreate da App API na VPS; a decisão humana e o encerramento d
 M6 continuam bloqueados até a criação do segundo gestor e a decisão do pacote
 inerte serem homologadas.
 
+**Gate funcional concluído em 2026-09-16:** a App API corrigida foi reconstruída
+e recriada saudavelmente; o painel criou o segundo `manager` no mesmo tenant e
+ele aprovou uma única vez o pacote operacional inerte. A evidência sanitizada do
+PostgreSQL registrou um plano `completed` com uma tentativa máxima, uma
+solicitação `approved` e uma decisão `approved`, sem efeito externo. A
+segregação de funções, o botão explícito de execução e a decisão humana estão
+homologados. M6 ainda **não está concluído**: falta implementar e homologar o
+recibo persistente de resultado no chat, solicitado como etapa final de UX.
+
 ## M7 — Hardening e retirada do legado
 
 **Objetivo:** operar a nova plataforma como sistema oficial e remover acessos

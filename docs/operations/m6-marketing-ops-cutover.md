@@ -795,6 +795,20 @@ Depois de aplicar a release que contém a migration `0018` e recriar a App API:
 3. Decida uma única vez e registre somente as contagens sanitizadas: um plano
    `completed`, um approval `approved`, uma decisão e zero ações externas.
 
+**Homologação registrada em 2026-09-16:** a criação de um segundo `manager` pelo
+painel foi concluída após a correção da App API; esse ator decidiu uma única vez
+o pacote operacional inerte. A verificação no PostgreSQL confirmou exatamente um
+plano `completed` com `max_execution_attempts=1`, uma solicitação `approved` e
+uma decisão `approved`. O pacote permaneceu `sandbox`, sem audiência, envio,
+upload, publicação, integração externa ou outra mutação externa. O fluxo
+funcional de segregação e aprovação humana deste checkpoint está aprovado.
+
+O M6 permanece aberto exclusivamente para a melhoria de UX já planejada: o chat
+deve reter um recibo terminal, persistente e legível após o clique em **Executar
+plano**, deixando claro se a execução foi concluída, falhou ou resultou em
+approval pendente. Essa melhoria não altera a decisão já registrada nem reabre
+o pacote homologado.
+
 **Pare** se o painel não listar os usuários do tenant, se a criação retornar
 5xx, se o aprovador for o solicitante, se a solicitação divergir do pacote
 inerte ou se houver qualquer efeito externo. O rollback da correção é reverter
