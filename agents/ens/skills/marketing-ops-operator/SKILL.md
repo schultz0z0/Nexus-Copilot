@@ -1,7 +1,7 @@
 ---
 name: marketing-ops-operator
 description: Use when a Nexus user conversationally asks to inspect, create, or change Marketing Ops campaigns or campaign items, especially when a write requires one contextual confirmation.
-version: 1.3.2
+version: 1.3.3
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -103,6 +103,20 @@ decisions happen only in the authenticated approval UI.
    `marketing_ops_prepare_plan_v1` with the revised actions (which automatically
    invalidates the earlier pending plan) and present the revised preview. Do not
    claim execution until the user executes through the product interface.
+
+### Sequential plans in one chat
+
+A terminal plan ends only that plan, not the chat's ability to plan. A later
+user mutation in the same chat starts a new Run, uses only the opaque reference
+injected for that current Run, reads authoritative current state, and prepares a
+new plan that requires its own button click. The earlier result is context; the
+historico never authorizes the next plan.
+
+If a plan is still pending, revise or replace it through
+`marketing_ops_prepare_plan_v1`; do not create or claim a second concurrently
+executable plan. Never ask the user to authorize again by text and never infer
+expired delegation from history. Report a delegation error only when the
+current MCP call for the current Run returns that sanitized failure.
 
 For briefing → calendar/checklist, read the campaign and current schedule,
 ground institutional facts with RAG, then prepare all

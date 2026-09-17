@@ -375,9 +375,9 @@ describe('Marketing Ops frontend contracts', () => {
     const planHash = 'c'.repeat(64);
     const idempotencyKey = 'idem-exec-1';
 
-    const listResult = await client.listAgentPlans(sessionId, 'pending');
+    const listResult = await client.listAgentPlans(sessionId, 'all', 10);
     expect(listResult.data).toHaveLength(1);
-    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/marketing/agent-plans?chat_session_id=${sessionId}&status=pending`);
+    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/marketing/agent-plans?chat_session_id=${sessionId}&status=all&limit=10`);
     expect(fetch.mock.calls[0]?.[1]?.credentials).toBe('same-origin');
 
     const execResult = await client.executeAgentPlan(planId, planHash, idempotencyKey);

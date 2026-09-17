@@ -74,6 +74,24 @@ describe('agentPlans wire contract', () => {
       expect(() => parseAgentPlansListQuery({ unknown: 'field' })).toThrow();
     });
 
+    it('accepts the bounded all-status receipt view', () => {
+      const sessionId = randomUUID();
+      expect(parseAgentPlansListQuery({
+        chat_session_id: sessionId,
+        status: 'all',
+        limit: '10'
+      })).toEqual({
+        chatSessionId: sessionId,
+        status: 'all',
+        limit: 10
+      });
+    });
+
+    it('rejects unknown plan statuses and out-of-range limits', () => {
+      expect(() => parseAgentPlansListQuery({ status: 'terminal' })).toThrow();
+      expect(() => parseAgentPlansListQuery({ status: 'all', limit: '101' })).toThrow();
+    });
+
     it('parses valid execute plan body with planHash only', () => {
       const planHash = 'c'.repeat(64);
       const parsed = parseExecutePlanBody({ planHash });

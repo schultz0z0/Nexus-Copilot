@@ -134,6 +134,89 @@ describe('AgentPlanCard', () => {
     expect(screen.queryByRole('button', { name: /executar plano/i })).toBeNull();
   });
 
+  it('renders a persisted successful receipt after reload without offering execution again', () => {
+    const completedPlan: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      status: 'completed',
+      executedAt: '2026-09-17T12:30:00.000Z',
+      updatedAt: '2026-09-17T12:30:00.000Z',
+      result: {
+        status: 'completed',
+        plan_id: samplePlan.id,
+        completed: [
+          { action_index: 0, action_type: 'campaign.create_draft', idempotency_hit: false, resource: { id: 'camp-1' } }
+        ],
+        failed: [],
+        pending: [],
+        deep_links: [
+          '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111',
+          'https://attacker.example/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111'
+        ]
+      }
+    };
+
+    render(<AgentPlanCard plan={completedPlan} canWrite={true} canApprove={true} />);
+
+    expect(screen.getAllByText('Plano concluído').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/1 ação concluída/i)).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: /ver recurso criado/i })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /executar plano/i })).toBeNull();
+  });
+
+  it('renders a persisted approval receipt as pending, not as an approved action', () => {
+    const approvalPlan: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      status: 'completed',
+      actions: [{
+        type: 'approval.submit_editorial',
+        campaign_id: '11111111-1111-1111-1111-111111111111',
+        asset_id: '22222222-2222-2222-2222-222222222222',
+        version_number: 1,
+        reason: 'Revisão textual',
+        expires_at: '2026-09-18T12:00:00.000Z'
+      }],
+      result: {
+        status: 'completed',
+        plan_id: samplePlan.id,
+        completed: [{ action_index: 0, action_type: 'approval.submit_editorial', idempotency_hit: false }],
+        failed: [],
+        pending: [],
+        deep_links: ['/marketing-ops/approvals/approval-1']
+      }
+    };
+
+    render(<AgentPlanCard plan={approvalPlan} canWrite={true} canApprove={true} />);
+
+    expect(screen.getByText(/Solicitação de aprovação criada — pendente/i)).toBeTruthy();
+    expect(screen.queryByText(/ação aprovada/i)).toBeNull();
+  });
+
+  it('renders persisted failure and replacement receipts with explicit terminal copy', () => {
+    const failedPlan: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      status: 'failed',
+      result: {
+        status: 'failed',
+        plan_id: samplePlan.id,
+        completed: [],
+        failed: [{
+          action_index: 0,
+          action_type: 'campaign.create_draft',
+          error: { code: 'conflict', message: 'A campanha mudou antes da execução', status: 409 }
+        }],
+        pending: [],
+        deep_links: []
+      }
+    };
+    const { rerender } = render(<AgentPlanCard plan={failedPlan} canWrite={true} canApprove={true} />);
+
+    expect(screen.getAllByText('Plano não concluído').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/A campanha mudou antes da execução/i)).toBeTruthy();
+
+    rerender(<AgentPlanCard plan={{ ...samplePlan, status: 'invalidated' }} canWrite={true} canApprove={true} />);
+    expect(screen.getByText(/plano foi substituído por uma versão mais recente/i)).toBeTruthy();
+  });
+
   it('executes plan with explicit button click, announces aria-live result and calls onExecuted', async () => {
     const user = userEvent.setup();
     const mockExecutionResult: MarketingOpsPlanExecutionResult = {

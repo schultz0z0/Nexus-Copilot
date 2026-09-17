@@ -298,5 +298,30 @@ export interface PreparedAgentPlanSummaryDTO {
   expiresAt: string;
   actions: MarketingOpsPlanAction[];
   requiredScopes: string[];
+  result: PreparedAgentPlanExecutionResultDTO | null;
+  executedAt: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface PreparedAgentPlanExecutionResultDTO {
+  plan_id: string;
+  status: 'completed' | 'partial' | 'failed';
+  completed: Array<{
+    action_index: number;
+    action_type: string;
+    resource?: { id?: string | undefined } | undefined;
+    idempotency_hit: boolean;
+  }>;
+  failed: Array<{
+    action_index: number;
+    action_type: string;
+    error: { code: string; message: string; status?: number | undefined };
+  }>;
+  pending: Array<{
+    action_index: number;
+    action_type: string;
+    reason?: string | undefined;
+  }>;
+  deep_links: string[];
 }

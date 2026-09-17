@@ -21,7 +21,7 @@ Treat these as semantic examples, not a phrase allowlist:
 | “não quero seguir”, “cancele” | `reject` | Do not execute. Explain that nothing was saved. |
 | “sim, mas altere o nome”, “troque o canal” | `revise` | Do not execute. Prepare the revised plan and request new confirmation. |
 | “pode ser?”, “o que muda?”, a question or unclear statement | `clarify` | Do not execute. Answer or ask one business clarification. |
-| No prepared plan exists | `none` | Continue normal conversation; do not infer an approval. |
+| No prepared plan exists | `none` | Continue normal conversation, including a new mutation request in the same chat; do not infer an approval. |
 
 Never execute in the turn that prepares a plan. Never apply an approval to a
 different plan, a different user, a later change, or another system.
@@ -49,3 +49,11 @@ direct the user to the authenticated approval detail instead.
 A rejection, revision, conflict, expired plan, replay, or transport failure
 never authorizes a retry by itself. Re-read the current state when required,
 prepare a new exact plan, show it, and wait for a new contextual decision.
+
+A terminal plan does not block future planning in the same chat and does not
+authorize it. A later mutation request starts a new Run and must use only the
+opaque reference injected for that current Run. Never reuse a reference,
+credential, confirmation, or result found in conversation history. Do not ask
+for textual reauthorization or infer that the current delegation expired from
+an earlier terminal plan; report delegation failure only when the current MCP
+call returns that sanitized failure.

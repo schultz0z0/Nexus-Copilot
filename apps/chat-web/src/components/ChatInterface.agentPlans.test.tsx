@@ -153,7 +153,7 @@ describe("ChatInterface - Structured Marketing Ops Plans", () => {
     );
   };
 
-  it("queries pending agent plans by fixed session UUID when structured plan execution is enabled", async () => {
+  it("queries bounded recent agent plans by fixed session UUID when structured plan execution is enabled", async () => {
     const sessionId = "session-1234-uuid";
     mocks.getMessagesPage.mockResolvedValue({
       messages: [
@@ -182,13 +182,45 @@ describe("ChatInterface - Structured Marketing Ops Plans", () => {
     renderWithProviders(client, { fixedSessionId: sessionId });
 
     await waitFor(() => {
-      expect(listAgentPlans).toHaveBeenCalledWith(sessionId, "pending");
+      expect(listAgentPlans).toHaveBeenCalledWith(sessionId, "all", 10);
     });
 
     expect(await screen.findByText("Plano de Marketing Ops")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Executar plano" })).toBeTruthy();
     expect(screen.getByText("Criar rascunho de campanha")).toBeTruthy();
     expect(screen.getByText(/Campanha Black Friday/)).toBeTruthy();
+  });
+
+  it("restores a terminal plan receipt from the server without an execution button", async () => {
+    const sessionId = "session-receipt-uuid";
+    mocks.getMessagesPage.mockResolvedValue({
+      messages: [{
+        id: "m-receipt",
+        role: "assistant",
+        content: "O plano anterior foi processado.",
+        created_at: "2026-09-17T12:00:00.000Z",
+      }],
+      hasMore: false,
+    });
+
+    const completedPlan: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      status: "completed",
+      result: executionSuccessResult,
+      executedAt: "2026-09-17T12:01:00.000Z",
+      updatedAt: "2026-09-17T12:01:00.000Z",
+    };
+    const listAgentPlans = vi.fn().mockResolvedValue(resultWrapper([completedPlan]));
+    const client = {
+      listAgentPlans,
+      executeAgentPlan: vi.fn(),
+    } as unknown as MarketingOpsClient;
+
+    renderWithProviders(client, { fixedSessionId: sessionId });
+
+    expect((await screen.findAllByText("Plano concluído")).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByRole("button", { name: "Executar plano" })).toBeNull();
+    expect(listAgentPlans).toHaveBeenCalledWith(sessionId, "all", 10);
   });
 
   it("does not query or render plan cards when structured plan execution is disabled or killed", async () => {

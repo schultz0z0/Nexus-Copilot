@@ -99,6 +99,10 @@ describe('PreparedPlanRepository', () => {
     expect(statements.findIndex((sql) => sql.includes('pg_advisory_xact_lock'))).toBeGreaterThanOrEqual(0);
     expect(statements.findIndex((sql) => sql.includes('pg_advisory_xact_lock')))
       .toBeLessThan(statements.findIndex((sql) => sql.includes('FROM marketing_ops.prepared_agent_plans')));
+    expect(fakeClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('pg_advisory_xact_lock'),
+      [[actorA.tenantId, actorA.userId, '33333333-3333-4333-8333-333333333333'].join(':')]
+    );
   });
 
   it('returns existing pending plan for same run id and same hash (idempotent prepare)', async () => {
@@ -151,7 +155,7 @@ describe('PreparedPlanRepository', () => {
     expect(plan.id).toBe(existingRow.id);
   });
 
-  it('invalidates prior pending plan for same run id when hash differs', async () => {
+  it('invalidates any prior pending plan in the same chat before inserting a replacement', async () => {
     let invalidated = false;
     const fakeClient = {
       release: vi.fn(),
@@ -200,13 +204,23 @@ describe('PreparedPlanRepository', () => {
     const plan = await repository.prepare({
       actor: actorA,
       chatSessionId: '33333333-3333-4333-8333-333333333333',
-      sourceRunId: '55555555-5555-4555-8555-555555555555'
+      sourceRunId: '66666666-6666-4666-8666-666666666666'
     }, {
       actions: revisedActions
     });
 
     expect(invalidated).toBe(true);
     expect(plan.id).toBe('new-plan-id');
+    const invalidationCall = fakeClient.query.mock.calls.find(([sql]) =>
+      String(sql).includes("status = 'invalidated'")
+    );
+    expect(invalidationCall).toBeDefined();
+    expect(String(invalidationCall?.[0])).not.toContain('source_run_id');
+    expect(invalidationCall?.[1]).toEqual([
+      actorA.tenantId,
+      actorA.userId,
+      '33333333-3333-4333-8333-333333333333'
+    ]);
   });
 
   it('opportunistically expires past plans during listPending', async () => {
@@ -233,6 +247,78 @@ describe('PreparedPlanRepository', () => {
     const plans = await repository.listPending(actorA, '33333333-3333-4333-8333-333333333333');
     expect(expiryRan).toBe(true);
     expect(plans).toEqual([]);
+  });
+
+  it('lists recent pending and terminal plans with actor scope, ordering and bounded limit', async () => {
+    const sessionId = '33333333-3333-4333-8333-333333333333';
+    const completedRow = {
+      id: '44444444-4444-4444-8444-444444444444',
+      tenant_id: actorA.tenantId,
+      prepared_by: actorA.userId,
+      chat_session_id: sessionId,
+      source_run_id: '55555555-5555-4555-8555-555555555555',
+      prepared_delegation_jti: 'jti-terminal',
+      plan_hash: 'a'.repeat(64),
+      actions: sampleActions,
+      required_scopes: ['campaign:write'],
+      status: 'completed',
+      expires_at: new Date(Date.now() + 900_000).toISOString(),
+      execution_key: 'secret-execution-key',
+      execution_started_at: new Date().toISOString(),
+      execution_attempts: 1,
+      result: { status: 'completed', plan_id: 'plan-1', completed: [], failed: [], pending: [], deep_links: [] },
+      executed_by: actorA.userId,
+      executed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    const calls: Array<{ sql: string; params: unknown[] }> = [];
+    const fakeClient = {
+      release: vi.fn(),
+      query: vi.fn(async (sql: string, params: unknown[] = []) => {
+        calls.push({ sql, params });
+        if (sql.includes('SELECT *')) return { rows: [completedRow] };
+        return { rows: [], rowCount: 0 };
+      })
+    };
+    const pool = {
+      connect: vi.fn(async () => fakeClient)
+    } as unknown as Pool;
+
+    const repository = new PreparedPlanRepository(pool);
+    const plans = await repository.listRecent(actorA, sessionId, undefined, 500);
+
+    expect(plans).toHaveLength(1);
+    const expiry = calls.find(({ sql }) => sql.includes("SET status = 'expired'"));
+    const select = calls.find(({ sql }) => sql.includes('SELECT *'));
+    expect(expiry?.params).toEqual([actorA.tenantId, actorA.userId, sessionId]);
+    expect(select?.sql).toContain('tenant_id = $1');
+    expect(select?.sql).toContain('prepared_by = $2');
+    expect(select?.sql).toContain('chat_session_id = $3');
+    expect(select?.sql).not.toContain('AND status =');
+    expect(select?.sql).toContain('ORDER BY created_at DESC');
+    expect(select?.params).toEqual([actorA.tenantId, actorA.userId, sessionId, 50]);
+  });
+
+  it('filters recent plans by one real status', async () => {
+    const calls: Array<{ sql: string; params: unknown[] }> = [];
+    const fakeClient = {
+      release: vi.fn(),
+      query: vi.fn(async (sql: string, params: unknown[] = []) => {
+        calls.push({ sql, params });
+        return { rows: [], rowCount: 0 };
+      })
+    };
+    const pool = {
+      connect: vi.fn(async () => fakeClient)
+    } as unknown as Pool;
+
+    const repository = new PreparedPlanRepository(pool);
+    await repository.listRecent(actorA, undefined, 'failed', 10);
+
+    const select = calls.find(({ sql }) => sql.includes('SELECT *'));
+    expect(select?.sql).toContain('status = $3');
+    expect(select?.params).toEqual([actorA.tenantId, actorA.userId, 'failed', 10]);
   });
 
   it('reserves a plan for execution with lock, execution key, and verifies hash', async () => {

@@ -10,7 +10,7 @@ const sha256Hex = z.string().regex(/^[0-9a-f]{64}$/);
 const listQuerySchema = z.object({
   chat_session_id: uuid.optional(),
   status: z.enum([
-    'pending', 'executing', 'completed', 'partial', 'failed', 'expired', 'invalidated'
+    'pending', 'executing', 'completed', 'partial', 'failed', 'expired', 'invalidated', 'all'
   ]).default('pending'),
   limit: z.coerce.number().int().min(1).max(100).default(25)
 }).strict();
@@ -25,7 +25,7 @@ const executeBodySchema = z.object({
 
 export interface AgentPlansFilter {
   chatSessionId?: string;
-  status: PreparedAgentPlanStatus;
+  status: PreparedAgentPlanStatus | 'all';
   limit: number;
 }
 
@@ -33,7 +33,7 @@ export function parseAgentPlansListQuery(value: unknown): AgentPlansFilter {
   const parsed = listQuerySchema.parse(value);
   return {
     ...(parsed.chat_session_id ? { chatSessionId: parsed.chat_session_id } : {}),
-    status: parsed.status as PreparedAgentPlanStatus,
+    status: parsed.status as PreparedAgentPlanStatus | 'all',
     limit: parsed.limit
   };
 }

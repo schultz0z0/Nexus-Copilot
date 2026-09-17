@@ -93,7 +93,7 @@ export class PreparedPlanRepository {
     return this.withClient(context.actor, correlationId, async (client) => {
       await client.query(
         `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
-        [[context.actor.tenantId, context.actor.userId, context.chatSessionId, context.sourceRunId].join(':')]
+        [[context.actor.tenantId, context.actor.userId, context.chatSessionId].join(':')]
       );
 
       // Check for exact existing pending plan with same run and hash
@@ -116,16 +116,16 @@ export class PreparedPlanRepository {
         return mapRowToRecord(existing.rows[0]);
       }
 
-      // Invalidate any existing pending plan for same run with different hash
+      // A chat may expose at most one executable plan. A new run therefore
+      // replaces any older pending plan after the exact replay check above.
       await client.query(
         `UPDATE marketing_ops.prepared_agent_plans
             SET status = 'invalidated'
           WHERE tenant_id = $1
             AND prepared_by = $2
             AND chat_session_id = $3
-            AND source_run_id = $4
             AND status = 'pending'`,
-        [context.actor.tenantId, context.actor.userId, context.chatSessionId, context.sourceRunId]
+        [context.actor.tenantId, context.actor.userId, context.chatSessionId]
       );
 
       // Insert new pending plan
@@ -196,6 +196,53 @@ export class PreparedPlanRepository {
             AND expires_at > clock_timestamp()
           ORDER BY created_at DESC
           LIMIT $${limitParamIndex}`,
+        selectParams
+      );
+
+      return result.rows.map(mapRowToRecord);
+    });
+  }
+
+  async listRecent(
+    actor: Actor,
+    chatSessionId?: string,
+    status?: PreparedAgentPlanStatus,
+    limit = 10
+  ): Promise<PreparedAgentPlanRecord[]> {
+    const correlationId = 'list-recent-' + (chatSessionId ?? 'all');
+    return this.withClient(actor, correlationId, async (client) => {
+      const expiryParams: unknown[] = [actor.tenantId, actor.userId];
+      const expirySessionClause = chatSessionId ? ' AND chat_session_id = $3' : '';
+      if (chatSessionId) expiryParams.push(chatSessionId);
+
+      await client.query(
+        `UPDATE marketing_ops.prepared_agent_plans
+            SET status = 'expired'
+          WHERE tenant_id = $1
+            AND prepared_by = $2${expirySessionClause}
+            AND status = 'pending'
+            AND expires_at <= clock_timestamp()`,
+        expiryParams
+      );
+
+      const selectParams: unknown[] = [actor.tenantId, actor.userId];
+      const clauses = ['tenant_id = $1', 'prepared_by = $2'];
+      if (chatSessionId) {
+        selectParams.push(chatSessionId);
+        clauses.push(`chat_session_id = $${selectParams.length}`);
+      }
+      if (status) {
+        selectParams.push(status);
+        clauses.push(`status = $${selectParams.length}`);
+      }
+      selectParams.push(Math.max(1, Math.min(limit, 50)));
+
+      const result = await client.query(
+        `SELECT *
+           FROM marketing_ops.prepared_agent_plans
+          WHERE ${clauses.join('\n            AND ')}
+          ORDER BY created_at DESC
+          LIMIT $${selectParams.length}`,
         selectParams
       );
 

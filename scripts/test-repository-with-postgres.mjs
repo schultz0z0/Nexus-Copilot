@@ -114,14 +114,14 @@ function verifyMigrationLedger(harness) {
     harness,
     "select string_agg(version, ',' order by version) from infra.schema_migrations",
   );
-  const expected = Array.from({ length: 17 }, (_, index) => String(index + 1).padStart(4, '0')).join(',');
+  const expected = Array.from({ length: 18 }, (_, index) => String(index + 1).padStart(4, '0')).join(',');
   if (ledger !== expected) throw new Error(`Unexpected migration ledger: ${ledger}`);
 
   const secondMigration = harness.migrate();
-  if (!secondMigration.stdout.includes('"applied":[]') || !secondMigration.stdout.includes('"0017"')) {
+  if (!secondMigration.stdout.includes('"applied":[]') || !secondMigration.stdout.includes('"0018"')) {
     throw new Error('Second migration run was not a complete idempotent replay');
   }
-  console.log('Migration ledger 0001-0017 and idempotent replay verified');
+  console.log('Migration ledger 0001-0018 and idempotent replay verified');
 }
 
 function seedInertStructuredPlan(harness) {

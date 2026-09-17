@@ -21,10 +21,10 @@ describe('agentPlanPresentation', () => {
     expect(planStatusPresentation('pending')).toEqual({ label: 'Pendente', tone: 'warning' });
     expect(planStatusPresentation('executing')).toEqual({ label: 'Executando...', tone: 'info' });
     expect(planStatusPresentation('completed')).toEqual({ label: 'Concluído', tone: 'success' });
-    expect(planStatusPresentation('partial')).toEqual({ label: 'Parcial', tone: 'warning' });
+    expect(planStatusPresentation('partial')).toEqual({ label: 'Concluído parcialmente', tone: 'warning' });
     expect(planStatusPresentation('failed')).toEqual({ label: 'Falhou', tone: 'destructive' });
     expect(planStatusPresentation('expired')).toEqual({ label: 'Expirado', tone: 'muted' });
-    expect(planStatusPresentation('invalidated')).toEqual({ label: 'Invalidado', tone: 'muted' });
+    expect(planStatusPresentation('invalidated')).toEqual({ label: 'Substituído', tone: 'muted' });
   });
 
   it('presents campaign.create_draft action', () => {

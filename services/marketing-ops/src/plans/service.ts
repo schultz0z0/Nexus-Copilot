@@ -1,4 +1,5 @@
 import type { Pool } from 'pg';
+import { z } from 'zod';
 import type { Actor } from '../auth/actor.js';
 import { appError } from '../errors.js';
 import type { ArtifactClient } from '../integrations/artifactClient.js';
@@ -8,6 +9,7 @@ import {
   type MarketingOpsPlanAction,
   PreparedAgentPlanRecord,
   PreparedAgentPlanStatus,
+  PreparedAgentPlanExecutionResultDTO,
   PreparedAgentPlanSummaryDTO
 } from './contracts.js';
 import {
@@ -32,7 +34,7 @@ export interface AgentPlanServiceDependencies {
 
 export interface ListPlansFilter {
   chatSessionId?: string;
-  status?: PreparedAgentPlanStatus;
+  status?: PreparedAgentPlanStatus | 'all';
   limit?: number;
 }
 
@@ -46,6 +48,38 @@ export type PlanExecutorFn = (
   plan: { plan_id: string; plan_hash?: string; actions: MarketingOpsPlanAction[] }
 ) => Promise<MarketingOpsPlanExecutionResult>;
 
+const persistedExecutionResultSchema = z.object({
+  plan_id: z.string(),
+  status: z.enum(['completed', 'partial', 'failed']),
+  completed: z.array(z.object({
+    action_index: z.number().int().nonnegative(),
+    action_type: z.string(),
+    resource: z.object({ id: z.string().optional() }).optional(),
+    idempotency_hit: z.boolean()
+  })),
+  failed: z.array(z.object({
+    action_index: z.number().int().nonnegative(),
+    action_type: z.string(),
+    error: z.object({
+      code: z.string(),
+      message: z.string(),
+      status: z.number().int().optional()
+    })
+  })),
+  pending: z.array(z.object({
+    action_index: z.number().int().nonnegative(),
+    action_type: z.string(),
+    reason: z.string().optional()
+  })),
+  deep_links: z.array(z.string())
+});
+
+function toPersistedResultDTO(
+  result: Record<string, unknown> | null
+): PreparedAgentPlanExecutionResultDTO | null {
+  return result ? persistedExecutionResultSchema.parse(result) : null;
+}
+
 export function toSummaryDTO(record: PreparedAgentPlanRecord): PreparedAgentPlanSummaryDTO {
   return {
     id: record.id,
@@ -54,7 +88,10 @@ export function toSummaryDTO(record: PreparedAgentPlanRecord): PreparedAgentPlan
     expiresAt: record.expiresAt,
     actions: marketingOpsPlanActionsSchema.parse(record.actions),
     requiredScopes: record.requiredScopes,
-    createdAt: record.createdAt
+    result: toPersistedResultDTO(record.result),
+    executedAt: record.executedAt,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt
   };
 }
 
@@ -69,7 +106,11 @@ export class AgentPlanService {
     if (!this.deps.features.read) {
       throw appError('feature_disabled', 503, 'Feature read is disabled');
     }
-    const records = await this.repository.listPending(actor, filter.chatSessionId, filter.limit);
+    const records = filter.status === 'all'
+      ? await this.repository.listRecent(actor, filter.chatSessionId, undefined, filter.limit)
+      : filter.status && filter.status !== 'pending'
+        ? await this.repository.listRecent(actor, filter.chatSessionId, filter.status, filter.limit)
+        : await this.repository.listPending(actor, filter.chatSessionId, filter.limit);
     return records.map(toSummaryDTO);
   }
 

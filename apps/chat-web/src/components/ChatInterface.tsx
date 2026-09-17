@@ -95,7 +95,7 @@ type ChatMessagesPaneProps = {
   onLoadOlderMessages: () => void;
   scrollRequest: ChatScrollRequest;
   showPendingAssistantIndicator: boolean;
-  pendingPlans?: MarketingOpsPreparedPlanSummary[];
+  recentPlans?: MarketingOpsPreparedPlanSummary[];
   marketingOpsClient?: MarketingOpsClient;
   canWrite?: boolean;
   canApprove?: boolean;
@@ -123,7 +123,7 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
   onLoadOlderMessages,
   scrollRequest,
   showPendingAssistantIndicator,
-  pendingPlans,
+  recentPlans,
   marketingOpsClient,
   canWrite = false,
   canApprove = false,
@@ -225,9 +225,9 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
             </div>
           </div>
           {index === (lastAssistantIndex !== -1 ? lastAssistantIndex : displayMessages.length - 1) &&
-            pendingPlans && pendingPlans.length > 0 && (
+            recentPlans && recentPlans.length > 0 && (
               <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
-                {pendingPlans.map((plan) => (
+                {recentPlans.map((plan) => (
                   <AgentPlanCard
                     key={plan.id}
                     plan={plan}
@@ -242,9 +242,9 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
         </Fragment>
       ))}
 
-      {displayMessages.length === 0 && pendingPlans && pendingPlans.length > 0 && (
+      {displayMessages.length === 0 && recentPlans && recentPlans.length > 0 && (
         <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
-          {pendingPlans.map((plan) => (
+          {recentPlans.map((plan) => (
             <AgentPlanCard
               key={plan.id}
               plan={plan}
@@ -302,22 +302,35 @@ export const ChatInterface = ({
   );
 
   const { data: plansData } = useQuery({
-    queryKey: marketingOpsKeys.agentPlans(currentSessionId ?? undefined, "pending"),
+    queryKey: marketingOpsKeys.agentPlans(currentSessionId ?? undefined, "all"),
     queryFn: async () => {
       if (!currentSessionId) return [];
-      const res = await client.listAgentPlans(currentSessionId, "pending");
+      const res = await client.listAgentPlans(currentSessionId, "all", 10);
       return res.data;
     },
     enabled: isStructuredExecutionEnabled,
   });
 
-  const pendingPlans = isStructuredExecutionEnabled ? (plansData ?? []) : [];
+  const recentPlans = isStructuredExecutionEnabled ? (plansData ?? []) : [];
 
   const handlePlanExecuted = useCallback(
-    (_result: MarketingOpsPlanExecutionResult) => {
+    (result: MarketingOpsPlanExecutionResult) => {
       if (currentSessionId && flags.structuredPlanExecution) {
+        const queryKey = marketingOpsKeys.agentPlans(currentSessionId, "all");
+        queryClient.setQueryData<MarketingOpsPreparedPlanSummary[]>(queryKey, (plans) =>
+          plans?.map((plan) => plan.id === result.plan_id
+            ? {
+                ...plan,
+                status: result.status,
+                result,
+                executedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+            : plan
+          )
+        );
         void queryClient.invalidateQueries({
-          queryKey: marketingOpsKeys.agentPlans(currentSessionId, "pending"),
+          queryKey,
         });
       }
     },
@@ -363,7 +376,7 @@ export const ChatInterface = ({
   
   const PAGE_SIZE = 50;
 
-  const isEmpty = messages.length === 0 && pendingPlans.length === 0;
+  const isEmpty = messages.length === 0 && recentPlans.length === 0;
   const suggestionCards = useMemo(() => ([
     {
       icon: Share2,
@@ -956,7 +969,7 @@ export const ChatInterface = ({
         onTerminalRun: () => {
           if (activeSessionId && flags.structuredPlanExecution) {
             void queryClient.invalidateQueries({
-              queryKey: marketingOpsKeys.agentPlans(activeSessionId, "pending"),
+              queryKey: marketingOpsKeys.agentPlans(activeSessionId, "all"),
             });
           }
         },
@@ -977,7 +990,7 @@ export const ChatInterface = ({
 
       if (flags.structuredPlanExecution) {
         void queryClient.invalidateQueries({
-          queryKey: marketingOpsKeys.agentPlans(activeSessionId, "pending"),
+          queryKey: marketingOpsKeys.agentPlans(activeSessionId, "all"),
         });
       }
 
@@ -1097,7 +1110,7 @@ export const ChatInterface = ({
               onLoadOlderMessages={loadOlderMessages}
               scrollRequest={scrollRequest}
               showPendingAssistantIndicator={showPendingAssistantIndicator}
-              pendingPlans={pendingPlans}
+              recentPlans={recentPlans}
               marketingOpsClient={client}
               canWrite={flags.write}
               canApprove={flags.approvals}

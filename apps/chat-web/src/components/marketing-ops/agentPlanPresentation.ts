@@ -28,13 +28,13 @@ export function planStatusPresentation(status: MarketingOpsPreparedPlanStatus): 
     case 'completed':
       return { label: 'Concluído', tone: 'success' };
     case 'partial':
-      return { label: 'Parcial', tone: 'warning' };
+      return { label: 'Concluído parcialmente', tone: 'warning' };
     case 'failed':
       return { label: 'Falhou', tone: 'destructive' };
     case 'expired':
       return { label: 'Expirado', tone: 'muted' };
     case 'invalidated':
-      return { label: 'Invalidado', tone: 'muted' };
+      return { label: 'Substituído', tone: 'muted' };
     default:
       return { label: status, tone: 'muted' };
   }

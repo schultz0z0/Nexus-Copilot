@@ -122,7 +122,7 @@ test("proxies GET /api/marketing/agent-plans with query preservation, stripped h
   const sessionId = "44444444-4444-4444-8444-444444444444";
   const response = await app.inject({
     method: "GET",
-    url: `/api/marketing/agent-plans?chat_session_id=${sessionId}&status=pending&limit=10`,
+    url: `/api/marketing/agent-plans?chat_session_id=${sessionId}&status=all&limit=10`,
     cookies: { ens_session: "opaque-session" },
     headers: {
       authorization: "Bearer forged",
@@ -132,7 +132,7 @@ test("proxies GET /api/marketing/agent-plans with query preservation, stripped h
   });
 
   assert.equal(response.statusCode, 200);
-  assert.equal(captured.url, `http://marketing-ops:8091/v1/agent-plans?chat_session_id=${sessionId}&status=pending&limit=10`);
+  assert.equal(captured.url, `http://marketing-ops:8091/v1/agent-plans?chat_session_id=${sessionId}&status=all&limit=10`);
 
   const headers = new Headers(captured.init.headers);
   assert.equal(headers.has("authorization"), false);

@@ -690,5 +690,9 @@ test("buildHermesResponsesRequest does not combine conversation with previous_re
 test("NEXUS_MARKETING_OPS_OPERATOR_CONTRACT forbids chat execution and instructs waiting for trusted product card", () => {
   assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /card confiavel|interface/i);
   assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Nunca chame marketing_ops_execute_plan_v1/i);
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /novo pedido.*mesmo chat.*novo Run/i);
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /referencia opaca.*Run atual/i);
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /plano anterior.*nao autoriza.*plano seguinte/i);
+  assert.match(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /nao peca.*autoriza.*novamente.*texto/i);
   assert.doesNotMatch(NEXUS_MARKETING_OPS_OPERATOR_CONTRACT, /Use marketing_ops_execute_plan_v1 somente/i);
 });

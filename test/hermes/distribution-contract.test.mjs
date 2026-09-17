@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -36,6 +36,23 @@ test('the checked-in ENS distribution satisfies the Hermes contract', () => {
     `validator failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
   assert.match(result.stdout, /ENS profile distribution is valid/);
+});
+
+test('the ENS operator contract supports sequential plans without reusing authorization', () => {
+  const distributionRoot = join(repositoryRoot, 'agents', 'ens');
+  const manifest = readFileSync(join(distributionRoot, 'distribution.yaml'), 'utf8');
+  const skill = readFileSync(
+    join(distributionRoot, 'skills', 'marketing-ops-operator', 'SKILL.md'),
+    'utf8',
+  );
+
+  assert.match(manifest, /^version:\s*0\.1\.3\s*$/m);
+  assert.match(skill, /^version:\s*1\.3\.3\s*$/m);
+  assert.match(skill, /terminal plan.*same chat.*new Run/is);
+  assert.match(skill, /plan.*still pending.*revise or replace/is);
+  assert.match(skill, /delegation error.*current MCP call.*current Run/is);
+  assert.match(skill, /historico never authorizes the next plan/is);
+  assert.match(skill, /Never ask the user to authorize again by text/is);
 });
 
 test('the validator reports every contract violation in one run', () => {

@@ -883,7 +883,7 @@ paths:
       summary: List durable prepared agent plans for the current actor
       parameters:
         - { name: chat_session_id, in: query, schema: { type: string, format: uuid } }
-        - { name: status, in: query, schema: { type: string, enum: [pending, executing, completed, partial, failed, expired, invalidated], default: pending } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, executing, completed, partial, failed, expired, invalidated, all], default: pending } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
       responses:
         '200':
@@ -958,7 +958,8 @@ components:
   schemas:
     PreparedAgentPlanSummary:
       type: object
-      required: [id, planHash, status, expiresAt, actions, requiredScopes, createdAt]
+      additionalProperties: false
+      required: [id, planHash, status, expiresAt, actions, requiredScopes, result, executedAt, createdAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
         planHash: { type: string, pattern: '^[0-9a-f]{64}$' }
@@ -966,7 +967,61 @@ components:
         expiresAt: { type: string, format: date-time }
         actions: { type: array, items: { type: object } }
         requiredScopes: { type: array, items: { type: string } }
+        result:
+          oneOf:
+            - { $ref: '#/components/schemas/PreparedAgentPlanExecutionResult' }
+            - { type: 'null' }
+        executedAt: { type: [string, 'null'], format: date-time }
         createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    PreparedAgentPlanExecutionResult:
+      type: object
+      additionalProperties: false
+      required: [status, plan_id, completed, failed, pending, deep_links]
+      properties:
+        status: { type: string, enum: [completed, partial, failed] }
+        plan_id: { type: string, format: uuid }
+        completed:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [action_index, action_type, idempotency_hit]
+            properties:
+              action_index: { type: integer, minimum: 0 }
+              action_type: { type: string }
+              idempotency_hit: { type: boolean }
+              resource: { type: object }
+        failed:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [action_index, action_type, error]
+            properties:
+              action_index: { type: integer, minimum: 0 }
+              action_type: { type: string }
+              error:
+                type: object
+                additionalProperties: false
+                required: [code, message]
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+                  status: { type: integer }
+        pending:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [action_index, action_type]
+            properties:
+              action_index: { type: integer, minimum: 0 }
+              action_type: { type: string }
+              reason: { type: string }
+        deep_links:
+          type: array
+          items: { type: string }
     ApprovalKind: { type: string, enum: [editorial, operational] }
     ApprovalStatus: { type: string, enum: [pending, approved, rejected, changes_requested, cancelled, expired] }
     ApprovalRisk: { type: string, enum: [low, medium, high, critical] }

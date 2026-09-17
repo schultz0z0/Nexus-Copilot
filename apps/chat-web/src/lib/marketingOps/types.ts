@@ -568,6 +568,8 @@ export type MarketingOpsPreparedPlanStatus =
   | 'expired'
   | 'invalidated';
 
+export type MarketingOpsPreparedPlanListStatus = MarketingOpsPreparedPlanStatus | 'all';
+
 export type MarketingOpsPlanAction =
   | { type: 'campaign.create_draft'; ref: string; name: string; course_slug?: string }
   | { type: 'campaign.update'; campaign_id: string; expected_version: number; patch: Record<string, unknown> }
@@ -588,7 +590,10 @@ export interface MarketingOpsPreparedPlanSummary {
   expiresAt: string;
   actions: MarketingOpsPlanAction[];
   requiredScopes: string[];
+  result?: MarketingOpsPlanExecutionResult | null;
+  executedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface MarketingOpsPlanExecutionResult {
@@ -603,11 +608,12 @@ export interface MarketingOpsPlanExecutionResult {
   failed: Array<{
     action_index: number;
     action_type: string;
-    error: { code: string; message: string };
+    error: { code: string; message: string; status?: number };
   }>;
   pending: Array<{
     action_index: number;
     action_type: string;
+    reason?: string;
   }>;
   deep_links: string[];
 }

@@ -80,13 +80,60 @@ describe('AgentPlanService', () => {
         expiresAt: record.expiresAt,
         actions: record.actions,
         requiredScopes: record.requiredScopes,
-        createdAt: record.createdAt
+        result: null,
+        executedAt: null,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt
       });
       // Ensure no sensitive or internal fields leaked
       expect((result[0] as any).tenantId).toBeUndefined();
       expect((result[0] as any).preparedBy).toBeUndefined();
       expect((result[0] as any).preparedDelegationJti).toBeUndefined();
       expect((result[0] as any).executionKey).toBeUndefined();
+      expect((result[0] as any).sourceRunId).toBeUndefined();
+      expect((result[0] as any).executedBy).toBeUndefined();
+    });
+
+    it('lists all recent plans and projects a closed persisted receipt result', async () => {
+      const resultPayload = {
+        status: 'completed',
+        plan_id: 'plan-1',
+        completed: [{ action_index: 0, action_type: 'campaign.create_draft', idempotency_hit: false, resource: { id: 'campaign-1' } }],
+        failed: [],
+        pending: [{ action_index: 1, action_type: 'approval.submit_operational' }],
+        deep_links: ['/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111'],
+        internal_secret: 'must-not-reach-browser'
+      };
+      const record = createSampleRecord({
+        status: 'completed',
+        result: resultPayload,
+        executedAt: new Date().toISOString()
+      });
+      const mockRepo = {
+        listRecent: vi.fn().mockResolvedValue([record])
+      } as unknown as PreparedPlanRepository;
+      const service = new AgentPlanService({
+        pool: {} as Pool,
+        planRepository: mockRepo,
+        features: { read: true, write: true, structuredPlanExecution: true }
+      });
+
+      const result = await service.listPlans(actorA, {
+        chatSessionId: record.chatSessionId,
+        status: 'all',
+        limit: 10
+      });
+
+      expect(mockRepo.listRecent).toHaveBeenCalledWith(actorA, record.chatSessionId, undefined, 10);
+      expect(result[0]?.result).toEqual({
+        status: 'completed',
+        plan_id: 'plan-1',
+        completed: resultPayload.completed,
+        failed: [],
+        pending: resultPayload.pending,
+        deep_links: resultPayload.deep_links
+      });
+      expect((result[0]?.result as any).internal_secret).toBeUndefined();
     });
 
     it('fails closed when a legacy stored action contains a nested credential field', async () => {

@@ -50,7 +50,7 @@ import type {
   MarketingOpsApprovalRequest,
   MarketingOpsEditorialApprovalSubmission,
   MarketingOpsOperationalApprovalSubmission,
-  MarketingOpsPreparedPlanStatus,
+  MarketingOpsPreparedPlanListStatus,
   MarketingOpsPreparedPlanSummary,
   MarketingOpsPlanExecutionResult
 } from './types';
@@ -526,10 +526,15 @@ export function createMarketingOpsClient(options: MarketingOpsClientOptions) {
         { method: 'POST', headers: mutationHeaders(idempotencyKey, version) }
       ),
 
-    listAgentPlans: (chatSessionId?: string, status: MarketingOpsPreparedPlanStatus = 'pending') =>
+    listAgentPlans: (
+      chatSessionId?: string,
+      status: MarketingOpsPreparedPlanListStatus = 'pending',
+      limit?: number
+    ) =>
       request<MarketingOpsPreparedPlanSummary[]>(withQuery('/v1/agent-plans', {
         chat_session_id: chatSessionId,
-        status
+        status,
+        limit
       })),
 
     executeAgentPlan: (planId: string, planHash: string, idempotencyKey: string) =>

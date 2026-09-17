@@ -12,6 +12,7 @@ import {
   XCircle
 } from 'lucide-react';
 import type { MarketingOpsClient } from '@/lib/marketingOps/client';
+import { parseMarketingOpsDeepLink } from '@/lib/marketingOps/deepLinks';
 import type {
   MarketingOpsPlanExecutionResult,
   MarketingOpsPreparedPlanSummary,
@@ -58,6 +59,49 @@ export function AgentPlanCard({
   const hasApprovalAction = plan.actions.some((a) => a.type.startsWith('approval.'));
   const isExpired = new Date(plan.expiresAt).getTime() <= Date.now() || currentStatus === 'expired';
   const isTerminal = ['completed', 'partial', 'failed', 'expired', 'invalidated'].includes(currentStatus);
+  const visibleResult = executionResult ?? plan.result ?? null;
+  const safeDeepLinks = visibleResult?.deep_links.filter((link) => parseMarketingOpsDeepLink(link)) ?? [];
+
+  const receiptPresentation = (() => {
+    const completedCount = visibleResult?.completed.length ?? 0;
+    const failedCount = visibleResult?.failed.length ?? 0;
+    const pendingCount = visibleResult?.pending.length ?? 0;
+
+    switch (currentStatus) {
+      case 'completed':
+        return {
+          title: 'Plano concluído',
+          message: `${completedCount} ${completedCount === 1 ? 'ação concluída' : 'ações concluídas'}.`,
+          tone: 'success' as const
+        };
+      case 'partial':
+        return {
+          title: 'Plano concluído parcialmente',
+          message: `${completedCount} concluída${completedCount === 1 ? '' : 's'}, ${failedCount} com falha e ${pendingCount} pendente${pendingCount === 1 ? '' : 's'}.`,
+          tone: 'warning' as const
+        };
+      case 'failed':
+        return {
+          title: 'Plano não concluído',
+          message: visibleResult?.failed[0]?.error.message ?? 'Nenhuma ação foi concluída.',
+          tone: 'destructive' as const
+        };
+      case 'expired':
+        return {
+          title: 'Plano expirado',
+          message: 'O prazo de execução terminou. Peça ao agente para preparar um novo plano.',
+          tone: 'muted' as const
+        };
+      case 'invalidated':
+        return {
+          title: 'Plano substituído',
+          message: 'Este plano foi substituído por uma versão mais recente e não pode mais ser executado.',
+          tone: 'muted' as const
+        };
+      default:
+        return null;
+    }
+  })();
 
   const isExecutable =
     !isTerminal &&
@@ -225,27 +269,44 @@ export function AgentPlanCard({
         </div>
       )}
 
-      {/* Success / Result Announcement */}
-      {executionResult && (
-        <div className="mt-3 space-y-1.5 rounded-lg border border-emerald-300 bg-emerald-50/90 p-3 text-xs text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+      {/* Durable execution receipt */}
+      {receiptPresentation && (
+        <div className={`mt-3 space-y-1.5 rounded-lg border p-3 text-xs ${{
+          success: 'border-emerald-300 bg-emerald-50/90 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200',
+          warning: 'border-amber-300 bg-amber-50/90 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
+          destructive: 'border-rose-300 bg-rose-50/90 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200',
+          muted: 'border-slate-300 bg-slate-50/90 text-slate-800 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200'
+        }[receiptPresentation.tone]}`}>
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <strong className="font-semibold">
-              Plano executado com sucesso: {executionResult.status}
-            </strong>
+            {receiptPresentation.tone === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            ) : receiptPresentation.tone === 'destructive' ? (
+              <XCircle className="h-4 w-4 shrink-0" />
+            ) : receiptPresentation.tone === 'warning' ? (
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+            ) : (
+              <Clock className="h-4 w-4 shrink-0" />
+            )}
+            <strong className="font-semibold">{receiptPresentation.title}</strong>
           </div>
-          {hasApprovalAction && (
-            <p className="text-emerald-800 dark:text-emerald-300">
+          <p>{receiptPresentation.message}</p>
+          {currentStatus === 'completed' && hasApprovalAction && (
+            <p className="font-medium">
               Solicitação de aprovação criada — pendente
             </p>
           )}
-          {executionResult.deep_links.length > 0 && (
+          {(plan.executedAt ?? plan.updatedAt) && (
+            <p className="opacity-75">
+              Registrado em {new Date(plan.executedAt ?? plan.updatedAt ?? '').toLocaleString('pt-BR')}
+            </p>
+          )}
+          {safeDeepLinks.length > 0 && (
             <div className="pt-1 flex flex-wrap gap-2">
-              {executionResult.deep_links.map((link, idx) => (
+              {safeDeepLinks.map((link, idx) => (
                 <a
                   key={idx}
                   href={link}
-                  className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-900 hover:underline dark:bg-emerald-900 dark:text-emerald-100"
+                  className="inline-flex items-center gap-1 rounded border border-current/20 bg-background/60 px-2 py-0.5 text-[11px] font-medium hover:underline"
                 >
                   Ver recurso criado
                   <ExternalLink className="h-3 w-3" />
@@ -260,6 +321,7 @@ export function AgentPlanCard({
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {isBusy ? 'Executando plano...' : ''}
         {executionResult ? `Plano executado com sucesso: ${executionResult.status}` : ''}
+        {!executionResult && receiptPresentation ? receiptPresentation.title : ''}
         {errorMessage ? `Falha na execução: ${errorMessage}` : ''}
       </div>
 
