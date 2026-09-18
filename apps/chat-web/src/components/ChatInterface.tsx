@@ -165,6 +165,64 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
     };
   }, [messagesScrollRef, scrollRequest]);
 
+  const plansByMessageIndex = useMemo(() => {
+    const map = new Map<number, MarketingOpsPreparedPlanSummary[]>();
+    if (!recentPlans || recentPlans.length === 0) return map;
+
+    const assistantIndices: number[] = [];
+    displayMessages.forEach((msg, idx) => {
+      if (msg.role === "assistant") {
+        assistantIndices.push(idx);
+      }
+    });
+
+    if (assistantIndices.length === 0) {
+      map.set(displayMessages.length - 1, [...recentPlans]);
+      return map;
+    }
+
+    const lastAstIdx = assistantIndices[assistantIndices.length - 1];
+
+    // Sort plans chronologically
+    const sorted = [...recentPlans].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    for (const plan of sorted) {
+      const planTime = new Date(plan.createdAt).getTime();
+      let targetIndex = -1;
+
+      if (!isNaN(planTime)) {
+        // Find the first user message sent clearly after the plan was created
+        const nextUserMsg = displayMessages.find(
+          (msg) => msg.role === "user" && new Date(msg.created_at).getTime() > planTime + 3000
+        );
+
+        if (nextUserMsg) {
+          const nextUserIndex = displayMessages.indexOf(nextUserMsg);
+          // Anchor the plan to the last assistant message that preceded that next user message
+          for (let i = assistantIndices.length - 1; i >= 0; i--) {
+            if (assistantIndices[i] < nextUserIndex) {
+              targetIndex = assistantIndices[i];
+              break;
+            }
+          }
+        }
+      }
+
+      // If no subsequent user message exists (active turn) or unmapped, anchor to latest assistant message
+      if (targetIndex === -1) {
+        targetIndex = lastAstIdx;
+      }
+
+      const existing = map.get(targetIndex) ?? [];
+      existing.push(plan);
+      map.set(targetIndex, existing);
+    }
+
+    return map;
+  }, [displayMessages, recentPlans]);
+
   return (
     <div ref={messagesScrollRef} className="space-y-6 overflow-y-auto overscroll-contain [overflow-anchor:none] p-4 md:p-8 flex-1 flex flex-col min-h-0">
       {(isRetrievingContext || (showPendingAssistantIndicator && liveStatusText)) && (
@@ -224,21 +282,20 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
               />
             </div>
           </div>
-          {index === (lastAssistantIndex !== -1 ? lastAssistantIndex : displayMessages.length - 1) &&
-            recentPlans && recentPlans.length > 0 && (
-              <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
-                {recentPlans.map((plan) => (
-                  <AgentPlanCard
-                    key={plan.id}
-                    plan={plan}
-                    client={marketingOpsClient}
-                    canWrite={canWrite}
-                    canApprove={canApprove}
-                    onExecuted={onPlanExecuted}
-                  />
-                ))}
-              </div>
-            )}
+          {plansByMessageIndex.has(index) && (
+            <div className="flex flex-col gap-3 my-2 w-full max-w-[80%]">
+              {plansByMessageIndex.get(index)!.map((plan) => (
+                <AgentPlanCard
+                  key={plan.id}
+                  plan={plan}
+                  client={marketingOpsClient}
+                  canWrite={canWrite}
+                  canApprove={canApprove}
+                  onExecuted={onPlanExecuted}
+                />
+              ))}
+            </div>
+          )}
         </Fragment>
       ))}
 

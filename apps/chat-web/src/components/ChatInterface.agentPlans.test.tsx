@@ -415,4 +415,60 @@ describe("ChatInterface - Structured Marketing Ops Plans", () => {
     // Status updated to executed / Concluído
     expect(await screen.findByText("Concluído")).toBeTruthy();
   });
+
+  it("anchors plan cards to historical assistant messages without cluttering subsequent turns", async () => {
+    const sessionId = "session-anchor-test";
+    mocks.getMessagesPage.mockResolvedValue({
+      messages: [
+        {
+          id: "m-1",
+          role: "user",
+          content: "Validação final M6 pós-deploy",
+          created_at: "2026-09-18T01:48:00.000Z",
+        },
+        {
+          id: "m-2",
+          role: "assistant",
+          content: "Plano preparado para a campanha...",
+          created_at: "2026-09-18T01:48:25.000Z",
+        },
+        {
+          id: "m-3",
+          role: "user",
+          content: "obrigado!",
+          created_at: "2026-09-18T01:49:05.000Z",
+        },
+        {
+          id: "m-4",
+          role: "assistant",
+          content: "Por nada! 🥰",
+          created_at: "2026-09-18T01:49:10.000Z",
+        },
+      ],
+      hasMore: false,
+    });
+
+    const historicalPlan: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      id: "7049499e-3503-4285-b37c-000000000000",
+      status: "completed",
+      createdAt: "2026-09-18T01:48:20.000Z",
+    };
+
+    const listAgentPlans = vi.fn().mockResolvedValue(resultWrapper([historicalPlan]));
+    const client = {
+      listAgentPlans,
+      executeAgentPlan: vi.fn(),
+    } as unknown as MarketingOpsClient;
+
+    renderWithProviders(client, { fixedSessionId: sessionId });
+
+    const planCard = await screen.findByText("Plano de Marketing Ops");
+    const thanksMsg = await screen.findByText("obrigado!");
+    const welcomeMsg = await screen.findByText("Por nada! 🥰");
+
+    // The plan card must precede the subsequent user and assistant messages in document flow
+    expect(planCard.compareDocumentPosition(thanksMsg) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(thanksMsg.compareDocumentPosition(welcomeMsg) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
