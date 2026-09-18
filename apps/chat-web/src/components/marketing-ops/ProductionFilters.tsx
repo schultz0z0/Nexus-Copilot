@@ -15,6 +15,7 @@ import type { ProductionScheduleUrlFilter } from '@/lib/marketingOps/scheduleUrl
 interface ProductionFiltersProps {
   filters: MarketingOpsProductionScheduleFilters;
   campaigns: MarketingOpsCampaignSummary[];
+  responsibles?: Array<{ userId: string; displayName: string }>;
   assigneeValue: string;
   assigneeInvalid: boolean;
   onAssigneeChange: (value: string) => void;
@@ -63,6 +64,7 @@ const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 p
 export function ProductionFilters({
   filters,
   campaigns,
+  responsibles,
   assigneeValue,
   assigneeInvalid,
   onAssigneeChange,
@@ -103,27 +105,47 @@ export function ProductionFilters({
 
         <div className="space-y-1.5 xl:col-span-2">
           <Label htmlFor="production-assignee">Responsável</Label>
-          <Input
-            id="production-assignee"
-            value={assigneeValue}
-            onChange={(event) => onAssigneeChange(event.target.value)}
-            onBlur={onAssigneeCommit}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                onAssigneeCommit();
-              }
-            }}
-            placeholder="ID do usuário"
-            aria-invalid={assigneeInvalid}
-            aria-describedby={assigneeInvalid ? 'production-assignee-error' : undefined}
-            className="h-11 rounded-[8px] bg-white/80"
-          />
-          {assigneeInvalid ? (
-            <p id="production-assignee-error" className="text-xs text-red-700">
-              Informe um ID de usuário válido.
-            </p>
-          ) : null}
+          {responsibles && responsibles.length > 0 ? (
+            <select
+              id="production-assignee"
+              value={assigneeValue}
+              onChange={(event) => {
+                const next = event.target.value;
+                onAssigneeChange(next);
+                onFilterChange('assigneeId', next || undefined);
+              }}
+              className={selectClass}
+            >
+              <option value="">Todos</option>
+              {responsibles.map((r) => (
+                <option key={r.userId} value={r.userId}>{r.displayName}</option>
+              ))}
+            </select>
+          ) : (
+            <>
+              <Input
+                id="production-assignee"
+                value={assigneeValue}
+                onChange={(event) => onAssigneeChange(event.target.value)}
+                onBlur={onAssigneeCommit}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    onAssigneeCommit();
+                  }
+                }}
+                placeholder="ID do usuário"
+                aria-invalid={assigneeInvalid}
+                aria-describedby={assigneeInvalid ? 'production-assignee-error' : undefined}
+                className="h-11 rounded-[8px] bg-white/80"
+              />
+              {assigneeInvalid ? (
+                <p id="production-assignee-error" className="text-xs text-red-700">
+                  Informe um ID de usuário válido.
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
 
         <div className="flex items-end xl:col-span-2">

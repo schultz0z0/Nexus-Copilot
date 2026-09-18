@@ -17,6 +17,30 @@ import type { MarketingOpsApprovalDecisionInput } from '@/lib/marketingOps/types
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const makeKey = () => globalThis.crypto.randomUUID();
 
+const statusLabel: Record<string, string> = {
+  pending: 'Pendente',
+  approved: 'Aprovada',
+  rejected: 'Rejeitada',
+  changes_requested: 'Ajustes solicitados',
+  cancelled: 'Cancelada',
+  expired: 'Expirada'
+};
+const kindLabel: Record<string, string> = {
+  editorial: 'Editorial',
+  operational: 'Operacional'
+};
+const riskLabel: Record<string, string> = {
+  low: 'baixo',
+  medium: 'médio',
+  high: 'alto',
+  critical: 'crítico'
+};
+const decisionLabel: Record<string, string> = {
+  approved: 'Aprovada',
+  rejected: 'Rejeitada',
+  changes_requested: 'Ajustes solicitados'
+};
+
 export default function ApprovalDetailPage({ client = marketingOpsClient, idempotencyKey = makeKey }: {
   client?: MarketingOpsClient; idempotencyKey?: () => string;
 }) {
@@ -72,13 +96,13 @@ export default function ApprovalDetailPage({ client = marketingOpsClient, idempo
         : query.isLoading ? <p className="mt-6">Carregando aprovação…</p>
           : query.isError || !approval ? <Alert variant="destructive" className="mt-5"><AlertCircle className="h-4 w-4" /><AlertTitle>Não foi possível carregar a aprovação</AlertTitle><AlertDescription><Button variant="outline" onClick={() => query.refetch()}>Tentar novamente</Button></AlertDescription></Alert>
             : <>
-              <header className="my-5"><div className="flex flex-wrap gap-2"><Badge>{approval.status}</Badge><Badge variant="outline">{approval.kind}</Badge><Badge variant="secondary">Risco {approval.riskLevel}</Badge></div>
+              <header className="my-5"><div className="flex flex-wrap gap-2"><Badge>{statusLabel[approval.status] ?? approval.status}</Badge><Badge variant="outline">{kindLabel[approval.kind] ?? approval.kind}</Badge><Badge variant="secondary">Risco {riskLabel[approval.riskLevel] ?? approval.riskLevel}</Badge></div>
                 <h1 className="mt-3 text-3xl font-bold">Solicitação de aprovação</h1><p className="mt-2 text-text-secondary">{approval.reason}</p></header>
               <ApprovalPreview approval={approval} />
               <section className="mt-4 rounded-lg border bg-white/70 p-4"><h2 className="font-semibold">Histórico</h2>
                 <ol className="mt-2 grid gap-2 text-sm"><li>Solicitada por {approval.requestedBy} em {new Date(approval.createdAt).toLocaleString('pt-BR')}</li>
                   {approval.supersedesRequestId ? <li>Ciclo anterior: <Link className="underline" to={`/marketing-ops/approvals/${approval.supersedesRequestId}`}>{approval.supersedesRequestId}</Link></li> : null}
-                  {approval.decision ? <li><p>Decisão: {approval.decision.decision} em {new Date(approval.decision.createdAt).toLocaleString('pt-BR')}</p>
+                  {approval.decision ? <li><p>Decisão: {decisionLabel[approval.decision.decision] ?? approval.decision.decision} em {new Date(approval.decision.createdAt).toLocaleString('pt-BR')}</p>
                     <p>{approval.decision.origin === 'system' ? 'Pelo sistema' : `Por ${approval.decision.decidedBy} (${approval.decision.deciderRole})`}</p>
                     {approval.decision.comment ? <p>Comentário: {approval.decision.comment}</p> : null}</li> : null}
                   {approval.actionPackage?.invalidationReason ? <li>Pacote invalidado: {approval.actionPackage.invalidationReason}</li> : null}</ol></section>

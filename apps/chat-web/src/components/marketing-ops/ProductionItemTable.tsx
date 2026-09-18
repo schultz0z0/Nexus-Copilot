@@ -15,9 +15,15 @@ interface ProductionItemTableProps {
   items: MarketingOpsProductionScheduleItem[];
   timeZone: string;
   onOpen: (itemId: string) => void;
+  userNamesById?: Map<string, string>;
   selectable?: boolean;
   selectedItemIds?: string[];
   onSelectionChange?: (itemId: string, selected: boolean) => void;
+}
+
+function decodeUnicode(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
 const statusLabels: Record<MarketingOpsItemStatus, string> = {
@@ -93,6 +99,7 @@ export function ProductionItemTable({
   items,
   timeZone,
   onOpen,
+  userNamesById,
   selectable = false,
   selectedItemIds = [],
   onSelectionChange
@@ -148,10 +155,10 @@ export function ProductionItemTable({
                     className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                   >
                     <span className="block font-semibold text-text-primary group-hover:text-brand-primary">
-                      {item.title}
+                      {decodeUnicode(item.title)}
                     </span>
                     <span className="mt-1 block text-xs text-text-muted">
-                      {item.campaignName} · {kindLabels[item.kind]}
+                      {decodeUnicode(item.campaignName)} · {kindLabels[item.kind]}
                     </span>
                   </button>
                 </TableCell>
@@ -169,8 +176,10 @@ export function ProductionItemTable({
                 <TableCell className="text-xs text-text-secondary">
                   {item.assigneeUserId ? (
                     <span className="flex items-center gap-1.5">
-                      <UserRound className="h-4 w-4 text-text-muted" />
-                      <span className="max-w-32 truncate" title={item.assigneeUserId}>{item.assigneeUserId}</span>
+                      <UserRound className="h-4 w-4 shrink-0 text-text-muted" />
+                      <span className="max-w-36 truncate" title={userNamesById?.get(item.assigneeUserId) ? `${userNamesById.get(item.assigneeUserId)} (${item.assigneeUserId})` : item.assigneeUserId}>
+                        {userNamesById?.get(item.assigneeUserId) ?? item.assigneeUserId}
+                      </span>
                     </span>
                   ) : 'Não definido'}
                 </TableCell>
@@ -181,7 +190,7 @@ export function ProductionItemTable({
                     variant="ghost"
                     size="icon"
                     onClick={() => onOpen(item.id)}
-                    aria-label={`Abrir item ${item.title}`}
+                    aria-label={`Abrir item ${decodeUnicode(item.title)}`}
                     className="h-10 w-10 rounded-[8px]"
                   >
                     <ArrowRight className="h-4 w-4" />
@@ -214,9 +223,9 @@ export function ProductionItemTable({
                   onClick={() => onOpen(item.id)}
                   className="break-words text-left font-semibold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                 >
-                  {item.title}
+                  {decodeUnicode(item.title)}
                 </button>
-                <p className="mt-1 text-xs text-text-muted">{item.campaignName} · {kindLabels[item.kind]}</p>
+                <p className="mt-1 text-xs text-text-muted">{decodeUnicode(item.campaignName)} · {kindLabels[item.kind]}</p>
               </div>
               <StatusBadge status={item.status} />
             </div>
@@ -236,7 +245,7 @@ export function ProductionItemTable({
               <div>
                 <dt className="text-xs text-text-muted">Responsável</dt>
                 <dd className="mt-1 truncate text-text-secondary">
-                  {item.assigneeUserId ?? 'Não definido'}
+                  {(item.assigneeUserId ? userNamesById?.get(item.assigneeUserId) ?? item.assigneeUserId : null) ?? 'Não definido'}
                 </dd>
               </div>
             </dl>

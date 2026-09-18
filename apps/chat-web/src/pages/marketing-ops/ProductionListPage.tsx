@@ -104,6 +104,26 @@ export default function ProductionListPage({
   const accessDenied = scheduleError?.status === 403;
   const queryCorrelationId = correlationId(scheduleQuery.error);
 
+  const { userNamesById, uniqueResponsibles } = useMemo(() => {
+    const map = new Map<string, string>();
+    const respMap = new Map<string, string>();
+    for (const campaign of campaigns) {
+      if (campaign.responsibles) {
+        for (const resp of campaign.responsibles) {
+          if (resp.userId && resp.displayName) {
+            map.set(resp.userId, resp.displayName);
+            respMap.set(resp.userId, resp.displayName);
+          }
+        }
+      }
+    }
+    const uniqueResponsibles = Array.from(respMap.entries()).map(([userId, displayName]) => ({
+      userId,
+      displayName
+    }));
+    return { userNamesById: map, uniqueResponsibles };
+  }, [campaigns]);
+
   const setFilter = (key: ProductionScheduleUrlFilter, value?: string) => {
     setSearchParams(setProductionScheduleFilter(searchParams, key, value), { replace: true });
   };
@@ -214,6 +234,7 @@ export default function ProductionListPage({
           <ProductionFilters
             filters={filters}
             campaigns={campaigns}
+            responsibles={uniqueResponsibles}
             assigneeValue={assigneeValue}
             assigneeInvalid={assigneeInvalid}
             onAssigneeChange={(value) => {
@@ -278,6 +299,7 @@ export default function ProductionListPage({
                   items={items}
                   timeZone={timeZone}
                   onOpen={openItem}
+                  userNamesById={userNamesById}
                   selectable={canBatch}
                   selectedItemIds={selectedItemIds}
                   onSelectionChange={(nextItemId, selected) => {

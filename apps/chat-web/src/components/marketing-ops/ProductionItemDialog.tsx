@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -268,11 +269,14 @@ export function ProductionItemDialog({
       to,
       createIdempotencyKey()
     ),
-    onSuccess: async (response) => {
+    onSuccess: async (response, to) => {
       setForm(formFromItem(response.data, timeZone));
       setHydratedVersion(response.data.version);
       queryClient.setQueryData(marketingOpsKeys.productionItem(response.data.id), response.data);
       await queryClient.invalidateQueries({ queryKey: ['marketing-ops', 'production', 'schedule'] });
+      if (to === 'cancelled' || to === 'completed') {
+        onOpenChange(false);
+      }
     }
   });
 
@@ -307,8 +311,10 @@ export function ProductionItemDialog({
       ? transitionOptions[status]
       : [];
   }, [itemQuery.data?.status]);
+  const isTerminal = itemQuery.data?.status === 'completed' || itemQuery.data?.status === 'cancelled';
+  const isFieldDisabled = !canWrite || isTerminal;
   const missing = itemQuery.error instanceof MarketingOpsApiError && itemQuery.error.status === 404;
-  const canSubmit = canWrite && Boolean(form.campaignId && form.title.trim());
+  const canSubmit = canWrite && !isTerminal && Boolean(form.campaignId && form.title.trim());
 
   const setField = <K extends keyof ItemForm>(key: K, value: ItemForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -333,11 +339,20 @@ export function ProductionItemDialog({
     >
       <DialogContent className="max-h-[92vh] overflow-y-auto rounded-[8px] border-white/60 bg-white/95 text-text-primary shadow-glass backdrop-blur-xl sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{isCreate ? 'Novo item' : 'Detalhes do item'}</DialogTitle>
+          <div className="flex items-center justify-between gap-2 pr-6">
+            <DialogTitle>{isCreate ? 'Novo item' : 'Detalhes do item'}</DialogTitle>
+            {isTerminal ? (
+              <Badge variant="outline" className="border-zinc-300 bg-zinc-100 text-zinc-600">
+                {itemQuery.data?.status === 'cancelled' ? 'Cancelado (somente leitura)' : 'Concluído (somente leitura)'}
+              </Badge>
+            ) : null}
+          </div>
           <DialogDescription>
             {isCreate
               ? 'Crie um rascunho operacional vinculado a uma campanha.'
-              : 'Edite agenda e responsável ou avance o item pela esteira.'}
+              : isTerminal
+                ? 'Item em estado final. Campos disponíveis apenas para consulta.'
+                : 'Edite agenda e responsável ou avance o item pela esteira.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -376,7 +391,7 @@ export function ProductionItemDialog({
                   id="production-item-campaign"
                   value={form.campaignId}
                   onChange={(event) => setField('campaignId', event.target.value)}
-                  disabled={!isCreate || !canWrite}
+                  disabled={!isCreate || isFieldDisabled}
                   className={selectClass}
                   required
                 >
@@ -393,7 +408,7 @@ export function ProductionItemDialog({
                   value={form.title}
                   onChange={(event) => setField('title', event.target.value)}
                   maxLength={200}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className="h-11 rounded-[8px] bg-white/80"
                   required
                 />
@@ -404,7 +419,7 @@ export function ProductionItemDialog({
                   id="production-item-kind"
                   value={form.kind}
                   onChange={(event) => setField('kind', event.target.value as MarketingOpsItemKind)}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className={selectClass}
                 >
                   <option value="task">Tarefa</option>
@@ -422,7 +437,7 @@ export function ProductionItemDialog({
                   id="production-item-priority"
                   value={form.priority}
                   onChange={(event) => setField('priority', event.target.value as MarketingOpsItemPriority)}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className={selectClass}
                 >
                   <option value="low">Baixa</option>
@@ -437,7 +452,7 @@ export function ProductionItemDialog({
                   id="production-item-channel"
                   value={form.channel}
                   onChange={(event) => setField('channel', event.target.value as MarketingOpsCampaignChannel | '')}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className={selectClass}
                 >
                   <option value="">Não definido</option>
@@ -459,7 +474,7 @@ export function ProductionItemDialog({
                   id="production-item-assignee"
                   value={form.assigneeUserId}
                   onChange={(event) => setField('assigneeUserId', event.target.value)}
-                  disabled={!canWrite || participantsQuery.isLoading}
+                  disabled={isFieldDisabled || participantsQuery.isLoading}
                   className={selectClass}
                 >
                   <option value="">Selecione</option>
@@ -475,7 +490,7 @@ export function ProductionItemDialog({
                   type="datetime-local"
                   value={form.startsAt}
                   onChange={(event) => setField('startsAt', event.target.value)}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className="h-11 rounded-[8px] bg-white/80"
                 />
               </Field>
@@ -486,7 +501,7 @@ export function ProductionItemDialog({
                   type="datetime-local"
                   value={form.dueAt}
                   onChange={(event) => setField('dueAt', event.target.value)}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   className="h-11 rounded-[8px] bg-white/80"
                 />
               </Field>
@@ -498,7 +513,7 @@ export function ProductionItemDialog({
                   value={form.description}
                   onChange={(event) => setField('description', event.target.value)}
                   maxLength={5000}
-                  disabled={!canWrite}
+                  disabled={isFieldDisabled}
                   rows={4}
                   className={`${selectClass} h-auto min-h-24 py-3`}
                 />
@@ -520,7 +535,9 @@ export function ProductionItemDialog({
                       : freezeError
                         ? 'Não foi possível congelar a versão'
                         : conflict
-                    ? 'O item foi atualizado em outra sessão'
+                    ? (mutationError instanceof MarketingOpsApiError && (mutationError.code === 'item_terminal' || mutationError.message?.includes('Terminal production item'))
+                        ? 'Item em estado final'
+                        : 'O item foi atualizado em outra sessão')
                     : mutationError instanceof MarketingOpsApiError && mutationError.code === 'item_requirements_missing'
                       ? 'Campos obrigatórios não preenchidos'
                       : mutationError instanceof MarketingOpsApiError && mutationError.code === 'item_content_required'
@@ -536,7 +553,9 @@ export function ProductionItemDialog({
                       ? `A versão atual do conteúdo é ${freezeError.currentVersion ?? 'mais recente'}. Recarregue antes de tentar novamente.`
                       : freezeError
                         ? freezeError.message
-                        : conflict?.currentVersion
+                        : mutationError instanceof MarketingOpsApiError && (mutationError.code === 'item_terminal' || mutationError.message?.includes('Terminal production item'))
+                          ? 'Este item já foi concluído ou cancelado e não aceita mais alterações.'
+                          : conflict?.currentVersion
                     ? `A versão atual é a versão ${conflict.currentVersion}. Recarregue antes de tentar novamente.`
                     : mutationError instanceof MarketingOpsApiError && mutationError.code === 'item_requirements_missing'
                       ? formatMissingFields(mutationError.details)
@@ -662,7 +681,7 @@ export function ProductionItemDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-[8px]">
                 Fechar
               </Button>
-              {canWrite ? (
+              {canWrite && !isTerminal ? (
                 <Button type="submit" disabled={!canSubmit || saveMutation.isPending} className="rounded-[8px]">
                   {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   {isCreate ? 'Criar item' : 'Salvar alterações'}
