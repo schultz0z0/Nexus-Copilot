@@ -18,7 +18,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
 | M6 — dados e cutover | Concluído | cutover operacional validado na VPS: dados canônicos, recibos duráveis pós-reload, planejamento sequencial seguro e ancoragem contextual de UX |
-| M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
+| M7 — hardening e retirada do legado | Concluído | operação estável, SLOs consolidados, rollback testado e dependências legadas e chaves revogadas |
 
 ## Estimativa de progresso global
 
@@ -35,8 +35,8 @@ do legado sem aceite no alvo não conta como concluído.
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
 | M6 | 10% | 10% | concluído; cutover operacional homologado na VPS (recibos persistentes após reload, planejamento sequencial com Runs independentes e UX ancorada por turno) |
-| M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **94% de crédito estimado / 6% restante** | M6 concluído; transição oficial para M7 em 2026-09-18 |
+| M7 | 6% | 6% | concluído; hardening de SLOs (RPO 1h, RTO 2h), drill de rollback de produção documentado e legado Supabase extinto em 2026-09-18 |
+| **Total** | **100%** | **100% de crédito estimado** | Migração integralmente concluída com sucesso em 2026-09-18. |
 
 ## M0 — Baseline e memória do projeto
 

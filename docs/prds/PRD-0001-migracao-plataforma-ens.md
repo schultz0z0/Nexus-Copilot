@@ -148,12 +148,12 @@ acoplamentos arquiteturais indesejados.
 
 ## Decisões pendentes
 
-- solução local de autenticação e formato de sessão da App API;
-- desenho exato de RLS e propagação de identidade/tenant no PostgreSQL;
-- object storage local e política de retenção;
-- substitutos para realtime, filas, cron e funções legadas do Supabase;
-- SLOs definitivos de runtime da aplicação (RPO de 1h e RTO de 2h para PostgreSQL definidos e exercitados em M3);
-- critérios e data para retirar o dashboard Hermes da internet.
+- ~~solução local de autenticação e formato de sessão da App API~~ (resolvido em M4);
+- ~~desenho exato de RLS e propagação de identidade/tenant no PostgreSQL~~ (resolvido em M3 e M4);
+- ~~object storage local e política de retenção~~ (resolvido em M5 e retenção formalizada em M7);
+- ~~substitutos para realtime, filas, cron e funções legadas do Supabase~~ (resolvido em M5 com App API e fallback HTTP poling);
+- ~~SLOs definitivos de runtime da aplicação~~ (RPO de 1h e RTO de 2h consolidados; SLOs globais estabelecidos em M7 no `docs/operations/slos-and-retention.md`);
+- ~~critérios e data para retirar o dashboard Hermes da internet~~ (resolvido via ADR-0005 em M7).
 
-Cada decisão estrutural pendente deverá gerar um ADR antes da implementação.
+Cada decisão estrutural pendente foi resolvida via ADR e homologada ao longo dos marcos de M3 a M7.
 
