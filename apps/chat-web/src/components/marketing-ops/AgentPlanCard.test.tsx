@@ -163,6 +163,26 @@ describe('AgentPlanCard', () => {
     expect(screen.queryByRole('button', { name: /executar plano/i })).toBeNull();
   });
 
+  it('renders links even if deep_links entries are provided as objects with href', () => {
+    const planWithObjectLinks: MarketingOpsPreparedPlanSummary = {
+      ...samplePlan,
+      status: 'completed',
+      result: {
+        status: 'completed',
+        plan_id: samplePlan.id,
+        completed: [{ action_index: 0, action_type: 'campaign.create_draft', idempotency_hit: false }],
+        failed: [],
+        pending: [],
+        deep_links: [
+          { href: '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111', label: 'Abrir' } as any
+        ]
+      }
+    };
+
+    render(<AgentPlanCard plan={planWithObjectLinks} canWrite={true} canApprove={true} />);
+    expect(screen.getAllByRole('link', { name: /ver recurso criado/i })).toHaveLength(1);
+  });
+
   it('renders a persisted approval receipt as pending, not as an approved action', () => {
     const approvalPlan: MarketingOpsPreparedPlanSummary = {
       ...samplePlan,

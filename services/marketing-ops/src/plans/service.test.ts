@@ -136,6 +136,49 @@ describe('AgentPlanService', () => {
       expect((result[0]?.result as any).internal_secret).toBeUndefined();
     });
 
+    it('normalizes deep links whether stored as strings or deep link objects with href', async () => {
+      const record = createSampleRecord({
+        status: 'completed',
+        result: {
+          status: 'completed',
+          plan_id: 'plan-1',
+          completed: [],
+          failed: [],
+          pending: [],
+          deep_links: [
+            {
+              resource_type: 'campaign',
+              resource_id: '11111111-1111-4111-8111-111111111111',
+              label: 'Abrir campanha',
+              href: '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111',
+              open_in: 'campaign_workspace'
+            },
+            '/marketing-ops/campaigns/22222222-2222-4222-8222-222222222222'
+          ]
+        },
+        executedAt: new Date().toISOString()
+      });
+      const mockRepo = {
+        listRecent: vi.fn().mockResolvedValue([record])
+      } as unknown as PreparedPlanRepository;
+      const service = new AgentPlanService({
+        pool: {} as Pool,
+        planRepository: mockRepo,
+        features: { read: true, write: true, structuredPlanExecution: true }
+      });
+
+      const result = await service.listPlans(actorA, {
+        chatSessionId: record.chatSessionId,
+        status: 'all',
+        limit: 10
+      });
+
+      expect(result[0]?.result?.deep_links).toEqual([
+        '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111',
+        '/marketing-ops/campaigns/22222222-2222-4222-8222-222222222222'
+      ]);
+    });
+
     it('fails closed when a legacy stored action contains a nested credential field', async () => {
       const record = createSampleRecord({
         actions: [{

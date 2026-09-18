@@ -60,7 +60,9 @@ export function AgentPlanCard({
   const isExpired = new Date(plan.expiresAt).getTime() <= Date.now() || currentStatus === 'expired';
   const isTerminal = ['completed', 'partial', 'failed', 'expired', 'invalidated'].includes(currentStatus);
   const visibleResult = executionResult ?? plan.result ?? null;
-  const safeDeepLinks = visibleResult?.deep_links.filter((link) => parseMarketingOpsDeepLink(link)) ?? [];
+  const safeDeepLinks = visibleResult?.deep_links
+    .map((link: unknown) => (typeof link === 'string' ? link : (link as { href?: string })?.href ?? ''))
+    .filter((link): link is string => Boolean(link) && Boolean(parseMarketingOpsDeepLink(link))) ?? [];
 
   const receiptPresentation = (() => {
     const completedCount = visibleResult?.completed.length ?? 0;

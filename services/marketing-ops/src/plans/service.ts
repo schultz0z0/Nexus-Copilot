@@ -71,7 +71,12 @@ const persistedExecutionResultSchema = z.object({
     action_type: z.string(),
     reason: z.string().optional()
   })),
-  deep_links: z.array(z.string())
+  deep_links: z.array(
+    z.union([
+      z.string(),
+      z.object({ href: z.string() }).passthrough().transform((item) => item.href)
+    ])
+  )
 });
 
 function toPersistedResultDTO(
