@@ -1,48 +1,74 @@
 #!/usr/bin/env bash
 # scripts/retire-legacy.sh
 # 
-# Script auxiliar para varrer e remover rastros das variáveis de ambiente legadas
-# nos arquivos de configuração do ecossistema ENS.
+# Script de descomissionamento e teardown seguro de credenciais, contêineres
+# e volumes legados (Supabase, Neo4j, Graph MCP).
+# Compatível com produção (/etc/ens/app.env) e execuções de teste.
 
 set -euo pipefail
 
-echo "==> M7: Descomissionamento de chaves e variáveis do Supabase e Legado"
+echo "==> M7: Descomissionamento de chaves e recursos do Legado"
 
-TARGET_DIR=${1:-/opt/prometeus-marketing}
+DRY_RUN=false
+TARGET_ENV="${1:-/etc/ens/app.env}"
 
-if [ ! -d "$TARGET_DIR" ]; then
-  echo "Erro: Diretório $TARGET_DIR não encontrado."
-  exit 1
+if [[ "${1:-}" == "--dry-run" ]] || [[ "${2:-}" == "--dry-run" ]]; then
+  DRY_RUN=true
+  echo "[Modo Dry-Run Ativo] Nenhuma alteração destrutiva será gravada."
+  if [[ "${1:-}" == "--dry-run" ]]; then
+    TARGET_ENV="${2:-/etc/ens/app.env}"
+  fi
 fi
 
-echo "Buscando referências em arquivos .env na VPS..."
+# 1. Limpeza de variáveis legadas no arquivo de ambiente
+clean_env_file() {
+  local env_file="$1"
+  if [ -f "$env_file" ]; then
+    echo "Processando arquivo de ambiente: $env_file"
+    local backup_file="${env_file}.bak.$(date +%s)"
+    
+    if [ "$DRY_RUN" = true ]; then
+      echo "  [Dry-run] Faria backup para: $backup_file"
+      echo "  [Dry-run] Linhas legadas encontradas:"
+      grep -E '^(VITE_)?SUPABASE_|^NEO4J_|^GRAPH_MCP_' "$env_file" || echo "    (Nenhuma linha legada encontrada)"
+    else
+      echo "  Criando backup de segurança em: $backup_file"
+      cp "$env_file" "$backup_file"
+      
+      sed -i '/^VITE_SUPABASE_/d' "$env_file"
+      sed -i '/^SUPABASE_/d' "$env_file"
+      sed -i '/^NEO4J_/d' "$env_file"
+      sed -i '/^GRAPH_MCP_/d' "$env_file"
+      echo "  Arquivo $env_file limpo com sucesso."
+    fi
+  else
+    echo "Arquivo de ambiente $env_file não existe neste host (OK se for teste local)."
+  fi
+}
 
-# Purge em app.env
-if [ -f "$TARGET_DIR/app.env" ]; then
-  echo "Limpando $TARGET_DIR/app.env"
-  sed -i '/VITE_SUPABASE_URL/d' "$TARGET_DIR/app.env"
-  sed -i '/VITE_SUPABASE_ANON_KEY/d' "$TARGET_DIR/app.env"
-  sed -i '/SUPABASE_URL/d' "$TARGET_DIR/app.env"
-  sed -i '/SUPABASE_SERVICE_ROLE_KEY/d' "$TARGET_DIR/app.env"
+clean_env_file "$TARGET_ENV"
+
+# Opcional: verificar diretório local .env se existir
+if [ -f "/opt/prometeus-marketing/.env" ] && [ "/opt/prometeus-marketing/.env" != "$TARGET_ENV" ]; then
+  clean_env_file "/opt/prometeus-marketing/.env"
 fi
 
-# Opcional: Purge de outros envs se existirem
-if [ -f "$TARGET_DIR/.env" ]; then
-  echo "Limpando $TARGET_DIR/.env"
-  sed -i '/VITE_SUPABASE_/d' "$TARGET_DIR/.env"
-  sed -i '/SUPABASE_/d' "$TARGET_DIR/.env"
-fi
-
-echo "Verificação de contêineres legados..."
-LEGACY_CONTAINERS=$(docker ps -a --filter "name=supabase" --filter "name=neo4j" --format "{{.ID}}")
+# 2. Verificação e limpeza de contêineres legados
+echo "==> Verificando contêineres legados no Docker..."
+LEGACY_CONTAINERS=$(docker ps -a --filter "name=supabase" --filter "name=neo4j" --filter "name=graph-mcp" --filter "name=legacy-" --format "{{.ID}}" 2>/dev/null || true)
 
 if [ -n "$LEGACY_CONTAINERS" ]; then
-  echo "Parando e removendo contêineres legados encontrados..."
-  docker stop $LEGACY_CONTAINERS
-  docker rm $LEGACY_CONTAINERS
+  if [ "$DRY_RUN" = true ]; then
+    echo "  [Dry-run] Contêineres legados que seriam removidos: $LEGACY_CONTAINERS"
+  else
+    echo "  Parando e removendo contêineres legados encontrados..."
+    docker stop $LEGACY_CONTAINERS 2>/dev/null || true
+    docker rm $LEGACY_CONTAINERS 2>/dev/null || true
+    echo "  Contêineres legados removidos com sucesso."
+  fi
 else
-  echo "Nenhum contêiner de nome 'supabase' ou 'neo4j' encontrado em execução local."
+  echo "  Nenhum contêiner legado em execução no Docker."
 fi
 
-echo "==> Limpeza de resíduos da arquitetura legada concluída."
-echo "Lembre-se de deletar o projeto físico na plataforma Supabase."
+echo "==> Descomissionamento local de resíduos legados concluído."
+echo "Lembre-se de deletar o projeto físico no console web do Supabase (fora da VPS)."

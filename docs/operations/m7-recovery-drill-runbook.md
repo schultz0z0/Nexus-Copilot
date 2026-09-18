@@ -1,68 +1,88 @@
 # M7: Production Recovery Drill Runbook
 
-Este documento prescreve o passo a passo para a execução de um **Drill de Recuperação (Recovery Drill)** na VPS de produção, garantindo que os RTO e RPO definidos em `slos-and-retention.md` são possíveis de serem atingidos.
+Este documento prescreve o passo a passo para a execução do **Drill de Recuperação (Recovery Drill)** na VPS de produção, garantindo que os RTO e RPO definidos em `slos-and-retention.md` são cumpridos na arquitetura oficial da ENS.
 
-> [!WARNING]
-> Este exercício deve ser realizado em janelas de manutenção e não substitui os testes automatizados de backup local.
+> [!NOTE]
+> O procedimento utiliza os serviços de operação nativos versionados em `infra/postgres/compose.yaml` (`postgres-backup`, `postgres-restore`, `postgres-restore-bootstrap` e `postgres-restore-drill`), garantindo isolamento total do banco de dados ativo de produção.
 
 ## Objetivo
-Verificar se o backup lógico via `restic` do PostgreSQL pode ser restaurado integralmente em um novo banco de dados na VPS sem perda de dados para além da tolerância estabelecida.
+Comprovar na topologia de produção que um snapshot lógico criptografado pelo `restic` pode ser restaurado integralmente em uma instância isolada e validado através da suíte `validate-restore.sql` sem interrupção indevida e com RTO < 2h.
 
-## Procedimento do Drill
+## Topologia do Drill
 
-### Passo 1: Interrupção Controlada da Aplicação
-Para obter um snapshot consistente e não afetar usuários em uso durante a validação, pause a aplicação web temporariamente:
-```bash
-docker compose --env-file /etc/ens/app.env \
-  -f infra/app/compose.yaml \
-  -f infra/app/compose.production.yaml \
-  stop chat-web app-api
+```
++--------------------------+          +--------------------------+
+|  postgres (Produção)     |          |  postgres-restore        |
+|  - Porta 5432 (Privada)  |          |  - Instância isolada     |
++------------+-------------+          +------------+-------------+
+             |                                     ^
+       backup|                               restore|
+             v                                     |
++--------------------------+          +------------+-------------+
+|  postgres-backup (Ops)   | -------> |  postgres-restore-drill  |
+|  - Restic snapshot       |  backup  |  - Validação SHA-256     |
+|  - /var/lib/nexus-backup |  volume  |  - pg_restore            |
++--------------------------+          |  - validate-restore.sql  |
+                                      +--------------------------+
 ```
 
-### Passo 2: Execução de Backup Isolado (Snapshot Final)
-Execute um backup forçado antes de mexer nos volumes para garantir um ponto de restauração zero-loss.
+## Procedimento do Drill na VPS
+
+### Passo 1: Execução de Snapshot de Produção Atual
+Gere um snapshot pontual do banco ativo usando o container unprivileged de backup:
+
 ```bash
-# Executar a task de backup (referência a ser configurada na VPS via cron)
-docker compose --env-file /etc/ens/postgres.env -f infra/postgres/compose.yaml exec -T backup /bin/backup.sh
+docker compose --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  run --rm postgres-backup
+```
+*Critério de sucesso:* O script gera `/var/lib/nexus-backup/status/last-backup.json` com status `success`, digest SHA-256 e snapshot salvo no repositório Restic.
+
+### Passo 2: Inicializar o Alvo Isolado de Restauração
+Suba a instância vazia de restauração e configure as roles de menor privilégio:
+
+```bash
+docker compose --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  up -d postgres-restore
+
+docker compose --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  run --rm postgres-restore-bootstrap
+```
+*Critério de sucesso:* `postgres-restore` atinge status `healthy` e `postgres-restore-bootstrap` conclui com código de saída 0.
+
+### Passo 3: Executar o Drill de Restauração e Validação
+Acione o serviço especializado `postgres-restore-drill`:
+
+```bash
+docker compose --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  run --rm postgres-restore-drill
 ```
 
-### Passo 3: Criação de Ambiente de Drill (Sandbox)
-Em vez de destruir os dados de produção para testar (o que traz risco real), suba uma instância secundária do PostgreSQL escutando na porta 5433 usando uma base vazia.
+#### O que o serviço `postgres-restore-drill` executa:
+1. Localiza o snapshot mais recente no repositório `restic`.
+2. Verifica a integridade da assinatura SHA-256 do arquivo dump.
+3. Restaura o dump lógico no banco `postgres-restore` usando `pg_restore`.
+4. Executa `infra/postgres/ops/validate-restore.sql`:
+   - Valida a presença de todas as relações críticas (`iam.*`, `chat.*`, `marketing_ops.*`).
+   - Confirma o menor privilégio das roles (`nexus_app`, `nexus_migrator`, `nexus_backup`).
+   - Verifica as contagens de sentinelas e integridade das chaves estrangeiras.
+5. Escreve `/var/lib/nexus-backup/status/last-restore-drill.json` registrando o tempo total de restauração (RTO).
 
-1. Crie uma pasta temporária `/opt/drill-db`.
-2. Crie um `compose.drill.yaml` que suba o PostgreSQL montando a `/opt/drill-db`.
+### Passo 4: Limpeza do Ambiente de Drill
+Após a validação aprovada, destrua a instância secundária e seu volume descartável:
 
-### Passo 4: Executar o Restore
-Com o `drill-db` rodando, acione o `restic` para depositar os dumps extraídos do repositório remoto para dentro do contêiner de drill.
 ```bash
-export RESTIC_REPOSITORY="s3:s3.amazonaws.com/sua-bucket-restic"
-export RESTIC_PASSWORD="sua-senha-restic"
-
-restic dump latest custom.sql | docker exec -i drill-postgres psql -U postgres
+docker compose --env-file /etc/ens/postgres.env \
+  -f infra/postgres/compose.yaml \
+  down --volumes --remove-orphans
 ```
+*(Nota: a instância de produção `postgres` permanece ativa e inalterada, pois usa outro compose profile e volumes independentes).*
 
-### Passo 5: Validação da Integridade (Asserções)
-Acesse o `drill-postgres` e rode queries para comprovar que os dados estão lá.
-```bash
-docker exec -it drill-postgres psql -U nexus_app -d nexus -c "SELECT count(*) FROM chat.chat_sessions;"
-```
-A contagem deve ser idêntica ao último snapshot da produção.
-
-### Passo 6: Limpeza (Tear-down)
-Uma vez que o drill for aprovado (dados idênticos e tempo de restore menor que 2 horas), destrua o `drill-db`:
-```bash
-docker compose -f compose.drill.yaml down -v
-rm -rf /opt/drill-db
-```
-
-### Passo 7: Retorno da Operação
-Inicie os containers da aplicação novamente.
-```bash
-docker compose --env-file /etc/ens/app.env \
-  -f infra/app/compose.yaml \
-  -f infra/app/compose.production.yaml \
-  start app-api chat-web
-```
-
-## Registro do Teste
-Guarde no changelog ou sistema interno da empresa (Jira, Notion) a data em que o drill foi executado, o tempo levado e qualquer impedimento encontrado para manter conformidade de SRE.
+## Critérios de Aceite do Drill
+- [ ] Status final em `last-restore-drill.json` reporta `status: "success"`.
+- [ ] O tempo total de recuperação não ultrapassa o RTO de 2 horas.
+- [ ] O banco ativo de produção (`postgres`) manteve 100% de disponibilidade durante o drill.
+- [ ] Nenhuma credencial ou segredo foi exposto em logs ou saída padrão.
