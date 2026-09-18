@@ -17,7 +17,7 @@ mas não autoriza remover a infraestrutura anterior antes do gate correspondente
 | M3 — fundação PostgreSQL | Concluído | PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos validados na VPS |
 | M4 — Auth e App API/BFF | Concluído | identidade/tenant, sessões HttpOnly, BFF Fastify, RBAC de admin e homologação E2E na VPS |
 | M5 — capacidades substitutas | Concluído | stack ens-app, Artifact Server CAS, remoção de dependências Supabase e chat na VPS |
-| M6 — dados e cutover | Gate funcional VPS aprovado; Checkpoint 7 pendente | recibos persistentes e novos planos sequenciais aprovados localmente |
+| M6 — dados e cutover | Concluído | cutover operacional validado na VPS: dados canônicos, recibos duráveis pós-reload, planejamento sequencial seguro e ancoragem contextual de UX |
 | M7 — hardening e retirada do legado | Pendente | operação estável, rollback testado e dependências removidas |
 
 ## Estimativa de progresso global
@@ -34,9 +34,9 @@ do legado sem aceite no alvo não conta como concluído.
 | M3 | 18% | 18% | concluído; PostgreSQL 18.6, menor privilégio, RLS, migrations 0001-0004 e contratos (24/24) validados na VPS |
 | M4 | 18% | 18% | concluído; migration 0005, App API/BFF Fastify, sessões seguras HttpOnly, rotas admin, frontend desacoplado e homologação E2E na VPS |
 | M5 | 14% | 14% | concluído; stack ens-app (App API, Artifact Server, Bridge, Chat Web) saudável, zero Supabase e chat homologado na VPS |
-| M6 | 10% | 9% | fluxo funcional homologado; recibos e planos sequenciais aprovados localmente, com Checkpoint 7 produtivo pendente |
+| M6 | 10% | 10% | concluído; cutover operacional homologado na VPS (recibos persistentes após reload, planejamento sequencial com Runs independentes e UX ancorada por turno) |
 | M7 | 6% | 0% | hardening e retirada do legado ainda não executados |
-| **Total** | **100%** | **93% de crédito estimado / 7% restante** | M6 não concluído; estimativa em 2026-09-17 |
+| **Total** | **100%** | **94% de crédito estimado / 6% restante** | M6 concluído; transição oficial para M7 em 2026-09-18 |
 
 ## M0 — Baseline e memória do projeto
 
@@ -351,9 +351,15 @@ deliberadamente ignorados, Chat Bridge 131/131, Artifact Server 13/13 e App API
 88/88. Typechecks, builds, contratos App 11/11, contratos Hermes 23/23 e profile
 ENS `0.1.3` também passaram. A nova UX distingue conclusão total, parcial,
 falha, expiração e substituição, informa que um approval criado está
-**pendente** e só publica deep links internos reconhecidos. O M6 continua
-**não concluído** até o Checkpoint 7 reproduzir na VPS o recibo após reload e um
-segundo plano no mesmo chat.
+**Homologação produtiva do Checkpoint 7 concluída em 2026-09-18:**
+O Checkpoint 7 foi totalmente executado e homologado na VPS sob supervisão do responsável:
+1. **Recibos persistentes e reload:** O card de execução foi mantido em estado terminal `completed` com deep links internos (`[Ver recurso criado ↗]`) e persistiu perfeitamente após reloads do navegador (correção de normalização de deep links validada no commit `1e005a7`).
+2. **Planejamento sequencial independente:** Um novo pedido no mesmo chat ("Validação final M6 pós-deploy") gerou um novo plano `pending` (`7049499e`) via nova Run/ref sem exigir reautorização textual do usuário, mantendo um único botão executável ativo.
+3. **Execução segura e idempotente:** A execução com clique único registrou o plano como `completed` no banco com `max_attempts = 1` e sem loops de execução (evidência do PostgreSQL: 6 planos `completed`, 1 `expired`, 1 `pending`).
+4. **Ancoragem contextual de UX (commit `bd954d4`):** A renderização dos cards foi associada ao turno conversacional em que foram preparados (`plansByMessageIndex`), impedindo que cards históricos desçam para o final do chat em mensagens subsequentes (como *"obrigado!"* e *"Por nada! 🥰"*).
+5. **Aprovação do operador:** A interface e os dados foram visual e funcionalmente validados na VPS pelo responsável humano.
+
+**Critério de saída M6 atingido:** O Marco M6 está oficialmente **Concluído**. A infraestrutura avança para o **Marco M7 (Hardening e retirada do legado)**.
 
 ## M7 — Hardening e retirada do legado
 

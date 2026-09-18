@@ -1,9 +1,9 @@
 # Runbook — M6 Marketing Ops e cutover
 
 **Marco:** M6  
-**Estado:** Gate funcional produtivo aprovado; Checkpoint 7 pendente
+**Estado:** Concluído (Homologação técnica, funcional e de UX aprovadas em 2026-09-18)
 **Último gate local:** 2026-09-17
-**Última homologação produtiva:** 2026-09-17
+**Última homologação produtiva:** 2026-09-18
 **Checkout da VPS:** `/opt/prometeus-marketing`
 
 ## Objetivo e fronteiras
@@ -965,8 +965,46 @@ Registre sem payloads ou credenciais:
 - saúde final dos serviços e SHA integral implantado.
 
 O M6 só muda para **Concluído** após todas as evidências acima e a percepção de
-UX serem aprovadas pelo responsável. Até lá, o estado permanece Checkpoint 7
-pendente.
+UX serem aprovadas pelo responsável.
+
+### 7.6 — Evidência de Fechamento do Checkpoint 7 (2026-09-18)
+
+O Checkpoint 7 foi executado e homologado com sucesso em produção na VPS:
+
+1. **Deploy e integridade dos serviços (Checkpoints 7.0–7.3):**
+   - Imagens `chat-bridge`, `marketing-ops`, `chat-web` e `hermes` recriadas e saudáveis.
+   - Hermes profile `ens@0.1.3` ativo com 10 ferramentas operacionais registradas no MCP privado `nexus_marketing_ops`.
+   - Smoke consolidado passou 11/11 sem exposição pública de portas de backend nem vazamento de tokens em logs.
+
+2. **Correção de regressão de deep links (commit `1e005a7`):**
+   - Durante a homologação inicial de reload, `marketing-ops` rejeitava planos executados com status 400 devido a formato de objetos em `deep_links` no banco.
+   - Corrigida e testada a normalização no backend e frontend; planos `completed` passaram a carregar perfeitamente após reloads com links internos funcionais (`/marketing-ops/campaigns/38e0588c-...`).
+
+3. **Homologação funcional autenticada no navegador (Checkpoint 7.4):**
+   - Sessão ativa `46d10fc7-9df3-4741-bc30-e087e4898d79`.
+   - Plano anterior (`bfe60878`) exibido estavelmente como recibo `completed` com link funcional após múltiplos reloads.
+   - Plano intermediário expirado (`54c51d48`) exibido como recibo `expired` sem falhas de interface.
+   - Novo pedido sequencial ("Validação final M6 pós-deploy") preparado pelo Hermes sem exigir confirmação textual adicional do usuário; novo plano `pending` (`7049499e`) exibido com botão único de execução.
+   - Execução com clique único concluída com sucesso e recibo registrado imediatamente.
+
+4. **Refinamento de ancoragem de UX (commit `bd954d4`):**
+   - Corrigido o comportamento onde cards se acumulavam no rodapé da conversa ao trocar novas mensagens.
+   - Implementada e testada a ancoragem contextual por turno (`plansByMessageIndex`), mantendo cards históricos fixados abaixo da mensagem do assistente que os gerou e deixando o final do chat livre para a conversa atual.
+
+5. **Auditoria de banco de dados no PostgreSQL da VPS (Checkpoint 7.5):**
+   ```text
+     status   | total | max_attempts
+   -----------+-------+--------------
+    expired   |     1 |            0
+    completed |     6 |            1
+    pending   |     1 |            0
+   (3 rows)
+   ```
+   - Nenhum plano com `execution_attempts > 1`.
+   - Zero concorrência de planos pendentes no mesmo chat.
+   - Ausência absoluta de credenciais ou tokens em logs e no chat.
+
+**Conclusão:** O Marco M6 atendeu a todos os critérios de aceitação e está formalmente **Concluído**. O programa migratório avança para o **Marco M7 (Hardening e retirada do legado)**.
 
 ### Rollback do Checkpoint 7
 

@@ -1,7 +1,6 @@
 # M6 Plan Receipts and Sequential Planning Implementation Plan
 
-**Estado:** Implementação local concluída em 2026-09-17; homologação produtiva
-do Checkpoint 7 pendente.
+**Estado:** Concluído em 2026-09-18; homologação produtiva do Checkpoint 7 validada na VPS (commits `1e005a7` e `bd954d4`).
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
