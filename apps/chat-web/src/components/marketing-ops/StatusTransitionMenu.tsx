@@ -71,12 +71,12 @@ export function StatusTransitionMenu({
               size="icon"
               disabled={disabled}
               aria-label="Outras transições"
-              className="h-11 w-11 rounded-[8px] bg-white/80"
+              className="h-11 w-11 rounded-[8px] bg-card"
             >
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="rounded-[8px] border-white/60 bg-white/90 shadow-glass backdrop-blur-xl">
+          <DropdownMenuContent align="end" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <DropdownMenuItem onSelect={() => onTransition(reopen.to)} className="min-h-10">
               {reopen.label}
             </DropdownMenuItem>

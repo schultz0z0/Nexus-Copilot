@@ -86,7 +86,7 @@ export interface MarketingOpsClientOptions {
   fetch?: typeof globalThis.fetch;
 }
 
-function withQuery(path: string, values: Record<string, unknown>): string {
+function withQuery(path: string, values: object): string {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(values)) {
     if (value !== undefined && value !== null) query.set(key, String(value));

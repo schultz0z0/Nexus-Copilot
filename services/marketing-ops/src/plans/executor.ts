@@ -14,6 +14,7 @@ import {
 import type { ArtifactClient } from '../integrations/artifactClient.js';
 import type { MarketingOpsPlanAction } from './contracts.js';
 import { submitEditorialApproval, submitOperationalApproval } from '../domain/approvals.js';
+import { createResultReport, updateResultReport } from '../domain/leads.js';
 import type { MarketingOpsPlan } from './token.js';
 import {
   deepLinkForCompletedAction,
@@ -35,6 +36,8 @@ export interface PlanExecutorDependencies {
   appendCampaignNote: typeof appendCampaignNote;
   submitEditorialApproval: typeof submitEditorialApproval;
   submitOperationalApproval: typeof submitOperationalApproval;
+  createResultReport: typeof createResultReport;
+  updateResultReport: typeof updateResultReport;
 }
 
 const defaultDependencies: PlanExecutorDependencies = {
@@ -47,7 +50,9 @@ const defaultDependencies: PlanExecutorDependencies = {
   linkExistingItemArtifact,
   appendCampaignNote,
   submitEditorialApproval,
-  submitOperationalApproval
+  submitOperationalApproval,
+  createResultReport,
+  updateResultReport
 };
 
 type ActionType = MarketingOpsPlanAction['type'];
@@ -155,6 +160,10 @@ export async function executeMarketingOpsPlan(
           ...(action.course_slug ? { courseSlug: action.course_slug } : {})
         });
         campaignRefs.set(action.ref, (resource as { id: string }).id);
+      } else if (action.type === 'campaign.results_record') {
+        resource = action.report_id && action.expected_version
+          ? await dependencies.updateResultReport(actionContext, action.campaign_id, action.report_id, action.expected_version, action.report, idempotencyKey)
+          : await dependencies.createResultReport(actionContext, action.campaign_id, action.report, idempotencyKey);
       } else if (action.type === 'campaign.update') {
         resource = await dependencies.updateCampaign(
           actionContext,

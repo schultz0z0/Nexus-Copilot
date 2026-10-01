@@ -226,8 +226,8 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
   return (
     <div ref={messagesScrollRef} className="space-y-6 overflow-y-auto overscroll-contain [overflow-anchor:none] p-4 md:p-8 flex-1 flex flex-col min-h-0">
       {(isRetrievingContext || (showPendingAssistantIndicator && liveStatusText)) && (
-        <div className="flex items-center gap-2 text-xs text-text-secondary bg-white/70 border border-white/40 px-3 py-2 rounded-full self-center animate-pulse">
-          <Sparkles className="w-3 h-3 text-brand-primary" />
+        <div className="flex items-center gap-2 text-xs text-text-secondary bg-card border border-border px-3 py-2 rounded-full self-center animate-pulse">
+          <Sparkles className="w-3 h-3 text-brand-accent" />
           <span>{liveStatusText ?? "Hermes está processando sua mensagem..."}</span>
         </div>
       )}
@@ -245,7 +245,7 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
             variant="ghost"
             onClick={onLoadOlderMessages}
             disabled={isLoadingMore}
-            className="text-xs text-slate-500 hover:text-slate-700"
+            className="text-xs text-text-muted hover:text-text-secondary"
           >
             {isLoadingMore ? "Carregando..." : "Carregar mensagens anteriores"}
           </Button>
@@ -270,9 +270,9 @@ const ChatMessagesPane = memo(function ChatMessagesPane({
               {message.role === "assistant" && (
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 rounded-full bg-brand-primary/20 flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-brand-primary" />
+                    <Sparkles className="w-3 h-3 text-brand-accent" />
                   </div>
-                  <span className="text-xs font-medium text-text-muted">Nexus AI</span>
+                  <span className="text-xs font-medium text-text-muted">Prometeus</span>
                 </div>
               )}
               <ChatMessageContent
@@ -463,12 +463,12 @@ export const ChatInterface = ({
 
   const composerMenuItems = useMemo<ComposerMenuItem[]>(
     () => ([
-      { key: "upload", label: "Adicionar fotos e arquivos", icon: Paperclip, kind: "upload", separatorAfter: true },
+      { key: "upload" as const, label: "Adicionar fotos e arquivos", icon: Paperclip, kind: "upload" as const, separatorAfter: true },
       {
         key: "image",
         label: "Criar imagem",
         icon: ImageIcon,
-        kind: "action",
+        kind: "action" as const,
         onSelect: () => setImageGenerationMode(true),
         separatorAfter: true,
       },
@@ -476,28 +476,28 @@ export const ChatInterface = ({
         key: "copy",
         label: "Criar Copy",
         icon: PenLine,
-        kind: "action",
+        kind: "action" as const,
         onSelect: () => setInput("Crie 5 variações de copy (curta, direta e persuasiva) para: "),
       },
       {
         key: "sales",
         label: "Aux. de Vendas",
         icon: BriefcaseBusiness,
-        kind: "action",
+        kind: "action" as const,
         onSelect: () => setInput("Me ajude a responder esse lead e fechar a venda. Contexto: "),
       },
       {
         key: "brief",
         label: "Briefing de peças",
         icon: ClipboardList,
-        kind: "action",
+        kind: "action" as const,
         onSelect: () => setInput("Monte um briefing completo para uma peça. Informações: "),
       },
       {
         key: "plan",
         label: "Planejamento",
         icon: ClipboardList,
-        kind: "action",
+        kind: "action" as const,
         onSelect: () => setInput("Crie um planejamento semanal de conteúdo para: "),
       },
     ].filter((item) => experience === "normal" || item.key === "upload")),
@@ -1054,8 +1054,8 @@ export const ChatInterface = ({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       const errorContent = assistantContent
-        ? `${assistantContent}\n\n⚠️ **Erro de Conexão**: O Nexus AI está analisando muitos documentos agora ou houve uma falha na rede. Por favor, tente perguntar novamente em alguns instantes.`
-        : "⚠️ **Erro de Conexão**: O Nexus AI está analisando muitos documentos agora ou houve uma falha na rede. Por favor, tente perguntar novamente em alguns instantes.";
+        ? `${assistantContent}\n\n⚠️ **Erro de Conexão**: O Prometeus está analisando muitos documentos agora ou houve uma falha na rede. Por favor, tente perguntar novamente em alguns instantes.`
+        : "⚠️ **Erro de Conexão**: O Prometeus está analisando muitos documentos agora ou houve uma falha na rede. Por favor, tente perguntar novamente em alguns instantes.";
 
       if (assistantTempId) {
         flushStreamingContent(assistantTempId, errorContent);
@@ -1116,8 +1116,8 @@ export const ChatInterface = ({
           {isEmpty && experience === "picture" ? (
             <div className="flex min-h-full flex-col items-center justify-center gap-6 px-4 py-8">
               <div className="max-w-lg text-center">
-                <h2 className="text-xl font-semibold text-slate-900">O que vamos criar?</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">Conte ao Hermes sobre a peça e anexe referências quando precisar. Ele organiza o briefing e conduz a geração no Picture.</p>
+                <h2 className="text-xl font-semibold text-foreground">O que vamos criar?</h2>
+                <p className="mt-2 text-sm leading-6 text-text-muted">Conte ao Hermes sobre a peça e anexe referências quando precisar. Ele organiza o briefing e conduz a geração no Picture.</p>
               </div>
               <div className="w-full max-w-3xl">
                 <ChatComposer

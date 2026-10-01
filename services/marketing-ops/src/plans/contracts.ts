@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { ResultReportInputSchema } from '../domain/leadsContracts.js';
 
 const planRef = z.string().min(1).max(64).regex(/^[a-z][a-z0-9-]*$/);
 const courseSlug = z.string().regex(/^[a-z0-9][a-z0-9-]{1,127}$/);
@@ -205,6 +206,27 @@ const submitOperationalApprovalAction = z.object({
   expires_at: instant
 }).strict();
 
+const recordResultsAction = z.object({
+  type: z.literal('campaign.results_record'),
+  campaign_id: uuid,
+  report: z.object({
+    sourceId: uuid, actionId: uuid.nullable().default(null),
+    periodFrom: z.iso.date(), periodTo: z.iso.date(), timeZone: z.string().max(100),
+    metrics: z.object({
+      sent: z.number().int().nonnegative().optional(), delivered: z.number().int().nonnegative().optional(),
+      opened: z.number().int().nonnegative().optional(), clicked: z.number().int().nonnegative().optional(),
+      responded: z.number().int().nonnegative().optional(), spend: z.number().nonnegative().optional(),
+      qualified: z.number().int().nonnegative().optional(), sales: z.number().int().nonnegative().optional(),
+      revenue: z.number().nonnegative().optional()
+    }).strict(), notes: nullableText(4000).default(null)
+  }).strict().superRefine((value, context) => {
+    const parsed = ResultReportInputSchema.safeParse(value);
+    if (!parsed.success) for (const issue of parsed.error.issues) context.addIssue({ code: 'custom', path: issue.path, message: issue.message });
+  }),
+  report_id: uuid.optional(),
+  expected_version: positiveInteger.optional()
+}).strict().refine(value => Boolean(value.report_id) === Boolean(value.expected_version), 'A revision requires report_id and expected_version together');
+
 export const marketingOpsPlanActionSchema = z.discriminatedUnion('type', [
   createCampaignAction,
   updateCampaignAction,
@@ -215,7 +237,8 @@ export const marketingOpsPlanActionSchema = z.discriminatedUnion('type', [
   linkArtifactAction,
   addCampaignNoteAction,
   submitEditorialApprovalAction,
-  submitOperationalApprovalAction
+  submitOperationalApprovalAction,
+  recordResultsAction
 ]);
 
 export const marketingOpsPlanActionsSchema = z.array(marketingOpsPlanActionSchema)
@@ -297,6 +320,7 @@ export interface PreparedAgentPlanSummaryDTO {
   status: PreparedAgentPlanStatus;
   expiresAt: string;
   actions: MarketingOpsPlanAction[];
+  actionLabels?: Array<{ actionIndex: number; campaign: string; source: string; action: string | null }>;
   requiredScopes: string[];
   result: PreparedAgentPlanExecutionResultDTO | null;
   executedAt: string | null;

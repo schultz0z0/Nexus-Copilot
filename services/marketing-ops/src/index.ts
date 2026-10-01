@@ -13,13 +13,32 @@ import { createDelegationResolver } from './delegation/resolver.js';
 import { ArtifactClient } from './integrations/artifactClient.js';
 import { RagCourseClient } from './integrations/ragCourseClient.js';
 import { startApprovalExpiryWorker } from './domain/approvalExpiryWorker.js';
+import { AdsIntegrationService } from './domain/ads.js';
+import { loadAdsConfig } from './integrations/ads/config.js';
+import { createAdsProviderClient } from './integrations/ads/providers.js';
+import { adsProviders, type AdsProvider, type AdsProviderClient } from './integrations/ads/types.js';
+import { openAdsSetupStore } from './integrations/ads/setupStore.js';
+import { resolve } from 'node:path';
+import { WebAnalyticsService } from './domain/webAnalytics.js';
 
 const config = loadConfig(process.env);
 const logger = createLogger();
 const metrics = createMetrics();
 const pool = createPool(config.databaseUrl);
+const operationalAdsConfig = loadAdsConfig(process.env);
+const adsStore = await openAdsSetupStore(pool, process.env.ADS_SETUP_DIRECTORY || resolve('data/ads'), operationalAdsConfig.encryptionKey);
+const adsConfig = loadAdsConfig(process.env, adsStore.key);
+const adsClients: Partial<Record<AdsProvider, AdsProviderClient>> = {};
+for (const provider of adsProviders) {
+  const settings = adsConfig.providers[provider];
+  if (settings) adsClients[provider] = createAdsProviderClient(provider, settings);
+}
+const adsService = new AdsIntegrationService(pool, adsConfig, adsClients, { store: adsStore });
+const webAnalyticsService=new WebAnalyticsService(pool,adsService);
 const router = createApiRouter({
   pool,
+  adsService,
+  webAnalyticsService,
   corsOrigins: config.corsOrigins,
   features: config.features,
   artifactClient: new ArtifactClient({
@@ -34,6 +53,7 @@ const router = createApiRouter({
   tenantTimeZone: config.tenantTimeZone,
   metrics,
   keyring: config.delegation,
+  captureKeyring: config.bffAssertion,
   resolveDelegation: createDelegationResolver(config.delegationResolve),
   refreshDelegation: createDelegationRefresher(config.delegationRefresh),
   verifyAssertion: (token, method, path) => verifyBffAssertion(
@@ -72,10 +92,34 @@ const stopApprovalExpiryWorker = config.features.write && config.features.approv
   })
   : () => undefined;
 
+// Durable work/generation checks live in AdsIntegrationService. This process
+// trigger only avoids overlapping ticks and observes the application kill switch.
+let adsTickRunning = false;
+let analyticsTickRunning=false;
+const analyticsTimer=config.features.read&&config.features.write?setInterval(()=>{
+  if(analyticsTickRunning||shuttingDown)return;
+  analyticsTickRunning=true;
+  void webAnalyticsService.syncDue().catch(()=>logger.error('analytics synchronization tick failed',{code:'analytics_sync_tick_failed'})).finally(()=>{analyticsTickRunning=false;});
+},60_000):undefined;
+analyticsTimer?.unref();
+const adsTimer = config.features.read && config.features.write
+  ? setInterval(() => {
+    if (adsTickRunning || shuttingDown) return;
+    adsTickRunning = true;
+    void adsService.syncDue().catch(() => {
+      // Provider bodies and credential-bearing errors never enter logs.
+      logger.error('ads synchronization tick failed', { code: 'ads_sync_tick_failed' });
+    }).finally(() => { adsTickRunning = false; });
+  }, adsConfig.syncIntervalMs)
+  : undefined;
+adsTimer?.unref();
+
 let shuttingDown = false;
 async function shutdown(signal: string) {
   if (shuttingDown) return;
   shuttingDown = true;
+  if (adsTimer) clearInterval(adsTimer);
+  if(analyticsTimer)clearInterval(analyticsTimer);
   stopApprovalExpiryWorker();
   logger.info('marketing-ops stopping', { signal });
   server.close(async () => {

@@ -21,6 +21,7 @@ services:
   marketing-ops:
     environment:
       NODE_ENV: development
+      ADS_PUBLIC_ORIGIN: ${ADS_PUBLIC_ORIGIN:-http://127.0.0.1:8088}
       MARKETING_OPS_FEATURE_READ: "true"
       MARKETING_OPS_FEATURE_WRITE: "true"
       MARKETING_OPS_FEATURE_APPROVALS: "true"

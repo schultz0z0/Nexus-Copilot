@@ -59,6 +59,17 @@ function createSampleRecord(overrides: Partial<PreparedAgentPlanRecord> = {}): P
 
 describe('AgentPlanService', () => {
   describe('listPlans', () => {
+    it('resolves report target labels from canonical actor-scoped data without changing signed actions', async () => {
+      const actions = [{ type: 'campaign.results_record', campaign_id: actorA.tenantId, report: { sourceId: actorA.userId, actionId: null, periodFrom: '2026-09-21', periodTo: '2026-09-27', timeZone: 'America/Sao_Paulo', metrics: { sales: 0 }, notes: null } }] as MarketingOpsPlanAction[];
+      const record = createSampleRecord({ actions });
+      const query = vi.fn(async (sql: string) => ({ rows: sql.includes('source.name') ? [{ campaign: 'Campanha real', source: 'Email semanal', action: null }] : [] }));
+      const pool = { connect: async () => ({ query, release() {} }) } as unknown as Pool;
+      const service = new AgentPlanService({ pool, planRepository: { listPending: async () => [record] } as unknown as PreparedPlanRepository, features: { read: true, write: true } });
+      const [summary] = await service.listPlans(actorA);
+      expect(summary?.actionLabels).toEqual([{ actionIndex: 0, campaign: 'Campanha real', source: 'Email semanal', action: null }]);
+      expect(summary?.actions).toEqual(actions);
+      expect(query.mock.calls.map(([sql]) => sql)).toContain('commit');
+    });
     it('returns allowlisted summary DTO fields only', async () => {
       const record = createSampleRecord();
       const mockRepo = {

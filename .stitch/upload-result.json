@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "screen": {
+        "screenshot": {
+          "name": "projects/11535637910255965569/files/16029582777659922288",
+          "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1Uc64YVjnXgir-Xy-rv4lXsO1bmDJQwXWKt6DPf2NJLPJlnIQ2QfVOQzU_KjGHurmLnUfNtKFt80Zm1y1JA-7HnpPh7M8LDG0Q6Imzj-Dk-opj4D1UB5XTc_Z5oP_TDBALZeI4INqmVvSNZCCDU92kfYlC_qd1CHPaBpuM7JRb4hK-0PViJGZqxfwyq1ESLVnuPHyv22wwxUSSKHIb-k_hEHeYdDjJqbxm-JkP-yzqMhVn-FrB3hA1iVTFZ_k9-IsET6Lu-x7o7oe8"
+        },
+        "htmlCode": {
+          "name": "projects/11535637910255965569/files/16029582777659920715",
+          "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBKOARIhYXBwX2NvbXBhbmlvbl91c2VyX3VwbG9hZGVkX2ZpbGVzGmkKM3VzZXJfdXBsb2FkZWRfaHRtbF8wMDA2NWM2YmJlNjllMTM1MDMzODU5YTEzMDJjYmYzORILEgcQ_fqukswNGAGSASQKCnByb2plY3RfaWQSFkIUMTE1MzU2Mzc5MTAyNTU5NjU1Njk&filename=&opi=96797242",
+          "mimeType": "text/html"
+        },
+        "id": "16029582777659923861",
+        "generatedBy": "UserUploadedHtml: Stitch MCP / brand review",
+        "width": "2560",
+        "height": "5280",
+        "title": "FINAL B — desktop · para comparação",
+        "name": "projects/11535637910255965569/screens/16029582777659923861",
+        "theme": {},
+        "screenType": "DESIGN",
+        "isCreatedByClient": true,
+        "screenMetadata": {
+          "status": "COMPLETE",
+          "displayMode": "HTML"
+        }
+      }
+    },
+    {
+      "screen": {
+        "screenshot": {
+          "name": "projects/11535637910255965569/files/16029582777659921369",
+          "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1UTm10G6hvT7G0Am3zqcsoaRnZwlVmGEYYhLMouv8uvV28cxIFNXSAPG73mCSgA-L2JfQAR_Hvbezx-1yG3KDn0b_teBOL8BJ8NM6GBZmvICvqI7wMb2ms6vJeYZ6EOj3gGQUKlawNOVCee65nZgOGnMTeqwOi3s4v37MtG5xROgj8aHPBeICvNgz3_Dlw7lgdLwuV5Dc89EX0jrYVb-9cxxC2Vbe4709v3uPG7qgClSu1c70khQVOstQVR4QeX8jNQHmCBKGKIxg"
+        },
+        "htmlCode": {
+          "name": "projects/11535637910255965569/files/16029582777659923892",
+          "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBKOARIhYXBwX2NvbXBhbmlvbl91c2VyX3VwbG9hZGVkX2ZpbGVzGmkKM3VzZXJfdXBsb2FkZWRfaHRtbF8wMDA2NWM2YmJlNjllMTM3MDMzODU5YTEzMDJjYmYzORILEgcQ_fqukswNGAGSASQKCnByb2plY3RfaWQSFkIUMTE1MzU2Mzc5MTAyNTU5NjU1Njk&filename=&opi=96797242",
+          "mimeType": "text/html"
+        },
+        "id": "16029582777659922942",
+        "generatedBy": "UserUploadedHtml: Stitch MCP / brand review",
+        "width": "2560",
+        "height": "7950",
+        "title": "FINAL B — mobile · para comparação",
+        "name": "projects/11535637910255965569/screens/16029582777659922942",
+        "theme": {},
+        "screenType": "DESIGN",
+        "isCreatedByClient": true,
+        "screenMetadata": {
+          "status": "COMPLETE",
+          "displayMode": "HTML"
+        }
+      }
+    }
+  ],
+  "screenInstances": [
+    {
+      "id": "16029582777659923861",
+      "sourceScreen": "projects/11535637910255965569/screens/16029582777659923861",
+      "x": 5870,
+      "width": 1280,
+      "height": 2640
+    },
+    {
+      "id": "16029582777659922942",
+      "sourceScreen": "projects/11535637910255965569/screens/16029582777659922942",
+      "x": 7250,
+      "width": 1280,
+      "height": 3975
+    }
+  ]
+}

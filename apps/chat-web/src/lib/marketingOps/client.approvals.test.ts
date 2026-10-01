@@ -7,7 +7,7 @@ const assetId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 describe('Marketing Ops approval client', () => {
   it('uses the six approval routes and concurrency headers', async () => {
-    const fetch = vi.fn(async () => new Response(JSON.stringify({ data: [], page: {} }), {
+    const fetch = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ data: [], page: {} }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     }));

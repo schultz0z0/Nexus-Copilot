@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>B — Visão de comando | Prometeus</title>
+<!-- Google Fonts: Space Grotesk & Geist Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-tint": "#b2c5ff",
+            "secondary-container": "#404960",
+            "surface-bright": "#373941",
+            "secondary-fixed-dim": "#bdc6e2",
+            "on-secondary": "#273046",
+            "primary": "#b2c5ff",
+            "on-tertiary-fixed": "#380d00",
+            "surface-dim": "#11131a",
+            "on-secondary-container": "#afb8d3",
+            "focus-blue": "#88B8FC",
+            "error-container": "#93000a",
+            "on-surface": "#e1e2ec",
+            "inverse-on-surface": "#2e3038",
+            "surface-container-low": "#191b22",
+            "surface": "#11131a",
+            "surface-container-highest": "#32343c",
+            "on-primary-fixed": "#001847",
+            "tertiary-fixed": "#ffdbcf",
+            "on-primary-fixed-variant": "#0040a0",
+            "outline-variant": "#434653",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#1d1f27",
+            "on-primary": "#002c72",
+            "muted-text": "#9CA7BA",
+            "on-secondary-fixed": "#121b30",
+            "on-tertiary-container": "#ffc4af",
+            "on-surface-variant": "#c3c6d6",
+            "surface-variant": "#32343c",
+            "primary-fixed-dim": "#b2c5ff",
+            "on-primary-container": "#c1d0ff",
+            "secondary": "#bdc6e2",
+            "on-error": "#690005",
+            "tertiary": "#ffb59a",
+            "primary-fixed": "#dae2ff",
+            "tertiary-fixed-dim": "#ffb59a",
+            "outline": "#8d909f",
+            "navy-institutional": "#1A2338",
+            "on-secondary-fixed-variant": "#3e465d",
+            "surface-raised": "#111727",
+            "on-tertiary": "#5b1b00",
+            "surface-base": "#0B101E",
+            "on-tertiary-fixed-variant": "#802a00",
+            "surface-container-lowest": "#0c0e15",
+            "primary-container": "#0652c5",
+            "mist-text": "#E2E8F0",
+            "action-blue": "#0652C5",
+            "on-background": "#e1e2ec",
+            "error": "#ffb4ab",
+            "canvas-midnight": "#040814",
+            "inverse-primary": "#1457ca",
+            "background": "#11131a",
+            "inverse-surface": "#e1e2ec",
+            "tertiary-container": "#a03600",
+            "surface-container-high": "#282a31",
+            "slate-supporting": "#3B4B6B",
+            "secondary-fixed": "#d9e2fe"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "margin": "2rem",
+            "space-md": "0.75rem",
+            "space-lg": "1rem",
+            "space-xl": "1.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem"
+          },
+          fontFamily: {
+            "section-title": ["Space Grotesk", "sans-serif"],
+            "title-lg": ["Space Grotesk", "sans-serif"],
+            "metadata": ["Geist Mono", "monospace"],
+            "body": ["Space Grotesk", "sans-serif"],
+            "label": ["Space Grotesk", "sans-serif"]
+          },
+          fontSize: {
+            "section-title": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+            "title-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
+            "metadata": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+            "body": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "label": ["14px", { lineHeight: "20px", fontWeight: "500" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #040814;
+      color: #E2E8F0;
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0B101E;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1A2338;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-canvas-midnight text-mist-text min-h-screen flex flex-col items-center selection:bg-action-blue selection:text-white">
+<!-- OUTER SHELL CONSTRAINED TO MAX 1440PX -->
+<div class="w-full max-w-[1440px] min-h-screen flex flex-col md:flex-row relative">
+<!-- MOBILE TOPBAR (< md) -->
+<header class="md:hidden sticky top-0 w-full z-50 bg-[#0B101E]/95 backdrop-blur-md border-b border-[#1A2338] px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<img alt="Logotipo Prometeus" class="h-7 w-auto object-contain" src="data:image/png;base64,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" style="aspect-ratio: 322/88;"/>
+<span class="text-xs font-metadata text-muted-text">Operações B2B</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-metadata bg-amber-500/10 text-amber-300 border border-amber-500/30">Demo</span>
+<button aria-label="Menu Principal" class="p-2 rounded bg-surface-raised border border-[#1A2338] text-mist-text min-h-[44px] min-w-[44px] flex items-center justify-center" type="button">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- SIDEBAR (Desktop Fixed/Sticky: 256px wide) -->
+<aside class="hidden md:flex w-64 shrink-0 border-r border-[#1A2338] bg-[#0B101E] flex-col justify-between p-4 sticky top-0 h-screen z-30">
+<div class="flex flex-col gap-4">
+<!-- Brand Logo Header -->
+<div class="px-1 pt-1 pb-3 border-b border-[#1A2338]">
+<img alt="Logotipo Prometeus" class="w-[160px] h-auto object-contain block" src="data:image/png;base64,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" style="aspect-ratio: 322/88;"/>
+<p class="text-xs font-metadata text-muted-text mt-1.5 pl-0.5">Operações B2B</p>
+</div>
+<!-- Navigation Links -->
+<nav aria-label="Navegação Principal" class="flex flex-col gap-1">
+<!-- 1. Visão geral (ACTIVE) -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-navy-institutional text-primary font-label text-sm border-l-2 border-primary" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="dashboard">dashboard</span>
+<span class="flex-1 font-medium">Visão geral</span>
+</a>
+<!-- 2. Campanhas -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-text hover:text-white font-label text-sm transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="flex-1">Campanhas</span>
+<span class="text-xs font-metadata px-1.5 py-0.5 rounded bg-surface-raised text-focus-blue border border-[#1A2338]">3</span>
+</a>
+<!-- 3. Calendário -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-text hover:text-white font-label text-sm transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="flex-1">Calendário</span>
+<span class="w-2 h-2 rounded-full bg-focus-blue" title="Ações da semana ativas"></span>
+</a>
+<!-- 4. Aprovações -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-text hover:text-white font-label text-sm transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<span class="flex-1">Aprovações</span>
+<span class="text-xs font-metadata px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">2</span>
+</a>
+<!-- 5. Hermes -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-text hover:text-white font-label text-sm transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="flex-1">Hermes</span>
+<span class="text-[10px] font-metadata uppercase tracking-wider px-1.5 py-0.5 rounded bg-navy-institutional text-muted-text">Relatórios</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Footer Context -->
+<div class="flex flex-col gap-2 pt-3 border-t border-[#1A2338]">
+<div class="px-3 py-2 rounded-lg bg-surface-raised border border-[#1A2338]">
+<div class="flex items-center justify-between text-xs font-metadata text-muted-text mb-1">
+<span class="text-white font-label text-xs">Operações B2B</span>
+<span class="text-[11px] text-focus-blue">Gestão</span>
+</div>
+<p class="text-[11px] font-metadata text-muted-text flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Corte: 21 set, 09:00
+          </p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-text hover:text-white font-label text-xs transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="manage_accounts">manage_accounts</span>
+<span>Configurações de Conta</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CANVAS (Max 1184px content area) -->
+<div class="flex-1 flex flex-col min-w-0 bg-canvas-midnight">
+<!-- TOPBAR -->
+<header class="sticky top-0 w-full z-40 border-b border-[#1A2338] bg-canvas-midnight/95 backdrop-blur px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+<div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 min-w-0">
+<h1 class="text-xl sm:text-2xl font-semibold font-section-title text-white tracking-tight shrink-0">Visão de comando</h1>
+<span class="text-xs sm:text-sm text-muted-text truncate font-body">Clareza para decidir o próximo movimento.</span>
+</div>
+<div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+<!-- Persistent badge -->
+<span class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#1A2338] bg-[#0B101E] text-xs font-metadata text-muted-text whitespace-nowrap">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            Demonstração · dados fictícios
+          </span>
+<!-- Action tools -->
+<div class="flex items-center gap-1 bg-[#0B101E] border border-[#1A2338] rounded-lg p-0.5">
+<button aria-label="Filtrar" class="p-2 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-1.5 flex items-center justify-center" title="Filtros contextuais">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_alt">filter_alt</span>
+</button>
+<button aria-label="Ajustar" class="p-2 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-1.5 flex items-center justify-center" title="Ajustes de visualização">
+<span class="material-symbols-outlined text-[18px]" data-icon="tune">tune</span>
+</button>
+<button aria-label="Notificações" class="p-2 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-1.5 flex items-center justify-center relative" title="Notificações operacionais">
+<span class="material-symbols-outlined text-[18px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-focus-blue rounded-full"></span>
+</button>
+</div>
+<!-- Primary Action Button -->
+<button class="flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-action-blue hover:bg-blue-700 text-white font-label text-sm transition-all shadow-sm shrink-0 min-h-[44px]">
+<span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+<span>Atualizar resultados</span>
+</button>
+</div>
+</header>
+<!-- CONTENT WRAPPER -->
+<main class="flex-1 px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-5 max-w-full">
+<!-- 1. FILTER CONTROLS BAR -->
+<section class="flex flex-wrap items-center justify-between gap-3 bg-[#0B101E] border border-[#1A2338] rounded-xl p-3 sm:p-3.5">
+<div class="flex flex-wrap items-center gap-2.5">
+<!-- Date Filter -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-raised border border-[#1A2338] text-mist-text font-metadata text-xs">
+<span class="material-symbols-outlined text-focus-blue text-[16px]" data-icon="calendar_month">calendar_month</span>
+<span>24 ago — 20 set 2026</span>
+</div>
+<!-- Campaign Select -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-raised border border-[#1A2338] text-mist-text font-label text-xs">
+<span class="text-muted-text font-metadata">Campanha:</span>
+<span class="font-medium text-white">Todas as campanhas (3)</span>
+<span class="material-symbols-outlined text-[16px] text-muted-text" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Channel Select -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-raised border border-[#1A2338] text-mist-text font-label text-xs">
+<span class="text-muted-text font-metadata">Canais:</span>
+<span class="font-medium text-white">Todos os canais (6)</span>
+<span class="material-symbols-outlined text-[16px] text-muted-text" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Integrity Status Micro -->
+<div class="flex items-center gap-2 text-xs font-metadata text-muted-text">
+<span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+<span>Sincronização analítica íntegra</span>
+<span class="text-outline">·</span>
+<span>Auditado via Hermes</span>
+</div>
+</section>
+<!-- 2. SÍNTESE EXECUTIVA DE DECISÃO RÁPIDA -->
+<section class="bg-[#0B101E] border border-[#23314E] rounded-xl p-4 sm:p-5">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+<!-- Bloco principal de diagnóstico -->
+<div class="lg:col-span-6 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-metadata font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  Atenção à cobertura
+                </span>
+<span class="text-xs font-metadata text-muted-text">Status operacional</span>
+</div>
+<h2 class="text-lg sm:text-[20px] leading-snug font-semibold font-section-title text-white">
+                Resultados em crescimento; falta o fechamento semanal do WhatsApp.
+              </h2>
+<div class="pt-1">
+<a class="inline-flex items-center gap-1.5 text-focus-blue font-label text-xs sm:text-sm hover:underline group" href="#prioridades">
+                  Revisar pendência
+                  <span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</div>
+</div>
+<!-- Três cartões de sinalização direta com visual técnico -->
+<div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+<!-- Card 1: Resultado (Updated copy: Meta demonstrativa do período) -->
+<div class="p-3 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<p class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Resultado</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-xl font-bold font-title-lg text-white">86%</span>
+<span class="text-xs font-metadata text-emerald-400 font-medium">da meta</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 86%;"></div>
+</div>
+</div>
+<p class="text-xs font-body text-muted-text leading-tight mt-1">
+                  Meta demonstrativa do período
+                </p>
+</div>
+<!-- Card 2: Execução -->
+<div class="p-3 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<p class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Execução</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-xl font-bold font-title-lg text-amber-300">3</span>
+<span class="text-xs font-metadata text-amber-300/80">atrasadas</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-amber-400 h-full rounded-full" style="width: 25%;"></div>
+</div>
+</div>
+<p class="text-xs font-body text-muted-text leading-tight mt-1">
+                  2 em criativos de Lançamento, 1 em disparo de E-mail
+                </p>
+</div>
+<!-- Card 3: Dados -->
+<div class="p-3 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<p class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Dados</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-xl font-bold font-title-lg text-white">23<span class="text-xs font-normal text-muted-text">/24</span></span>
+<span class="text-xs font-metadata text-focus-blue">relatórios</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-action-blue h-full rounded-full" style="width: 95.8%;"></div>
+</div>
+</div>
+<p class="text-xs font-body text-muted-text leading-tight mt-1">
+                  WhatsApp semana 38 aguarda envio via Hermes
+                </p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. FAIXA DE MÉTRICAS (Ribbon contínuo de 6 KPIs + CPL) -->
+<section class="bg-[#0B101E] border border-[#1A2338] rounded-xl overflow-hidden">
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-[#1A2338]">
+<!-- Métrica 1 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Leads totais</span>
+<span class="text-2xl font-bold font-title-lg text-white my-1 tabular-nums">2.460</span>
+<span class="text-[11px] font-metadata text-muted-text/80">Total no período</span>
+</div>
+<!-- Métrica 2 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Qualificados</span>
+<span class="text-2xl font-bold font-title-lg text-focus-blue my-1 tabular-nums">984</span>
+<span class="text-[11px] font-metadata text-muted-text/80">Taxa média 40,0%</span>
+</div>
+<!-- Métrica 3 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Oportunidades</span>
+<span class="text-2xl font-bold font-title-lg text-white my-1 tabular-nums">410</span>
+<span class="text-[11px] font-metadata text-muted-text/80">41,7% dos qualificados</span>
+</div>
+<!-- Métrica 4 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Vendas no período</span>
+<span class="text-2xl font-bold font-title-lg text-white my-1 tabular-nums">126</span>
+<span class="text-[11px] font-metadata text-muted-text/80">Fechamentos registrados</span>
+</div>
+<!-- Métrica 5 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Receita gerada</span>
+<span class="text-xl sm:text-2xl font-bold font-title-lg text-white my-1 tabular-nums whitespace-nowrap">R$ 378.000</span>
+<span class="text-[11px] font-metadata text-muted-text/80">Ticket médio R$ 3.000</span>
+</div>
+<!-- Métrica 6 -->
+<div class="p-3.5 sm:p-4 flex flex-col">
+<span class="text-xs font-label text-muted-text">Investimento mídia</span>
+<span class="text-xl sm:text-2xl font-bold font-title-lg text-mist-text my-1 tabular-nums whitespace-nowrap">R$ 24.600</span>
+<span class="text-[11px] font-metadata text-muted-text/80">Canais pagos diretos</span>
+</div>
+</div>
+<!-- Faixa informativa acoplada de integridade -->
+<div class="bg-navy-institutional/50 border-t border-[#1A2338] px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs font-body">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-focus-blue text-[18px]" data-icon="info">info</span>
+<span class="text-mist-text">CPL qualificado pago: <strong class="text-focus-blue font-semibold">R$ 41,00</strong> (base em 600 leads qualificados pagos). Sem atribuição artificial de ROI/ROAS.</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-amber-500/40 text-amber-300 font-metadata text-[11px]">
+                Totais parciais
+              </span>
+<span class="text-muted-text text-xs">WhatsApp semana 38 pendente de consolidação analítica</span>
+</div>
+</div>
+</section>
+<!-- 4. CENA ANALÍTICA PRINCIPAL: RITMO (65%) & PRIORIDADES (35%) - Bound to ~280px chart content height -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+<!-- Ritmo de aquisição semanal (65% / 8 cols) -->
+<div class="lg:col-span-8 bg-[#0B101E] border border-[#1A2338] rounded-xl p-4 sm:p-5 flex flex-col justify-between">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+<div>
+<h3 class="text-lg font-semibold font-section-title text-white">Ritmo de aquisição semanal</h3>
+<p class="text-xs font-body text-muted-text">Volume de Leads versus Leads Qualificados ao longo das últimas 4 semanas</p>
+</div>
+<!-- Legenda de traços -->
+<div class="flex items-center gap-3 text-xs font-metadata flex-wrap">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-1 bg-action-blue rounded"></span>
+<span class="text-mist-text">Leads atuais</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-1 bg-focus-blue rounded"></span>
+<span class="text-focus-blue">Qualificados</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-0.5 border-t border-dashed border-outline-variant"></span>
+<span class="text-muted-text">Período anterior</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-0.5 bg-amber-400"></span>
+<span class="text-amber-300">Meta</span>
+</div>
+</div>
+</div>
+<!-- Gráfico SVG - Bound container height (approx 260px-280px total content) -->
+<div class="relative w-full h-[210px] bg-surface-raised/40 rounded-lg p-2.5 border border-[#1A2338] flex flex-col justify-between overflow-x-auto custom-scroll">
+<div class="min-w-[480px] h-full flex flex-col justify-between">
+<svg class="w-full h-36 overflow-visible" preserveaspectratio="none" viewbox="0 0 700 150">
+<defs>
+<lineargradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#0652C5" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#0652C5" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Gridlines -->
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="15" y2="15"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="50" y2="50"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="85" y2="85"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="120" y2="120"></line>
+<!-- Eixo Y Labels -->
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="19">800</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="54">600</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="89">400</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="124">200</text>
+<!-- Linha de Meta Semanal (Fixa em 600 leads = y: 50) -->
+<line opacity="0.7" stroke="#ffb59a" stroke-dasharray="4,4" stroke-width="1.5" x1="40" x2="680" y1="50" y2="50"></line>
+<!-- Linha Período Anterior (Dashed) -->
+<polyline fill="none" points="110,65 280,60 460,55 630,58" stroke="#434653" stroke-dasharray="3,3" stroke-width="1.8"></polyline>
+<!-- Área preenchida sob Leads Atuais -->
+<polygon fill="url(#areaGradient)" points="110,58 280,47 460,32 630,40 630,120 110,120"></polygon>
+<!-- Curva Leads Atuais -->
+<polyline fill="none" points="110,58 280,47 460,32 630,40" stroke="#0652C5" stroke-width="3"></polyline>
+<circle cx="110" cy="58" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="280" cy="47" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="460" cy="32" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="630" cy="40" fill="#88B8FC" r="4.5" stroke="#0652C5" stroke-width="2"></circle>
+<!-- Curva Qualificados -->
+<polyline fill="none" points="110,116 280,111 460,104 630,115" stroke="#88B8FC" stroke-width="2.2"></polyline>
+<circle cx="110" cy="116" fill="#88B8FC" r="3.5"></circle>
+<circle cx="280" cy="111" fill="#88B8FC" r="3.5"></circle>
+<circle cx="460" cy="104" fill="#88B8FC" r="3.5"></circle>
+<circle cx="630" cy="115" fill="#ffb59a" r="4" stroke="#88B8FC" stroke-width="1.5"></circle>
+<!-- Marcador S38 -->
+<line opacity="0.8" stroke="#a03600" stroke-dasharray="2,2" stroke-width="1" x1="630" x2="630" y1="15" y2="120"></line>
+</svg>
+<!-- Eixo X -->
+<div class="grid grid-cols-4 text-center font-body text-xs text-muted-text pt-1 border-t border-[#1A2338]">
+<div>
+<span class="text-white font-medium">Semana 35</span>
+<p class="text-[11px] font-metadata text-muted-text">560 leads · 220 qual.</p>
+</div>
+<div>
+<span class="text-white font-medium">Semana 36</span>
+<p class="text-[11px] font-metadata text-muted-text">620 leads · 250 qual.</p>
+</div>
+<div>
+<span class="text-white font-medium">Semana 37</span>
+<p class="text-[11px] font-metadata text-muted-text">700 leads · 290 qual.</p>
+</div>
+<div>
+<span class="text-amber-300 font-semibold flex items-center justify-center gap-1">
+                        Semana 38*
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+</span>
+<p class="text-[11px] font-metadata text-amber-300/80">Parcial · aguarda WhatsApp</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2.5 border-t border-[#1A2338] flex flex-wrap items-center justify-between text-xs font-body text-muted-text gap-2">
+<span>Ritmo médio: <strong class="text-white">615 leads/semana</strong> contra meta de 600.</span>
+<span class="text-focus-blue font-metadata">Consolidação S38: terça-feira, 22 set</span>
+</div>
+</div>
+<!-- Prioridades da semana (35% / 4 cols) -->
+<div class="lg:col-span-4 bg-[#0B101E] border border-[#1A2338] rounded-xl p-4 sm:p-5 flex flex-col justify-between" id="prioridades">
+<div>
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-lg font-semibold font-section-title text-white">Prioridades da semana</h3>
+<span class="text-xs font-metadata px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-focus-blue">3 pendências</span>
+</div>
+<!-- 3 Ações Críticas -->
+<div class="flex flex-col gap-2.5">
+<!-- Item 1 (Crítico/Alerta - CTA alterado: "Informar resultado ao Hermes") -->
+<div class="p-3 rounded-lg bg-surface-raised border-l-4 border-l-amber-400 border border-[#1A2338]">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-metadata px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 font-medium">Dados / Hermes</span>
+<span class="text-[11px] font-metadata text-muted-text">Atraso 24h</span>
+</div>
+<h4 class="font-label text-xs sm:text-sm text-white mt-1.5 font-medium leading-snug">WhatsApp: Fechamento pendente da semana 38</h4>
+<p class="text-xs font-body text-muted-text mt-0.5">Impacta cálculo de CPL global e coorte completa.</p>
+<div class="mt-2 flex justify-end">
+<button class="px-2.5 py-1.5 rounded bg-[#0B101E] hover:bg-navy-institutional text-focus-blue border border-[#1A2338] font-label text-xs transition-colors min-h-[44px] flex items-center">
+                      Informar resultado ao Hermes
+                    </button>
+</div>
+</div>
+<!-- Item 2 (Execução) -->
+<div class="p-3 rounded-lg bg-surface-raised border-l-4 border-l-focus-blue border border-[#1A2338]">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-metadata px-2 py-0.5 rounded bg-navy-institutional text-focus-blue font-medium">Execução</span>
+<span class="text-[11px] font-metadata text-muted-text">Calendário</span>
+</div>
+<h4 class="font-label text-xs sm:text-sm text-white mt-1.5 font-medium leading-snug">3 ações atrasadas na campanha Lançamento</h4>
+<p class="text-xs font-body text-muted-text mt-0.5">2 criativos de conversão e 1 fluxo de nutrição de e-mail.</p>
+<div class="mt-2 flex justify-end">
+<button class="px-2.5 py-1.5 rounded bg-[#0B101E] hover:bg-navy-institutional text-mist-text border border-[#1A2338] font-label text-xs transition-colors min-h-[44px] flex items-center">
+                      Replanejar prazos
+                    </button>
+</div>
+</div>
+<!-- Item 3 (Aprovação) -->
+<div class="p-3 rounded-lg bg-surface-raised border-l-4 border-l-slate-supporting border border-[#1A2338]">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-metadata px-2 py-0.5 rounded bg-[#0B101E] text-muted-text font-medium">Aprovação técnica</span>
+<span class="text-[11px] font-metadata text-muted-text">Mídia B2B</span>
+</div>
+<h4 class="font-label text-xs sm:text-sm text-white mt-1.5 font-medium leading-snug">2 peças de mídia LinkedIn aguardando validação</h4>
+<p class="text-xs font-body text-muted-text mt-0.5">Gargalo para escala do canal de menor CPL institucional.</p>
+<div class="mt-2 flex justify-end">
+<button class="px-2.5 py-1.5 rounded bg-action-blue hover:bg-blue-700 text-white font-label text-xs transition-colors min-h-[44px] flex items-center">
+                      Avaliar criativos
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2.5 border-t border-[#1A2338] flex items-center justify-between text-xs font-body text-muted-text">
+<span>Auditoria contínua</span>
+<a class="text-focus-blue hover:underline font-label" href="#">Ver fila de aprovações →</a>
+</div>
+</div>
+</section>
+<!-- 5. FUNIL DE VENDAS EXPRESSIVO E PROPORCIONAL -->
+<section class="bg-[#0B101E] border border-[#1A2338] rounded-xl p-4 sm:p-5">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-4">
+<div>
+<h3 class="text-lg font-semibold font-section-title text-white">Da primeira conversa à venda</h3>
+<p class="text-xs font-body text-muted-text mt-0.5">
+                Coorte de entrada · 24 ago a 20 set · Etapas acumuladas; vendas da coorte diferem das vendas fechadas no período.
+              </p>
+</div>
+<div class="text-xs font-body px-3 py-1.5 rounded bg-navy-institutional text-focus-blue border border-[#1A2338] self-start md:self-auto">
+              Conversão final da coorte: <strong class="font-bold text-white">3,3%</strong> (82 vendas de 2.460 leads)
+            </div>
+</div>
+<!-- Etapas Conectadas Horizontais -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+<!-- Etapa 1 -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-xs font-label text-muted-text">
+<span>01. Lead</span>
+<span class="text-white font-metadata">100%</span>
+</div>
+<p class="text-2xl font-bold font-title-lg text-white my-1.5 tabular-nums">2.460</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-action-blue h-full w-full rounded-full"></div>
+</div>
+</div>
+<p class="text-[11px] font-body text-muted-text mt-2 pt-2 border-t border-[#1A2338]">Base inicial de entrada</p>
+</div>
+<!-- Etapa 2 -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-xs font-label text-muted-text">
+<span>02. Qualificado</span>
+<span class="text-focus-blue font-metadata">40,0%</span>
+</div>
+<p class="text-2xl font-bold font-title-lg text-focus-blue my-1.5 tabular-nums">984</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 40.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-body text-muted-text mt-2 pt-2 border-t border-[#1A2338]">Passagem: 40,0% do total</p>
+</div>
+<!-- Etapa 3 -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-xs font-label text-muted-text">
+<span>03. Oportunidade</span>
+<span class="text-focus-blue font-metadata">41,7%</span>
+</div>
+<p class="text-2xl font-bold font-title-lg text-white my-1.5 tabular-nums">410</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 41.7%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-body text-muted-text mt-2 pt-2 border-t border-[#1A2338]">41,7% dos qualificados</p>
+</div>
+<!-- Etapa 4 -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-xs font-label text-muted-text">
+<span>04. Proposta</span>
+<span class="text-focus-blue font-metadata">50,0%</span>
+</div>
+<p class="text-2xl font-bold font-title-lg text-white my-1.5 tabular-nums">205</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 50.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-body text-muted-text mt-2 pt-2 border-t border-[#1A2338]">50,0% das oportunidades</p>
+</div>
+<!-- Etapa 5 -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-[#1A2338] flex flex-col justify-between border-l-2 border-l-emerald-400 col-span-2 sm:col-span-1">
+<div>
+<div class="flex items-center justify-between text-xs font-label text-muted-text">
+<span>05. Venda coorte</span>
+<span class="text-emerald-400 font-metadata">40,0%</span>
+</div>
+<p class="text-2xl font-bold font-title-lg text-emerald-400 my-1.5 tabular-nums">82</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-emerald-400 h-full rounded-full" style="width: 40.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-body text-muted-text mt-2 pt-2 border-t border-[#1A2338]">40,0% das propostas aceitas</p>
+</div>
+</div>
+<div class="mt-3 px-3 py-2 rounded bg-surface-raised border border-[#1A2338] text-xs font-body text-muted-text flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+<span>* As 126 vendas registradas no período incluem ciclos de negociação de meses anteriores. A coorte específica converteu 82 clientes até o momento.</span>
+<span class="text-focus-blue font-metadata shrink-0">Ciclo médio: 24 dias</span>
+</div>
+</section>
+<!-- 6. DESEMPENHO POR CANAL ("Onde o resultado acontece") -->
+<section class="bg-[#0B101E] border border-[#1A2338] rounded-xl overflow-hidden">
+<div class="p-4 sm:p-5 border-b border-[#1A2338] flex flex-wrap items-center justify-between gap-2">
+<div>
+<h3 class="text-lg font-semibold font-section-title text-white">Onde o resultado acontece</h3>
+<p class="text-xs font-body text-muted-text">Desempenho discriminado por canal com honestidade de atribuição e integridade das fontes.</p>
+</div>
+<span class="text-xs font-metadata text-muted-text">6 canais mapeados</span>
+</div>
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left font-body border-collapse min-w-[720px]">
+<thead>
+<tr class="bg-surface-raised text-xs font-label text-muted-text border-b border-[#1A2338]">
+<th class="py-2.5 px-4 font-medium">Canal</th>
+<th class="py-2.5 px-3 font-medium">Status / Procedência</th>
+<th class="py-2.5 px-3 text-right font-medium">Leads</th>
+<th class="py-2.5 px-3 text-right font-medium">Qualificados</th>
+<th class="py-2.5 px-3 text-right font-medium">Custo Mídia</th>
+<th class="py-2.5 px-3 text-right font-medium">CPL Qualificado</th>
+<th class="py-2.5 px-4 text-right font-medium">Ação</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#1A2338] text-sm text-mist-text">
+<!-- Linha 1: Google Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                    Google Ads
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-muted-text font-metadata">Fonte planejada</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums">700</td>
+<td class="py-3 px-3 text-right tabular-nums text-focus-blue font-medium">280</td>
+<td class="py-3 px-3 text-right tabular-nums">R$ 11.200</td>
+<td class="py-3 px-3 text-right tabular-nums font-semibold text-white">R$ 40,00</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-focus-blue hover:underline min-h-[44px] sm:min-h-0">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 2: Meta Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                    Meta Ads
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-muted-text font-metadata">Fonte planejada</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums">800</td>
+<td class="py-3 px-3 text-right tabular-nums text-focus-blue font-medium">240</td>
+<td class="py-3 px-3 text-right tabular-nums">R$ 7.200</td>
+<td class="py-3 px-3 text-right tabular-nums font-semibold text-white">R$ 30,00</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-focus-blue hover:underline min-h-[44px] sm:min-h-0">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 3: LinkedIn Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                    LinkedIn Ads
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-muted-text font-metadata">Fonte planejada</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums">200</td>
+<td class="py-3 px-3 text-right tabular-nums text-focus-blue font-medium">80</td>
+<td class="py-3 px-3 text-right tabular-nums">R$ 6.200</td>
+<td class="py-3 px-3 text-right tabular-nums font-semibold text-white">R$ 77,50</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-focus-blue hover:underline min-h-[44px] sm:min-h-0">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 4: Orgânico / Busca -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-slate-supporting"></span>
+                    Orgânico / Busca
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-muted-text font-metadata">Tráfego próprio</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums">400</td>
+<td class="py-3 px-3 text-right tabular-nums text-focus-blue font-medium">240</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-focus-blue hover:underline min-h-[44px] sm:min-h-0">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 5: E-mail Marketing -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-slate-supporting"></span>
+                    E-mail Marketing
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-[#1A2338] text-muted-text font-metadata">Importação semanal manual</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums">260</td>
+<td class="py-3 px-3 text-right tabular-nums text-focus-blue font-medium">144</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-focus-blue hover:underline min-h-[44px] sm:min-h-0">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 6: WhatsApp (PARCIAL) -->
+<tr class="hover:bg-surface-raised/60 transition-colors bg-amber-500/5">
+<td class="py-3 px-4 font-medium text-amber-300 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    WhatsApp
+                  </td>
+<td class="py-3 px-3 text-xs">
+<span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-metadata">Parcial · semana pendente</span>
+</td>
+<td class="py-3 px-3 text-right tabular-nums text-amber-300 font-medium">100</td>
+<td class="py-3 px-3 text-right tabular-nums text-amber-300/70">—</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-3 text-right tabular-nums text-muted-text">—</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs font-label text-amber-300 font-medium hover:underline min-h-[44px] sm:min-h-0">Informar dados</button>
+</td>
+</tr>
+</tbody>
+<!-- Totais -->
+<tfoot>
+<tr class="bg-navy-institutional/80 text-xs font-label text-mist-text border-t-2 border-[#1A2338]">
+<td class="py-3 px-4 font-bold text-white uppercase tracking-wider" colspan="2">Totais consolidados</td>
+<td class="py-3 px-3 text-right tabular-nums font-bold text-white">2.460 Leads</td>
+<td class="py-3 px-3 text-right tabular-nums font-bold text-focus-blue">984 Qualificados</td>
+<td class="py-3 px-3 text-right tabular-nums font-bold text-white">R$ 24.600</td>
+<td class="py-3 px-3 text-right tabular-nums font-bold text-focus-blue">R$ 41,00</td>
+<td class="py-3 px-4 text-right text-muted-text font-metadata">Ponderado pago</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="p-3 bg-surface-raised border-t border-[#1A2338] text-xs font-body text-muted-text flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="policy">policy</span>
+<span>Regra de integridade: Canais orgânicos e inbound relacional não recebem rateio artificial de mídia paga; o traço explícito (—) evita distorção de CPL.</span>
+</div>
+</section>
+<!-- 7. FAIXA COMPARATIVA DE CAMPANHAS -->
+<section class="flex flex-col gap-3">
+<div class="flex flex-wrap items-center justify-between gap-1">
+<h3 class="text-lg font-semibold font-section-title text-white">Desempenho por campanha ativa</h3>
+<span class="text-xs font-body text-muted-text">Monitoramento de ritmo e ações vinculadas ao calendário</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+<!-- Campanha 1 -->
+<div class="p-4 rounded-xl bg-[#0B101E] border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-xs font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-[#1A2338]">Campanha 01</span>
+<span class="text-xs font-metadata text-emerald-400 font-medium">92% da meta</span>
+</div>
+<h4 class="text-base font-semibold font-section-title text-white mt-2">Crescimento B2B</h4>
+<div class="grid grid-cols-2 gap-2 my-2.5 py-2 border-y border-[#1A2338] text-xs font-body">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">1.280</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">540</span>
+</div>
+</div>
+</div>
+<div class="pt-1">
+<span class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Próxima ação no calendário:</span>
+<p class="text-xs font-label text-mist-text mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-focus-blue" data-icon="event">event</span>
+                  Disparo newsletter técnica (23/09)
+                </p>
+</div>
+</div>
+<!-- Campanha 2 -->
+<div class="p-4 rounded-xl bg-[#0B101E] border border-[#1A2338] flex flex-col justify-between border-l-2 border-l-amber-400">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-xs font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-[#1A2338]">Campanha 02</span>
+<span class="text-xs font-metadata text-amber-300 font-medium">78% da meta</span>
+</div>
+<h4 class="text-base font-semibold font-section-title text-white mt-2">Lançamento de solução</h4>
+<div class="grid grid-cols-2 gap-2 my-2.5 py-2 border-y border-[#1A2338] text-xs font-body">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">740</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">280</span>
+</div>
+</div>
+</div>
+<div class="pt-1">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-metadata text-amber-300 uppercase tracking-wider">2 ações atrasadas</span>
+<span class="text-[10px] font-metadata text-muted-text">Gargalo criativo</span>
+</div>
+<p class="text-xs font-label text-mist-text mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-amber-400" data-icon="schedule">schedule</span>
+                  Reunião de criativos de conversão (22/09)
+                </p>
+</div>
+</div>
+<!-- Campanha 3 -->
+<div class="p-4 rounded-xl bg-[#0B101E] border border-[#1A2338] flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-xs font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-[#1A2338]">Campanha 03</span>
+<span class="text-xs font-metadata text-emerald-400 font-medium">88% da meta</span>
+</div>
+<h4 class="text-base font-semibold font-section-title text-white mt-2">Relacionamento &amp; Base</h4>
+<div class="grid grid-cols-2 gap-2 my-2.5 py-2 border-y border-[#1A2338] text-xs font-body">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">440</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">164</span>
+</div>
+</div>
+</div>
+<div class="pt-1">
+<span class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Próxima ação no calendário:</span>
+<p class="text-xs font-label text-mist-text mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-focus-blue" data-icon="event">event</span>
+                  Ajuste de fluxo de cadência (24/09)
+                </p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="w-full border-t border-[#1A2338] bg-canvas-midnight mt-8">
+<div class="flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 lg:px-8 py-4 w-full text-xs font-body text-muted-text gap-3">
+<div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+<p>© 2026 Prometeus Command Center. Dados sincronizados para decisão executiva.</p>
+<span class="hidden sm:inline text-outline-variant/40">|</span>
+<p class="text-outline font-metadata">Cenário ilustrativo: 21 set 2026, 09:00</p>
+</div>
+<div class="flex items-center gap-4 text-xs font-label">
+<a class="text-muted-text hover:text-white transition-colors" href="#">Integridade &amp; Auditoria</a>
+<a class="text-muted-text hover:text-white transition-colors" href="#">Status do Sistema</a>
+<a class="text-muted-text hover:text-white transition-colors" href="#">Conexão CRM</a>
+</div>
+</div>
+<div class="px-4 sm:px-6 lg:px-8 py-2.5 bg-surface-base/40 border-t border-[#1A2338]/60 flex flex-wrap items-center justify-between text-[11px] font-metadata text-muted-text gap-2">
+<span>E-mail e WhatsApp: fechamento semanal informado ao Hermes por campanha</span>
+<span>CRM: próxima etapa após validação executiva</span>
+<span class="text-focus-blue font-medium">Prometeus · Tecnologia que amplia pessoas</span>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

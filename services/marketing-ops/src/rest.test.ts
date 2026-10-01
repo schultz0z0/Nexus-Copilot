@@ -10,6 +10,7 @@ import { createApp } from './http/createApp.js';
 import { parse } from 'yaml';
 import { ArtifactClient } from './integrations/artifactClient.js';
 import { RagCourseClient } from './integrations/ragCourseClient.js';
+import { AdsIntegrationService } from './domain/ads.js';
 import {
   parseCampaignCreateBody,
   parseCampaignListQuery,
@@ -62,6 +63,7 @@ function apiRouter(
 ) {
   return createApiRouter({
     pool,
+    adsService: new AdsIntegrationService(pool, { providers: {}, syncIntervalMs: 900000 }, {}),
     corsOrigins: ['http://frontend.local'],
     features,
     artifactClient,
@@ -90,7 +92,33 @@ describe('Marketing Ops REST v1', () => {
   it('keeps every public REST operation in the OpenAPI contract', () => {
     const document = parse(readFileSync(new URL('../openapi/marketing-ops.v1.yaml', import.meta.url), 'utf8')) as { paths: Record<string, unknown> };
     expect(Object.keys(document.paths).sort()).toEqual([
+      '/ads-integrations',
+      '/ads-integrations/{provider}/setup',
+      '/ads-integrations/{provider}/authorize',
+      '/ads-integrations/{provider}/callback',
+      '/ads-integrations/{provider}/account',
+      '/ads-integrations/{provider}/disconnect',
+      '/ads-integrations/{provider}/accounts',
+      '/ads-integrations/{provider}/campaigns',
+      '/campaigns/{id}/ads-links',
+      '/campaigns/{id}/ads-links/{linkId}/disable',
+      '/campaigns/{id}/ads-links/{linkId}/sync',
+      '/campaigns/{id}/ads-links/{linkId}/results',
       '/agent-plans', '/agent-plans/{planId}/execute',
+      '/campaigns/{id}/lead-sources',
+      '/campaigns/{id}/lead-sources/{sourceId}',
+      '/campaigns/{id}/leads',
+      '/campaigns/{id}/lead-imports/preview',
+      '/campaigns/{id}/lead-imports/{previewId}',
+      '/campaigns/{id}/lead-imports/{previewId}/confirm',
+      '/campaigns/{id}/result-reports',
+      '/campaigns/{id}/result-reports/{reportId}',
+      '/campaigns/{id}/result-reports/{reportId}/revisions',
+      '/campaigns/{id}/lead-capture-reviews',
+      '/campaigns/{id}/lead-capture-reviews/{captureId}/resolve',
+      '/results',
+      '/public/capture/{publicId}',
+      '/public/capture/{publicId}/whatsapp',
       '/approval-requests', '/approval-requests/editorial',
       '/approval-requests/operational', '/approval-requests/{requestId}',
       '/approval-requests/{requestId}/cancel', '/approval-requests/{requestId}/decisions',
@@ -249,6 +277,7 @@ describe('Marketing Ops REST v1', () => {
       components: { schemas: Record<string, unknown> };
     };
     const mutations = [
+      ['/ads-integrations/{provider}/setup', 'post', true],
       ['/campaigns', 'post', false],
       ['/campaigns/{id}', 'patch', true],
       ['/campaigns/{id}/transitions', 'post', true],
@@ -294,7 +323,7 @@ describe('Marketing Ops REST v1', () => {
     };
     const documented = Object.entries(document.paths).flatMap(([path, operations]) =>
       Object.keys(operations)
-        .filter((method) => ['get', 'post', 'patch', 'delete'].includes(method))
+        .filter((method) => ['get', 'post', 'patch', 'delete', 'options'].includes(method))
         .map((method) => `${method.toUpperCase()} ${path}`)
     ).sort();
     const stack = (apiRouter() as unknown as {

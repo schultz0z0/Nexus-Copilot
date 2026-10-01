@@ -42,7 +42,7 @@ const roleLabels: Record<MarketingOpsParticipantRole, string> = {
 
 const allRoles: MarketingOpsParticipantRole[] = ['owner', 'editor', 'viewer'];
 const collaboratorRoles: MarketingOpsParticipantRole[] = ['editor', 'viewer'];
-const selectClass = 'h-10 min-w-28 rounded-[8px] border border-input bg-white/80 px-2 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
+const selectClass = 'h-10 min-w-28 rounded-[8px] border border-input bg-card px-2 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
 
 function initials(name: string): string {
   return name
@@ -239,7 +239,7 @@ export function ParticipantsPanel({
   };
 
   return (
-    <section aria-labelledby="campaign-people" className="border-b border-white/40 bg-white/25 px-4 py-6 backdrop-blur-lg sm:px-6 md:px-8">
+    <section aria-labelledby="campaign-people" className="border-b border-border bg-card px-4 py-6 backdrop-blur-lg sm:px-6 md:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -250,7 +250,7 @@ export function ParticipantsPanel({
             <Button type="button" variant="outline" onClick={() => {
               setOperationError(null);
               setAddOpen(true);
-            }} className="h-11 rounded-[8px] bg-white/80">
+            }} className="h-11 rounded-[8px] bg-card">
               <Plus className="mr-2 h-4 w-4" />
               Adicionar participante
             </Button>
@@ -258,7 +258,7 @@ export function ParticipantsPanel({
         </div>
 
         {operationError && !addOpen && !removeTarget ? (
-          <Alert variant="destructive" className="mt-4 rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="mt-4 rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertTitle>Operação não concluída</AlertTitle>
             <AlertDescription>
               {operationDetails.message}
@@ -269,11 +269,11 @@ export function ParticipantsPanel({
 
         {participantsQuery.isLoading ? (
           <div aria-label="Carregando participantes" className="mt-5 space-y-2">
-            <div className="h-16 animate-pulse rounded-[8px] bg-slate-200" />
-            <div className="h-16 animate-pulse rounded-[8px] bg-slate-200" />
+            <div className="h-16 animate-pulse rounded-[8px] bg-muted" />
+            <div className="h-16 animate-pulse rounded-[8px] bg-muted" />
           </div>
         ) : participantsQuery.isError ? (
-          <Alert variant="destructive" className="mt-5 rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="mt-5 rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertTitle>Não foi possível carregar as pessoas</AlertTitle>
             <AlertDescription>
               <Button type="button" variant="outline" onClick={() => participantsQuery.refetch()} className="mt-2 h-10 rounded-[8px]">
@@ -283,9 +283,9 @@ export function ParticipantsPanel({
             </AlertDescription>
           </Alert>
         ) : participants.length === 0 ? (
-          <p className="mt-5 border-l-2 border-slate-300 px-4 py-3 text-sm text-text-muted">Nenhum participante encontrado.</p>
+          <p className="mt-5 border-l-2 border-border px-4 py-3 text-sm text-text-muted">Nenhum participante encontrado.</p>
         ) : (
-          <ul className="glass-surface shadow-glass mt-5 divide-y divide-white/50 overflow-hidden rounded-[8px] border-white/60">
+          <ul className="glass-surface shadow-glass mt-5 divide-y divide-border overflow-hidden rounded-[8px] border-border">
             {participants.map((participant) => {
               const collaboratorEditable = canManageCollaborators && participant.memberRole !== 'owner';
               const roleEditable = !participant.isPrimary && (canManageOwners || collaboratorEditable);
@@ -344,7 +344,7 @@ export function ParticipantsPanel({
                           setRemoveTarget(participant);
                         }}
                         aria-label={`Remover ${participant.displayName}`}
-                        className="h-10 w-10 rounded-[8px] text-red-700"
+                        className="h-10 w-10 rounded-[8px] text-status-error"
                       >
                         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
@@ -368,7 +368,7 @@ export function ParticipantsPanel({
           setNewPrimary(false);
         }
       }}>
-        <DialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl">
+        <DialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Adicionar participante</DialogTitle>
             <DialogDescription>Localize uma pessoa do tenant e defina seu papel na campanha.</DialogDescription>
@@ -397,9 +397,9 @@ export function ParticipantsPanel({
               />
             </div>
             {candidatesQuery.isFetching ? <p className="text-sm text-text-muted">Buscando pessoas...</p> : null}
-            {candidatesQuery.isError ? <p className="text-sm text-red-700">Não foi possível buscar pessoas.</p> : null}
+            {candidatesQuery.isError ? <p className="text-sm text-status-error">Não foi possível buscar pessoas.</p> : null}
             {candidates.length ? (
-              <div className="divide-y divide-slate-100 rounded-[8px] border border-slate-200">
+              <div className="divide-y divide-border rounded-[8px] border border-border">
                 {candidates.map((candidate) => (
                   <Button
                     key={candidate.userId}
@@ -460,7 +460,7 @@ export function ParticipantsPanel({
       <AlertDialog open={Boolean(removeTarget)} onOpenChange={(open) => {
         if (!open && !pendingKey) setRemoveTarget(null);
       }}>
-        <AlertDialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl">
+        <AlertDialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Remover participante</AlertDialogTitle>
             <AlertDialogDescription>

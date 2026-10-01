@@ -156,7 +156,7 @@ export default function CampaignListPage({
 
       <MarketingOpsMobileBar
         label="Campanhas"
-        icon={<Megaphone className="h-4 w-4 text-brand-primary" />}
+        icon={<Megaphone className="h-4 w-4 text-brand-accent" />}
         action={canWrite ? (
           <Button
             size="icon"
@@ -197,19 +197,19 @@ export default function CampaignListPage({
 
           <section aria-live="polite" aria-busy={campaignsQuery.isLoading} className="py-5">
             {campaignsQuery.isLoading ? (
-              <div aria-label="Carregando campanhas" className="glass-surface shadow-glass overflow-hidden rounded-[8px] border-white/60">
+              <div aria-label="Carregando campanhas" className="glass-surface shadow-glass overflow-hidden rounded-[8px] border-border">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="grid h-20 grid-cols-6 items-center gap-4 border-b border-slate-100 px-4 last:border-b-0">
-                    <div className="col-span-2 h-4 animate-pulse rounded bg-slate-200" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
+                  <div key={index} className="grid h-20 grid-cols-6 items-center gap-4 border-b border-border px-4 last:border-b-0">
+                    <div className="col-span-2 h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
                   </div>
                 ))}
               </div>
             ) : campaignsQuery.isError ? (
-              <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+              <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>{accessDenied ? 'Acesso não autorizado' : 'Não foi possível carregar as campanhas'}</AlertTitle>
                 <AlertDescription>
@@ -222,7 +222,7 @@ export default function CampaignListPage({
                 </AlertDescription>
               </Alert>
             ) : campaigns.length === 0 ? (
-              <div className="glass-surface shadow-glass flex min-h-64 flex-col items-center justify-center rounded-[8px] border-white/60 px-4 py-10 text-center">
+              <div className="glass-surface shadow-glass flex min-h-64 flex-col items-center justify-center rounded-[8px] border-border px-4 py-10 text-center">
                 <Inbox className="h-9 w-9 text-text-muted" />
                 <h2 className="mt-4 text-lg font-semibold text-text-primary">
                   {hasFilters ? 'Nenhuma campanha encontrada' : 'Nenhuma campanha ainda'}
@@ -251,7 +251,7 @@ export default function CampaignListPage({
                       variant="outline"
                       onClick={() => campaignsQuery.fetchNextPage()}
                       disabled={campaignsQuery.isFetchingNextPage}
-                      className="h-11 rounded-[8px] bg-white/80"
+                      className="h-11 rounded-[8px] bg-card"
                     >
                       {campaignsQuery.isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Carregar mais

@@ -230,7 +230,7 @@ export function MaterialsPanel({
   };
 
   return (
-    <section aria-labelledby="campaign-materials" className="border-b border-white/50 bg-white/50 px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
+    <section aria-labelledby="campaign-materials" className="border-b border-border bg-card px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -241,7 +241,7 @@ export function MaterialsPanel({
             <div className="flex flex-wrap items-center gap-2">
               <Label
                 htmlFor="campaign-material-upload"
-                className="inline-flex h-11 cursor-pointer items-center rounded-[8px] border border-input bg-white/80 px-4 text-sm font-medium hover:bg-white"
+                className="inline-flex h-11 cursor-pointer items-center rounded-[8px] border border-input bg-card px-4 text-sm font-medium hover:bg-accent"
               >
                 {pendingKey === 'upload' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
                 {pendingKey === 'upload' ? 'Enviando material...' : 'Adicionar material'}
@@ -257,7 +257,7 @@ export function MaterialsPanel({
               <Button type="button" variant="outline" onClick={() => {
                 setOperationError(null);
                 setLinkOpen(true);
-              }} className="h-11 rounded-[8px] bg-white/80">
+              }} className="h-11 rounded-[8px] bg-card">
                 <Link2 className="mr-2 h-4 w-4" />
                 Vincular existente
               </Button>
@@ -265,9 +265,9 @@ export function MaterialsPanel({
           ) : null}
         </div>
 
-        {validationError ? <p className="mt-3 text-sm text-red-700">{validationError}</p> : null}
+        {validationError ? <p className="mt-3 text-sm text-status-error">{validationError}</p> : null}
         {operationError && !linkOpen && !unlinkTarget ? (
-          <Alert variant="destructive" className="mt-4 rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="mt-4 rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertTitle>Operação não concluída</AlertTitle>
             <AlertDescription>
               {operation.message}
@@ -278,11 +278,11 @@ export function MaterialsPanel({
 
         {materialsQuery.isLoading ? (
           <div aria-label="Carregando materiais" className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="h-28 animate-pulse rounded-[8px] bg-slate-100" />
-            <div className="h-28 animate-pulse rounded-[8px] bg-slate-100" />
+            <div className="h-28 animate-pulse rounded-[8px] bg-muted" />
+            <div className="h-28 animate-pulse rounded-[8px] bg-muted" />
           </div>
         ) : materialsQuery.isError ? (
-          <Alert variant="destructive" className="mt-5 rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="mt-5 rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertTitle>Não foi possível carregar os materiais</AlertTitle>
             <AlertDescription>
               <Button type="button" variant="outline" onClick={() => materialsQuery.refetch()} className="mt-2 h-10 rounded-[8px]">
@@ -292,13 +292,13 @@ export function MaterialsPanel({
             </AlertDescription>
           </Alert>
         ) : materials.length === 0 ? (
-          <p className="mt-5 border-l-2 border-slate-300 px-4 py-3 text-sm text-text-muted">Nenhum material vinculado.</p>
+          <p className="mt-5 border-l-2 border-border px-4 py-3 text-sm text-text-muted">Nenhum material vinculado.</p>
         ) : (
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
             {materials.map((material) => {
               const busy = pendingKey?.endsWith(material.id) ?? false;
               return (
-                <li key={material.id} className="glass-surface shadow-glass rounded-[8px] border-white/60 p-4">
+                <li key={material.id} className="glass-surface shadow-glass rounded-[8px] border-border p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="break-words text-sm font-semibold text-text-primary">{material.filename}</p>
@@ -333,7 +333,7 @@ export function MaterialsPanel({
                           setUnlinkTarget(material);
                         }}
                         aria-label={`Desvincular ${material.filename}`}
-                        className="h-10 rounded-[8px] text-red-700"
+                        className="h-10 rounded-[8px] text-status-error"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Desvincular
@@ -352,7 +352,7 @@ export function MaterialsPanel({
         setLinkOpen(open);
         if (!open) setArtifactId('');
       }}>
-        <DialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl">
+        <DialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Vincular artefato existente</DialogTitle>
             <DialogDescription>Informe o identificador de um artefato ao qual você possui acesso.</DialogDescription>
@@ -376,7 +376,7 @@ export function MaterialsPanel({
               className="h-11 rounded-[8px]"
             />
             {artifactId && !artifactUuidPattern.test(artifactId.trim()) ? (
-              <p className="text-sm text-red-700">Informe um UUID válido.</p>
+              <p className="text-sm text-status-error">Informe um UUID válido.</p>
             ) : null}
           </div>
           <DialogFooter>
@@ -392,7 +392,7 @@ export function MaterialsPanel({
       <AlertDialog open={Boolean(unlinkTarget)} onOpenChange={(open) => {
         if (!open && !pendingKey) setUnlinkTarget(null);
       }}>
-        <AlertDialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl">
+        <AlertDialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Desvincular material</AlertDialogTitle>
             <AlertDialogDescription>

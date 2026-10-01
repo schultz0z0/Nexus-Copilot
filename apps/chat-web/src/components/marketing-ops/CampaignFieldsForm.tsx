@@ -30,7 +30,7 @@ const channels: Array<{ value: MarketingOpsCampaignChannel; label: string }> = [
   { value: 'other', label: 'Outro' }
 ];
 
-const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 px-3 text-sm text-text-primary outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-50';
+const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-card px-3 text-sm text-text-primary outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-50';
 
 interface CampaignFieldsFormProps {
   values: CampaignFormValues;
@@ -59,9 +59,13 @@ export function CampaignFieldsForm({
   return (
     <form id="campaign-workspace-form" onSubmit={submit} className="space-y-0">
       <fieldset disabled={disabled}>
-        <section aria-labelledby="campaign-essentials" className="border-b border-white/50 bg-white/50 px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
+        <section aria-labelledby="campaign-essentials" className="border-b border-border bg-card px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
           <div className="mx-auto max-w-5xl">
             <h2 id="campaign-essentials" className="text-lg font-semibold text-text-primary">Essenciais</h2>
+            <p className="mt-2 max-w-3xl text-sm text-text-secondary">
+              Para planejar, informe objetivo, tipo e título da referência, início e término.
+              Defina também um responsável principal na aba Equipe. Você pode salvar um rascunho incompleto.
+            </p>
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
               <div className="space-y-1.5 md:col-span-2">
                 <Label htmlFor="campaign-name">Nome</Label>
@@ -72,9 +76,9 @@ export function CampaignFieldsForm({
                   maxLength={200}
                   aria-invalid={Boolean(errors.name)}
                   aria-describedby={errors.name ? 'campaign-name-error' : undefined}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
-                {errors.name ? <p id="campaign-name-error" className="text-sm text-red-700">{errors.name}</p> : null}
+                {errors.name ? <p id="campaign-name-error" className="text-sm text-status-error">{errors.name}</p> : null}
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
@@ -85,7 +89,7 @@ export function CampaignFieldsForm({
                   onChange={(event) => onChange({ objective: event.target.value || null })}
                   maxLength={2000}
                   rows={4}
-                  className="rounded-[8px] bg-white/80"
+                  className="rounded-[8px] bg-card"
                 />
               </div>
 
@@ -126,14 +130,14 @@ export function CampaignFieldsForm({
                   onChange={(event) => onChange({ audience: event.target.value || null })}
                   maxLength={2000}
                   rows={3}
-                  className="rounded-[8px] bg-white/80"
+                  className="rounded-[8px] bg-card"
                 />
               </div>
             </div>
           </div>
         </section>
 
-        <section aria-labelledby="campaign-planning" className="border-b border-white/40 bg-white/25 px-4 py-6 backdrop-blur-lg sm:px-6 md:px-8">
+        <section aria-labelledby="campaign-planning" className="border-b border-border bg-card px-4 py-6 backdrop-blur-lg sm:px-6 md:px-8">
           <div className="mx-auto max-w-5xl">
             <h2 id="campaign-planning" className="text-lg font-semibold text-text-primary">Planejamento</h2>
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -144,7 +148,7 @@ export function CampaignFieldsForm({
                   type="date"
                   value={values.startsOn ?? ''}
                   onChange={(event) => onChange({ startsOn: event.target.value || null })}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
               </div>
               <div className="space-y-1.5">
@@ -156,9 +160,9 @@ export function CampaignFieldsForm({
                   onChange={(event) => onChange({ endsOn: event.target.value || null })}
                   aria-invalid={Boolean(errors.endsOn)}
                   aria-describedby={errors.endsOn ? 'campaign-ends-on-error' : undefined}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
-                {errors.endsOn ? <p id="campaign-ends-on-error" className="text-sm text-red-700">{errors.endsOn}</p> : null}
+                {errors.endsOn ? <p id="campaign-ends-on-error" className="text-sm text-status-error">{errors.endsOn}</p> : null}
               </div>
 
               <div className="space-y-1.5">
@@ -203,13 +207,13 @@ export function CampaignFieldsForm({
                     );
                   })}
                 </div>
-                {errors.secondaryChannels ? <p className="text-sm text-red-700">{errors.secondaryChannels}</p> : null}
+                {errors.secondaryChannels ? <p className="text-sm text-status-error">{errors.secondaryChannels}</p> : null}
               </div>
             </div>
           </div>
         </section>
 
-        <section aria-labelledby="campaign-briefing" className="border-b border-white/50 bg-white/50 px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
+        <section aria-labelledby="campaign-briefing" className="border-b border-border bg-card px-4 py-6 backdrop-blur-xl sm:px-6 md:px-8">
           <div className="mx-auto max-w-5xl">
             <h2 id="campaign-briefing" className="text-lg font-semibold text-text-primary">Briefing</h2>
             <div className="mt-5 grid grid-cols-1 gap-5">
@@ -221,7 +225,7 @@ export function CampaignFieldsForm({
                   onChange={(event) => onChange({ briefing: event.target.value || null })}
                   maxLength={20000}
                   rows={8}
-                  className="rounded-[8px] bg-white/80"
+                  className="rounded-[8px] bg-card"
                 />
               </div>
               <div className="space-y-1.5">
@@ -232,7 +236,7 @@ export function CampaignFieldsForm({
                   onChange={(event) => onChange({ notes: event.target.value || null })}
                   maxLength={10000}
                   rows={5}
-                  className="rounded-[8px] bg-white/80"
+                  className="rounded-[8px] bg-card"
                 />
               </div>
             </div>

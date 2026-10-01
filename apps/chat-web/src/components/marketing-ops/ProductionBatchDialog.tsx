@@ -33,7 +33,7 @@ interface ProductionBatchDialogProps {
 }
 
 type ActionType = MarketingOpsProductionBatchAction['type'];
-const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 px-3 text-sm text-text-primary outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
+const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-card px-3 text-sm text-text-primary outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
 
 export function ProductionBatchDialog({
   open,
@@ -115,7 +115,7 @@ export function ProductionBatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-surface max-h-[90vh] overflow-y-auto rounded-[8px] border-white/60 sm:max-w-xl">
+      <DialogContent className="glass-surface max-h-[90vh] overflow-y-auto rounded-[8px] border-border sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Ação em lote</DialogTitle>
           <DialogDescription>
@@ -168,7 +168,7 @@ export function ProductionBatchDialog({
                 value={assigneeUserId}
                 onChange={(event) => setAssigneeUserId(event.target.value)}
                 placeholder="UUID; vazio remove a atribuição"
-                className="h-11 rounded-[8px] bg-white/80"
+                className="h-11 rounded-[8px] bg-card"
               />
               <p className="text-xs text-text-muted">
                 Deixe vazio para remover a atribuição atual.
@@ -185,7 +185,7 @@ export function ProductionBatchDialog({
                   type="datetime-local"
                   value={startsAt}
                   onChange={(event) => setStartsAt(event.target.value)}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
               </div>
               <div className="space-y-2">
@@ -195,7 +195,7 @@ export function ProductionBatchDialog({
                   type="datetime-local"
                   value={dueAt}
                   onChange={(event) => setDueAt(event.target.value)}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
               </div>
               <p className="text-xs text-text-muted sm:col-span-2">
@@ -205,7 +205,7 @@ export function ProductionBatchDialog({
           ) : null}
 
           {validationMessage ? (
-            <p role="alert" className="flex items-center text-sm text-red-800">
+            <p role="alert" className="flex items-center text-sm text-status-error">
               <AlertCircle className="mr-2 h-4 w-4" />
               {validationMessage}
             </p>
@@ -219,20 +219,20 @@ export function ProductionBatchDialog({
           ) : null}
 
           {result ? (
-            <section aria-live="polite" className="rounded-[8px] border border-slate-200 bg-white/70 p-3">
+            <section aria-live="polite" className="rounded-[8px] border border-border bg-card p-3">
               <div className="flex flex-wrap gap-2 text-sm font-medium">
-                <span className="inline-flex items-center text-emerald-800">
+                <span className="inline-flex items-center text-status-success">
                   <CheckCircle2 className="mr-1.5 h-4 w-4" />
                   {result.succeeded} {result.succeeded === 1 ? 'atualizado' : 'atualizados'}
                 </span>
-                <span className="inline-flex items-center text-red-800">
+                <span className="inline-flex items-center text-status-error">
                   <XCircle className="mr-1.5 h-4 w-4" />
                   {result.failed} {result.failed === 1 ? 'falhou' : 'falharam'}
                 </span>
               </div>
               {result.results.some((itemResult) => !itemResult.ok) ? (
                 <ul className="mt-3 space-y-2 text-sm">
-                  {result.results.filter((itemResult) => !itemResult.ok).map((itemResult) => (
+                  {result.results.filter((itemResult) => itemResult.ok === false).map((itemResult) => (
                     <li key={itemResult.itemId} className="rounded-[6px] bg-red-50 p-2 text-red-900">
                       <span className="font-medium">{itemTitle(itemResult.itemId)}</span>
                       <span className="block text-xs">
@@ -260,7 +260,7 @@ export function ProductionBatchDialog({
             <Button
               type="submit"
               disabled={selectedItems.length === 0 || mutation.isPending}
-              className="h-10 rounded-[8px] text-slate-950"
+              className="h-10 rounded-[8px] text-foreground"
             >
               {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Aplicar em {selectedItems.length} {selectedItems.length === 1 ? 'item' : 'itens'}

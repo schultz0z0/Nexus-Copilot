@@ -1,0 +1,16 @@
+# Optional overlay: operator-provided secrets, independent per installation.
+# Use with compose.yaml (and compose.development.yaml for localhost).
+services:
+  marketing-ops:
+    environment:
+      ADS_TOKEN_ENCRYPTION_KEY_FILE: /run/ads-secrets/token_encryption_key
+      ADS_GOOGLE_CLIENT_SECRET_FILE: /run/ads-secrets/google_client_secret
+      ADS_META_CLIENT_SECRET_FILE: /run/ads-secrets/meta_client_secret
+      ADS_LINKEDIN_CLIENT_SECRET_FILE: /run/ads-secrets/linkedin_client_secret
+    volumes:
+      - type: bind
+        source: ${ADS_SECRETS_DIR:?Set an absolute private directory for this installation}
+        target: /run/ads-secrets
+        read_only: true
+        bind:
+          create_host_path: false

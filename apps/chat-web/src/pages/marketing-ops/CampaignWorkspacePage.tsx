@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Loader2, Megaphone, RefreshCw, Save, Undo2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { CampaignFieldsForm } from '@/components/marketing-ops/CampaignFieldsForm';
@@ -12,6 +12,11 @@ import {
   type CampaignFormValues
 } from '@/components/marketing-ops/campaignForm';
 import { CampaignHeader } from '@/components/marketing-ops/CampaignHeader';
+import { CampaignResultsOverview } from '@/components/marketing-ops/CampaignResultsOverview';
+import { CampaignLeadsPanel } from '@/components/marketing-ops/CampaignLeadsPanel';
+import { LeadSourcesPanel } from '@/components/marketing-ops/LeadSourcesPanel';
+import { leadClient, type LeadClient } from '@/lib/marketingOps/leads';
+import { adsClient } from '@/lib/marketingOps/ads';
 import { MaterialsPanel } from '@/components/marketing-ops/MaterialsPanel';
 import { MarketingOpsMobileBar } from '@/components/marketing-ops/MarketingOpsMobileBar';
 import { ParticipantsPanel } from '@/components/marketing-ops/ParticipantsPanel';
@@ -29,6 +34,8 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CampaignWebAnalytics } from '@/components/marketing-ops/CampaignWebAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { MarketingOpsApiError, type MarketingOpsClient } from '@/lib/marketingOps/client';
 import { marketingOpsFlags } from '@/lib/marketingOps/flags';
@@ -44,6 +51,7 @@ import type {
 
 interface CampaignWorkspacePageProps {
   client?: MarketingOpsClient;
+  leadsClient?: LeadClient;
   canWrite?: boolean;
   canArchive?: boolean;
   tenantRole?: MarketingOpsTenantRole;
@@ -59,13 +67,27 @@ interface ConflictState {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// The domain sends planning requirements as details.fields, not Zod issues.
+// Translate known fields without weakening the server's transition rules.
+const planningFields = {
+  name: { label: 'Nome', input: 'campaign-name' },
+  objective: { label: 'Objetivo', input: 'campaign-objective' },
+  referenceType: { label: 'Tipo de referência', input: 'campaign-reference-type' },
+  referenceTitleSnapshot: { label: 'Título da referência', input: 'campaign-reference-title' },
+  startsOn: { label: 'Início', input: 'campaign-starts-on' },
+  endsOn: { label: 'Término', input: 'campaign-ends-on' },
+  period: { label: 'Período válido: término igual ou posterior ao início', input: 'campaign-starts-on' },
+  primaryOwner: { label: 'Responsável principal na aba Equipe', input: null },
+};
+
 function defaultIdempotencyKey(): string {
   return globalThis.crypto.randomUUID();
 }
 
-function errorDetails(error: unknown): { status: number | null; message: string; correlationId: string | null; details?: unknown } {
-  const candidate = error as { status?: unknown; message?: unknown; correlationId?: unknown; details?: unknown } | null;
+function errorDetails(error: unknown): { code: string | null; status: number | null; message: string; correlationId: string | null; details?: unknown } {
+  const candidate = error as { code?: unknown; status?: unknown; message?: unknown; correlationId?: unknown; details?: unknown } | null;
   return {
+    code: typeof candidate?.code === 'string' ? candidate.code : null,
     status: typeof candidate?.status === 'number' ? candidate.status : null,
     message: typeof candidate?.message === 'string' ? candidate.message : 'Não foi possível concluir a operação.',
     correlationId: typeof candidate?.correlationId === 'string' ? candidate.correlationId : null,
@@ -87,10 +109,10 @@ function WorkspaceFailure({
   return (
     <div className="relative min-h-screen overflow-x-hidden text-text-primary">
       <Sidebar />
-      <MarketingOpsMobileBar label="Campanhas" icon={<Megaphone className="h-4 w-4 text-brand-primary" />} />
+      <MarketingOpsMobileBar label="Campanhas" icon={<Megaphone className="h-4 w-4 text-brand-accent" />} />
       <div className="min-h-screen md:ml-20">
         <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-10 sm:px-6">
-          <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>{title}</AlertTitle>
             <AlertDescription>
@@ -113,6 +135,7 @@ function WorkspaceFailure({
 function CampaignWorkspace({
   initialCampaign,
   client,
+  leadsClient,
   canWrite,
   canArchive,
   tenantRole,
@@ -122,6 +145,7 @@ function CampaignWorkspace({
 }: {
   initialCampaign: MarketingOpsCampaign;
   client: MarketingOpsClient;
+  leadsClient: LeadClient;
   canWrite: boolean;
   canArchive: boolean;
   tenantRole: MarketingOpsTenantRole;
@@ -132,6 +156,8 @@ function CampaignWorkspace({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [campaign, setCampaign] = useState(initialCampaign);
+  const [tab, setTab] = useState('overview');
+  const [focusTarget, setFocusTarget] = useState<string | null>(null);
   const [values, setValues] = useState<CampaignFormValues>(() => campaignToFormValues(initialCampaign));
   const [errors, setErrors] = useState<CampaignFormErrors>({});
   const [operationError, setOperationError] = useState<unknown>(null);
@@ -158,6 +184,26 @@ function CampaignWorkspace({
   const nestedReadOnly = !canWrite || campaign.status === 'archived';
   const details = errorDetails(operationError);
   const issues = validationIssues(details.details);
+  const planningError = details.code === 'campaign_requirements_missing';
+  const requiredFields = (details.details as { fields?: unknown } | null)?.fields;
+  const missingFields = planningError && Array.isArray(requiredFields)
+    ? requiredFields.filter((field): field is keyof typeof planningFields =>
+      typeof field === 'string' && Object.prototype.hasOwnProperty.call(planningFields, field))
+    : [];
+  const missingPlanningInput = missingFields.find(field => planningFields[field].input !== null);
+
+  useEffect(() => {
+    if (!focusTarget || tab !== 'planning') return;
+    // Tabs mount their panel on selection; move focus after it is in the DOM.
+    const frame = requestAnimationFrame(() => {
+      const input = document.getElementById(focusTarget)
+        ?? document.getElementById('campaign-course-search')
+        ?? document.getElementById('campaign-reference-type');
+      input?.focus();
+      setFocusTarget(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusTarget, tab]);
 
   const applyCampaign = (next: MarketingOpsCampaign) => {
     setCampaign(next);
@@ -285,7 +331,7 @@ function CampaignWorkspace({
 
       <MarketingOpsMobileBar
         label="Workspace da campanha"
-        icon={<Megaphone className="h-4 w-4 text-brand-primary" />}
+        icon={<Megaphone className="h-4 w-4 text-brand-accent" />}
       />
 
       <main className="min-h-screen md:ml-20">
@@ -303,13 +349,31 @@ function CampaignWorkspace({
 
         {operationError ? (
           <div className="mx-auto max-w-5xl px-4 pt-5 sm:px-6 md:px-8">
-            <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+            <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Não foi possível concluir a operação</AlertTitle>
+              <AlertTitle>{planningError ? 'Faltam informações para planejar' : 'Não foi possível concluir a operação'}</AlertTitle>
               <AlertDescription>
-                <p>{details.message}</p>
+                <p>{planningError ? 'Complete os campos abaixo para planejar a campanha. Seu rascunho foi preservado.' : details.message}</p>
+                {missingFields.length > 0 ? (
+                  <ul className="mt-2 list-disc pl-5">
+                    {missingFields.map(field => <li key={field}>{planningFields[field].label}</li>)}
+                  </ul>
+                ) : null}
+                {planningError ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {missingPlanningInput || missingFields.length === 0 ? (
+                      <Button type="button" variant="outline" className="min-h-11" onClick={() => {
+                        setTab('planning');
+                        setFocusTarget(missingPlanningInput ? planningFields[missingPlanningInput].input : 'campaign-name');
+                      }}>Completar planejamento</Button>
+                    ) : null}
+                    {missingFields.includes('primaryOwner') ? (
+                      <Button type="button" variant="outline" className="min-h-11" onClick={() => setTab('team')}>Definir responsável</Button>
+                    ) : null}
+                  </div>
+                ) : null}
                 {issues ? (
-                  <ul className="mt-2 list-disc pl-5 text-xs text-red-850">
+                  <ul className="mt-2 list-disc pl-5 text-xs text-status-error">
                     {issues.map((issue, index) => (
                       <li key={index}>
                         <strong>Campo "{issue.path.join('.') || 'geral'}":</strong> {issue.message}
@@ -323,6 +387,29 @@ function CampaignWorkspace({
           </div>
         ) : null}
 
+        <Tabs value={tab} onValueChange={setTab} className="min-w-0">
+          <div className="mx-auto max-w-5xl px-4 pt-5 sm:px-6 md:px-8">
+            <div className="overflow-x-auto pb-1">
+              <TabsList aria-label="Seções da campanha" className="h-12 min-w-max justify-start gap-2 rounded-none border-b border-border bg-transparent p-0">
+                {[
+                  ['overview', 'Visão geral'], ['planning', 'Planejamento'], ['team', 'Equipe'],
+                  ['sources', 'Fontes'], ['leads', 'Leads'], ...(managesTenant ? [['site', 'Navegação']] : []), ['materials', 'Materiais'], ['history', 'Histórico'],
+                ].map(([value, label]) => <TabsTrigger key={value} value={value} className="h-11 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-brand-accent data-[state=active]:bg-transparent data-[state=active]:text-brand-accent data-[state=active]:shadow-none">
+                  {label}{value === 'planning' && dirty ? <><span aria-hidden="true" className="ml-2 h-1.5 w-1.5 rounded-full bg-status-warning" /><span className="sr-only"> · alterações não salvas</span></> : null}
+                </TabsTrigger>)}
+              </TabsList>
+            </div>
+            {dirty && tab !== 'planning' && <div role="status" className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card px-4 py-2 text-xs text-text-secondary"><p>Há alterações não salvas no planejamento.</p><Button variant="link" className="min-h-11 p-0 text-xs" onClick={() => setTab('planning')}>Continuar edição</Button></div>}
+          </div>
+          <TabsContent value="overview" className="mt-0">
+            <CampaignResultsOverview campaign={campaign} api={leadsClient} ops={client} readOnly={readOnly} onSources={() => setTab('sources')}
+              owner={participantsQuery.isLoading ? 'Carregando equipe…' : participantsQuery.isError ? 'Equipe indisponível' : participantsQuery.data?.data.find(participant => participant.isPrimary)?.displayName ?? 'Não definido'}
+              onPlanning={() => setTab('planning')} onTeam={() => setTab('team')} />
+          </TabsContent>
+          <TabsContent value="sources" className="mt-0"><LeadSourcesPanel key={campaign.id} campaignId={campaign.id} api={leadsClient} ops={client} readOnly={readOnly} adsApi={adsClient} adsReadOnly={readOnly || !managesTenant} /></TabsContent>
+          <TabsContent value="leads" className="mt-0"><CampaignLeadsPanel key={campaign.id} campaignId={campaign.id} api={leadsClient} readOnly={readOnly} /></TabsContent>
+          {managesTenant && <TabsContent value="site" className="mt-0"><CampaignWebAnalytics key={campaign.id} campaignId={campaign.id} canManage={!readOnly} /></TabsContent>}
+          <TabsContent value="planning" className="mt-0">
         <CampaignFieldsForm
           values={values}
           errors={errors}
@@ -337,6 +424,8 @@ function CampaignWorkspace({
           onSubmit={save}
         />
 
+          </TabsContent>
+          <TabsContent value="team" className="mt-0">
         <ParticipantsPanel
           campaignId={campaign.id}
           campaignVersion={campaign.version}
@@ -348,6 +437,8 @@ function CampaignWorkspace({
           onCampaignVersionChange={applyCampaignVersion}
         />
 
+          </TabsContent>
+          <TabsContent value="materials" className="mt-0">
         <MaterialsPanel
           campaignId={campaign.id}
           campaignVersion={campaign.version}
@@ -359,14 +450,18 @@ function CampaignWorkspace({
           onCampaignVersionChange={applyCampaignVersion}
         />
 
+          </TabsContent>
+          <TabsContent value="history" className="mt-0">
         <TimelinePanel
           campaignId={campaign.id}
           client={client}
-          reserveFooterSpace={!readOnly}
+          reserveFooterSpace={false}
         />
+          </TabsContent>
+        </Tabs>
 
-        {!readOnly ? (
-          <div className="sticky bottom-0 z-30 border-t border-white/50 bg-white/75 px-4 py-3 shadow-[0_-10px_30px_-24px_rgba(11,18,32,0.45)] backdrop-blur-xl sm:px-6 md:px-8">
+        {!readOnly && tab === 'planning' ? (
+          <div className="sticky bottom-0 z-30 border-t border-border bg-card px-4 py-3 shadow-[0_-10px_30px_-24px_rgba(11,18,32,0.45)] backdrop-blur-xl sm:px-6 md:px-8">
             <div className="mx-auto flex max-w-5xl items-center justify-end gap-2">
               <Button
                 type="button"
@@ -377,7 +472,7 @@ function CampaignWorkspace({
                   setErrors({});
                   setOperationError(null);
                 }}
-                className="h-11 rounded-[8px] bg-white/80"
+                className="h-11 rounded-[8px] bg-card"
               >
                 <Undo2 className="mr-2 h-4 w-4" />
                 Descartar
@@ -411,7 +506,7 @@ function CampaignWorkspace({
       />
 
       <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
-        <AlertDialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl">
+        <AlertDialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Arquivar campanha</AlertDialogTitle>
             <AlertDialogDescription>
@@ -436,6 +531,7 @@ function CampaignWorkspace({
 
 export default function CampaignWorkspacePage({
   client = marketingOpsClient,
+  leadsClient = leadClient,
   canWrite,
   canArchive,
   tenantRole,
@@ -467,12 +563,12 @@ export default function CampaignWorkspacePage({
     return (
       <div className="relative min-h-screen overflow-x-hidden text-text-primary">
         <Sidebar />
-        <MarketingOpsMobileBar label="Workspace da campanha" icon={<Megaphone className="h-4 w-4 text-brand-primary" />} />
+        <MarketingOpsMobileBar label="Workspace da campanha" icon={<Megaphone className="h-4 w-4 text-brand-accent" />} />
         <div className="md:ml-20">
           <div aria-label="Carregando workspace" className="mx-auto max-w-5xl space-y-5 px-4 py-8 sm:px-6 md:px-8">
-            <div className="h-8 w-2/3 animate-pulse rounded bg-slate-200" />
-            <div className="glass-surface shadow-glass h-36 animate-pulse rounded-[8px] border-white/60" />
-            <div className="glass-surface shadow-glass h-72 animate-pulse rounded-[8px] border-white/60" />
+            <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
+            <div className="glass-surface shadow-glass h-36 animate-pulse rounded-[8px] border-border" />
+            <div className="glass-surface shadow-glass h-72 animate-pulse rounded-[8px] border-border" />
           </div>
         </div>
       </div>
@@ -511,8 +607,10 @@ export default function CampaignWorkspacePage({
 
   return (
     <CampaignWorkspace
+      key={campaignQuery.data.data.id}
       initialCampaign={campaignQuery.data.data}
       client={client}
+      leadsClient={leadsClient}
       canWrite={writeAllowed}
       canArchive={archiveAllowed}
       tenantRole={effectiveTenantRole}

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>B — Visão de comando | Prometeus</title>
+<!-- Google Fonts: Space Grotesk & Geist Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-tint": "#b2c5ff",
+            "secondary-container": "#404960",
+            "surface-bright": "#373941",
+            "secondary-fixed-dim": "#bdc6e2",
+            "on-secondary": "#273046",
+            "primary": "#b2c5ff",
+            "on-tertiary-fixed": "#380d00",
+            "surface-dim": "#11131a",
+            "on-secondary-container": "#afb8d3",
+            "focus-blue": "#88B8FC",
+            "error-container": "#93000a",
+            "on-surface": "#e1e2ec",
+            "inverse-on-surface": "#2e3038",
+            "surface-container-low": "#191b22",
+            "surface": "#11131a",
+            "surface-container-highest": "#32343c",
+            "on-primary-fixed": "#001847",
+            "tertiary-fixed": "#ffdbcf",
+            "on-primary-fixed-variant": "#0040a0",
+            "outline-variant": "#434653",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#1d1f27",
+            "on-primary": "#002c72",
+            "muted-text": "#9CA7BA",
+            "on-secondary-fixed": "#121b30",
+            "on-tertiary-container": "#ffc4af",
+            "on-surface-variant": "#c3c6d6",
+            "surface-variant": "#32343c",
+            "primary-fixed-dim": "#b2c5ff",
+            "on-primary-container": "#c1d0ff",
+            "secondary": "#bdc6e2",
+            "on-error": "#690005",
+            "tertiary": "#ffb59a",
+            "primary-fixed": "#dae2ff",
+            "tertiary-fixed-dim": "#ffb59a",
+            "outline": "#8d909f",
+            "navy-institutional": "#1A2338",
+            "on-secondary-fixed-variant": "#3e465d",
+            "surface-raised": "#111727",
+            "on-tertiary": "#5b1b00",
+            "surface-base": "#0B101E",
+            "on-tertiary-fixed-variant": "#802a00",
+            "surface-container-lowest": "#0c0e15",
+            "primary-container": "#0652c5",
+            "mist-text": "#E2E8F0",
+            "action-blue": "#0652C5",
+            "on-background": "#e1e2ec",
+            "error": "#ffb4ab",
+            "canvas-midnight": "#040814",
+            "inverse-primary": "#1457ca",
+            "background": "#11131a",
+            "inverse-surface": "#e1e2ec",
+            "tertiary-container": "#a03600",
+            "surface-container-high": "#282a31",
+            "slate-supporting": "#3B4B6B",
+            "secondary-fixed": "#d9e2fe"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "margin": "2rem",
+            "space-md": "0.75rem",
+            "space-lg": "1rem",
+            "space-xl": "1.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem"
+          },
+          fontFamily: {
+            "section-title": ["Space Grotesk", "sans-serif"],
+            "title-lg": ["Space Grotesk", "sans-serif"],
+            "metadata": ["Geist Mono", "monospace"],
+            "body": ["Space Grotesk", "sans-serif"],
+            "label": ["Space Grotesk", "sans-serif"]
+          },
+          fontSize: {
+            "section-title": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+            "title-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
+            "metadata": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+            "body": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "label": ["14px", { lineHeight: "20px", fontWeight: "500" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #040814;
+      color: #E2E8F0;
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0B101E;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1A2338;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-canvas-midnight text-mist-text min-h-screen flex selection:bg-action-blue selection:text-white">
+<!-- SIDEBAR (Prescribed Component: SideNavBar) -->
+<aside class="fixed top-0 left-0 h-screen w-64 border-r border-outline-variant/30 bg-surface-base flex flex-col justify-between p-space-md z-50">
+<div class="flex flex-col gap-space-lg">
+<!-- Brand Logo Header -->
+<div class="px-space-sm pt-space-xs pb-space-sm flex items-center justify-between border-b border-outline-variant/20">
+<div>
+<img alt="Logotipo Prometeus" class="w-[160px] h-auto object-contain text-on-surface font-title-lg" src="https://lh3.googleusercontent.com/aida/AEtjO1Up3UQMRkVbpiTfVT0GAwgkG5sWenSkGLqA6ubYWCwfLG9ckKWeZL86whRTgALg4EgoJUKR5SXPBI_pbU-wlZjdMDxE1awY7w5JEkNNHwasfq3nhAJLZNuoXFKSyi1yY9nMrcJoEuc2FnoNeL51yWX_WJ4Myh-kYunI5VijKEzN6_zhhc_MNPGVesMK10cOYFv4TgbLQNc_tXt4mMBmRUuWnELvezrrjc-1PiGIxvUhnP8VtrGjr8MSTZ2g"/>
+<p class="text-metadata font-metadata text-muted-text mt-1">Operações B2B</p>
+</div>
+</div>
+<!-- Navigation Tabs (Active: Visão geral) -->
+<nav aria-label="Navegação Principal" class="flex flex-col gap-1.5">
+<!-- 1. Visão geral (ACTIVE) -->
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg bg-navy-institutional text-primary font-label border-l-2 border-primary" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="flex-1">Visão geral</span>
+</a>
+<!-- 2. Campanhas -->
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-muted-text hover:text-on-surface font-label transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="flex-1">Campanhas</span>
+<span class="text-metadata font-metadata px-1.5 py-0.5 rounded bg-surface-raised text-focus-blue border border-outline-variant/30">3</span>
+</a>
+<!-- 3. Calendário -->
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-muted-text hover:text-on-surface font-label transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="flex-1">Calendário</span>
+<span class="w-2 h-2 rounded-full bg-focus-blue" title="Ações da semana ativas"></span>
+</a>
+<!-- 4. Aprovações -->
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-muted-text hover:text-on-surface font-label transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<span class="flex-1">Aprovações</span>
+<span class="text-metadata font-metadata px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">2</span>
+</a>
+<!-- 5. Hermes -->
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-muted-text hover:text-on-surface font-label transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="flex-1">Hermes</span>
+<span class="text-[10px] font-metadata uppercase tracking-wider px-1.5 py-0.5 rounded bg-navy-institutional text-muted-text">Relatórios</span>
+</a>
+</nav>
+</div>
+<!-- Sidebar Footer Context -->
+<div class="flex flex-col gap-space-sm pt-space-md border-t border-outline-variant/20">
+<div class="px-space-md py-space-sm rounded-lg bg-surface-raised border border-outline-variant/20">
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text mb-1">
+<span class="text-on-surface font-label">Operações B2B</span>
+<span class="text-[11px] text-focus-blue">Gestão</span>
+</div>
+<p class="text-[11px] font-metadata text-muted-text flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          Corte: 21 set, 09:00
+        </p>
+</div>
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-muted-text hover:text-on-surface font-label transition-colors hover:bg-surface-raised" href="#">
+<span class="material-symbols-outlined" data-icon="manage_accounts">manage_accounts</span>
+<span>Configurações de Conta</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CANVAS (Offset by sidebar width 260px) -->
+<div class="ml-64 flex-1 flex flex-col min-w-0">
+<!-- TOPBAR (Prescribed Component: TopNavBar) -->
+<header class="sticky top-0 w-full z-40 border-b border-outline-variant/30 bg-canvas-midnight flex items-center justify-between px-margin py-space-md">
+<div class="flex items-baseline gap-space-lg">
+<h1 class="text-section-title font-section-title text-on-surface tracking-tight">Visão de comando</h1>
+<span class="hidden md:inline-block text-body font-body text-muted-text">Clareza para decidir o próximo movimento.</span>
+</div>
+<div class="flex items-center gap-space-md">
+<!-- Persistent badge -->
+<span class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant/30 bg-surface-base text-metadata font-metadata text-muted-text">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
+          Demonstração · dados fictícios
+        </span>
+<!-- Action tools -->
+<div class="flex items-center gap-1 bg-surface-base border border-outline-variant/30 rounded-lg p-1">
+<button aria-label="Filtrar" class="p-1.5 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors" title="Filtros contextuais">
+<span class="material-symbols-outlined" data-icon="filter_alt">filter_alt</span>
+</button>
+<button aria-label="Ajustar" class="p-1.5 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors" title="Ajustes de visualização">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+</button>
+<button aria-label="Notificações" class="p-1.5 rounded text-muted-text hover:text-mist-text hover:bg-surface-raised transition-colors relative" title="Notificações operacionais">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 bg-focus-blue rounded-full"></span>
+</button>
+</div>
+<!-- Primary Action Refresh -->
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-action-blue hover:bg-primary-container text-white font-label text-label transition-all active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+<span>Atualizar resultados</span>
+</button>
+</div>
+</header>
+<!-- CONTENT WRAPPER -->
+<main class="flex-1 px-margin py-space-xl flex flex-col gap-6">
+<!-- FILTER CONTROLS BAR -->
+<section class="flex flex-wrap items-center justify-between gap-3 bg-surface-base border border-outline-variant/30 rounded-lg p-space-md">
+<div class="flex flex-wrap items-center gap-3">
+<!-- Date Filter -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-raised border border-outline-variant/30 text-mist-text font-metadata text-metadata">
+<span class="material-symbols-outlined text-focus-blue text-[16px]" data-icon="calendar_month">calendar_month</span>
+<span>24 ago — 20 set 2026</span>
+</div>
+<!-- Campaign Select -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-raised border border-outline-variant/30 text-mist-text font-label text-label">
+<span class="text-muted-text text-metadata font-metadata">Campanha:</span>
+<span class="font-medium">Todas as campanhas (3)</span>
+<span class="material-symbols-outlined text-[16px] text-muted-text" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Channel Select -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-raised border border-outline-variant/30 text-mist-text font-label text-label">
+<span class="text-muted-text text-metadata font-metadata">Canais:</span>
+<span class="font-medium">Todos os canais (6)</span>
+<span class="material-symbols-outlined text-[16px] text-muted-text" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Integrity Status Micro -->
+<div class="flex items-center gap-2 text-metadata font-metadata text-muted-text">
+<span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+<span>Sincronização analítica íntegra</span>
+<span class="text-outline">·</span>
+<span>Auditado via Hermes</span>
+</div>
+</section>
+<!-- 3. SÍNTESE EXECUTIVA DE DECISÃO RÁPIDA (5s Executive Readout) -->
+<section class="bg-surface-base border border-[#222E48] rounded-xl p-space-lg">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+<!-- Bloco principal de diagnóstico -->
+<div class="lg:col-span-6 flex flex-col gap-2.5">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-metadata font-metadata">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                Atenção à cobertura
+              </span>
+<span class="text-metadata font-metadata text-muted-text">Status operacional</span>
+</div>
+<h2 class="text-[20px] leading-7 font-semibold font-title-lg text-white">
+              Resultados em crescimento; falta o fechamento semanal do WhatsApp.
+            </h2>
+<div class="pt-1">
+<a class="inline-flex items-center gap-1.5 text-focus-blue font-label text-label hover:underline group" href="#prioridades">
+                Revisar pendência
+                <span class="group-hover:translate-x-1 transition-transform">→</span>
+</a>
+</div>
+</div>
+<!-- Três cartões de sinalização direta com visual técnico -->
+<div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+<!-- Card 1: Resultado -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<p class="text-metadata font-metadata text-muted-text uppercase tracking-wider">Resultado</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-[22px] font-bold font-title-lg text-mist-text">86%</span>
+<span class="text-metadata font-metadata text-emerald-400 font-medium">da meta</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 86%;"></div>
+</div>
+</div>
+<p class="text-metadata font-metadata text-muted-text leading-tight mt-1">
+                Leads e qualificação acima do ritmo projetado
+              </p>
+</div>
+<!-- Card 2: Execução -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<p class="text-metadata font-metadata text-muted-text uppercase tracking-wider">Execução</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-[22px] font-bold font-title-lg text-amber-300">3</span>
+<span class="text-metadata font-metadata text-amber-300/80">atrasadas</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-amber-400 h-full rounded-full" style="width: 25%;"></div>
+</div>
+</div>
+<p class="text-metadata font-metadata text-muted-text leading-tight mt-1">
+                2 em criativos de Lançamento, 1 em disparo de E-mail
+              </p>
+</div>
+<!-- Card 3: Dados -->
+<div class="p-3.5 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<p class="text-metadata font-metadata text-muted-text uppercase tracking-wider">Dados</p>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-[22px] font-bold font-title-lg text-mist-text">23<span class="text-sm font-normal text-muted-text">/24</span></span>
+<span class="text-metadata font-metadata text-focus-blue">relatórios</span>
+</div>
+<div class="w-full h-1 bg-canvas-midnight rounded-full my-2 overflow-hidden">
+<div class="bg-action-blue h-full rounded-full" style="width: 95.8%;"></div>
+</div>
+</div>
+<p class="text-metadata font-metadata text-muted-text leading-tight mt-1">
+                WhatsApp semana 38 aguarda envio via Hermes
+              </p>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. FAIXA TIPOGRÁFICA INTEGRADA DE MÉTRICAS (Ribbon contínuo de 6 dados + CPL) -->
+<section class="bg-surface-base border border-outline-variant/30 rounded-xl overflow-hidden">
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y md:divide-y-0 md:divide-x divide-[#1A2338]">
+<!-- Metrica 1 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Leads totais</span>
+<span class="text-title-lg font-title-lg text-white my-1 tabular-nums">2.460</span>
+<span class="text-[11px] font-metadata text-outline">Total no período</span>
+</div>
+<!-- Metrica 2 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Qualificados</span>
+<span class="text-title-lg font-title-lg text-focus-blue my-1 tabular-nums">984</span>
+<span class="text-[11px] font-metadata text-outline">Taxa média 40,0%</span>
+</div>
+<!-- Metrica 3 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Oportunidades</span>
+<span class="text-title-lg font-title-lg text-white my-1 tabular-nums">410</span>
+<span class="text-[11px] font-metadata text-outline">41,7% dos qualificados</span>
+</div>
+<!-- Metrica 4 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Vendas no período</span>
+<span class="text-title-lg font-title-lg text-white my-1 tabular-nums">126</span>
+<span class="text-[11px] font-metadata text-outline">Fechamentos registrados</span>
+</div>
+<!-- Metrica 5 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Receita gerada</span>
+<span class="text-title-lg font-title-lg text-white my-1 tabular-nums">R$ 378.000</span>
+<span class="text-[11px] font-metadata text-outline">Ticket médio R$ 3.000</span>
+</div>
+<!-- Metrica 6 -->
+<div class="p-space-lg flex flex-col">
+<span class="text-metadata font-metadata text-muted-text">Investimento mídia</span>
+<span class="text-title-lg font-title-lg text-mist-text my-1 tabular-nums">R$ 24.600</span>
+<span class="text-[11px] font-metadata text-outline">Canais pagos diretos</span>
+</div>
+</div>
+<!-- Faixa informativa acoplada de integridade -->
+<div class="bg-navy-institutional/60 border-t border-outline-variant/30 px-space-lg py-2.5 flex flex-wrap items-center justify-between gap-3 text-metadata font-metadata">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-focus-blue text-[18px]" data-icon="info">info</span>
+<span class="text-on-surface">CPL qualificado pago: <strong class="text-focus-blue font-semibold">R$ 41,00</strong> (base em 600 leads qualificados pagos). Sem atribuição artificial de ROI/ROAS.</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-amber-500/40 text-amber-300 font-medium">
+              Totais parciais
+            </span>
+<span class="text-muted-text">WhatsApp semana 38 pendente de consolidação analítica</span>
+</div>
+</div>
+</section>
+<!-- 5. CENA ANALÍTICA PRINCIPAL (Grid 2 colunas: 65% / 35%) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Ritmo de aquisição semanal (65%) -->
+<div class="lg:col-span-8 bg-surface-base border border-outline-variant/30 rounded-xl p-space-lg flex flex-col justify-between">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+<div>
+<h3 class="text-section-title font-section-title text-white">Ritmo de aquisição semanal</h3>
+<p class="text-metadata font-metadata text-muted-text">Volume de Leads versus Leads Qualificados ao longo das últimas 4 semanas</p>
+</div>
+<!-- Legenda direta nos traços -->
+<div class="flex items-center gap-4 text-metadata font-metadata">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-1 bg-action-blue rounded"></span>
+<span class="text-mist-text">Leads atuais</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-1 bg-focus-blue rounded"></span>
+<span class="text-focus-blue">Qualificados</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-0.5 border-t border-dashed border-outline-variant"></span>
+<span class="text-muted-text">Período anterior</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-0.5 bg-amber-400"></span>
+<span class="text-amber-300">Meta</span>
+</div>
+</div>
+</div>
+<!-- Gráfico Customizado SVG com Coordenadas Claras e Precisas -->
+<div class="relative w-full h-64 bg-surface-raised/40 rounded-lg p-3 border border-outline-variant/20 flex flex-col justify-between">
+<!-- SVG Canvas -->
+<svg class="w-full h-48 overflow-visible" preserveaspectratio="none" viewbox="0 0 700 180">
+<defs>
+<lineargradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#0652C5" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#0652C5" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Gridlines -->
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="20" y2="20"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="65" y2="65"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="110" y2="110"></line>
+<line stroke="#1A2338" stroke-width="1" x1="40" x2="680" y1="155" y2="155"></line>
+<!-- Eixo Y Labels -->
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="24">800</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="69">600</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="114">400</text>
+<text fill="#9CA7BA" font-family="Geist Mono" font-size="10" x="10" y="159">200</text>
+<!-- Linha de Meta Semanal (Fixa em 600 leads = y: 65) -->
+<line opacity="0.7" stroke="#ffb59a" stroke-dasharray="4,4" stroke-width="1.5" x1="40" x2="680" y1="65" y2="65"></line>
+<!-- Linha Período Anterior (Dashed) S35: 520(83), S36: 550(76), S37: 580(70), S38: 560(74) -->
+<polyline fill="none" points="110,83 280,76 460,70 630,74" stroke="#434653" stroke-dasharray="3,3" stroke-width="1.8"></polyline>
+<!-- Área preenchida sob Leads Atuais -->
+<polygon fill="url(#areaGradient)" points="110,74 280,60 460,42 630,52 630,155 110,155"></polygon>
+<!-- Curva Leads Atuais (S35: 560(74), S36: 620(60), S37: 700(42), S38: 660*(52)) -->
+<polyline fill="none" points="110,74 280,60 460,42 630,52" stroke="#0652C5" stroke-width="3"></polyline>
+<!-- Pontos Leads Atuais -->
+<circle cx="110" cy="74" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="280" cy="60" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="460" cy="42" fill="#0652C5" r="4" stroke="#0B101E" stroke-width="2"></circle>
+<circle cx="630" cy="52" fill="#88B8FC" r="5" stroke="#0652C5" stroke-width="2"></circle>
+<!-- Curva Qualificados (S35: 220(150), S36: 250(144), S37: 290(135), S38: 224*(149)) -->
+<polyline fill="none" points="110,150 280,144 460,135 630,149" stroke="#88B8FC" stroke-width="2.2"></polyline>
+<circle cx="110" cy="150" fill="#88B8FC" r="3.5"></circle>
+<circle cx="280" cy="144" fill="#88B8FC" r="3.5"></circle>
+<circle cx="460" cy="135" fill="#88B8FC" r="3.5"></circle>
+<circle cx="630" cy="149" fill="#ffb59a" r="4.5" stroke="#88B8FC" stroke-width="1.5"></circle>
+<!-- Marcador de Parcialidade S38 -->
+<line opacity="0.8" stroke="#a03600" stroke-dasharray="2,2" stroke-width="1" x1="630" x2="630" y1="20" y2="155"></line>
+</svg>
+<!-- Eixo X com Semanas e Alerta S38 -->
+<div class="grid grid-cols-4 text-center font-metadata text-metadata text-muted-text pt-2 border-t border-outline-variant/30">
+<div>
+<span class="text-mist-text font-medium">Semana 35</span>
+<p class="text-[11px] text-outline">560 leads · 220 qual.</p>
+</div>
+<div>
+<span class="text-mist-text font-medium">Semana 36</span>
+<p class="text-[11px] text-outline">620 leads · 250 qual.</p>
+</div>
+<div>
+<span class="text-mist-text font-medium">Semana 37</span>
+<p class="text-[11px] text-outline">700 leads · 290 qual.</p>
+</div>
+<div class="relative">
+<span class="text-amber-300 font-semibold flex items-center justify-center gap-1">
+                    Semana 38*
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+</span>
+<p class="text-[11px] text-amber-300/80">Semana parcial · aguarda WhatsApp</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex flex-wrap items-center justify-between text-metadata font-metadata text-muted-text">
+<span>Ritmo médio: 615 leads/semana contra meta de 600.</span>
+<span class="text-focus-blue">Consolidação final da S38 programada para terça-feira, 22 set</span>
+</div>
+</div>
+<!-- Prioridades da semana (35%) -->
+<div class="lg:col-span-4 bg-surface-base border border-outline-variant/30 rounded-xl p-space-lg flex flex-col justify-between" id="prioridades">
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-section-title font-section-title text-white">Prioridades da semana</h3>
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-focus-blue">3 pendências</span>
+</div>
+<!-- 3 Ações Críticas -->
+<div class="flex flex-col gap-3">
+<!-- Item 1 (Crítico/Alerta) -->
+<div class="p-3.5 rounded-lg bg-surface-raised border-l-4 border-l-amber-400 border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 font-medium">Dados / Hermes</span>
+<span class="text-[11px] font-metadata text-muted-text">Atraso 24h</span>
+</div>
+<h4 class="font-label text-label text-white mt-2 font-medium">WhatsApp: Fechamento pendente da semana 38</h4>
+<p class="text-metadata font-metadata text-muted-text mt-1">Impacta cálculo de CPL global e coorte completa.</p>
+<div class="mt-3 flex justify-end">
+<button class="px-3 py-1.5 rounded bg-surface-base hover:bg-navy-institutional text-focus-blue border border-outline-variant/30 font-label text-metadata transition-colors">
+                    Notificar analista Hermes
+                  </button>
+</div>
+</div>
+<!-- Item 2 (Execução) -->
+<div class="p-3.5 rounded-lg bg-surface-raised border-l-4 border-l-focus-blue border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-navy-institutional text-focus-blue font-medium">Execução</span>
+<span class="text-[11px] font-metadata text-muted-text">Calendário</span>
+</div>
+<h4 class="font-label text-label text-white mt-2 font-medium">3 ações atrasadas na campanha Lançamento</h4>
+<p class="text-metadata font-metadata text-muted-text mt-1">2 criativos de conversão e 1 fluxo de nutrição de e-mail.</p>
+<div class="mt-3 flex justify-end">
+<button class="px-3 py-1.5 rounded bg-surface-base hover:bg-navy-institutional text-mist-text border border-outline-variant/30 font-label text-metadata transition-colors">
+                    Replanejar prazos
+                  </button>
+</div>
+</div>
+<!-- Item 3 (Aprovação) -->
+<div class="p-3.5 rounded-lg bg-surface-raised border-l-4 border-l-slate-supporting border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-surface-base text-muted-text font-medium">Aprovação técnica</span>
+<span class="text-[11px] font-metadata text-muted-text">Mídia B2B</span>
+</div>
+<h4 class="font-label text-label text-white mt-2 font-medium">2 peças de mídia LinkedIn aguardando validação</h4>
+<p class="text-metadata font-metadata text-muted-text mt-1">Gargalo para escala do canal de menor CPL institucional.</p>
+<div class="mt-3 flex justify-end">
+<button class="px-3 py-1.5 rounded bg-action-blue hover:bg-primary-container text-white font-label text-metadata transition-colors">
+                    Avaliar criativos
+                  </button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>Auditoria contínua</span>
+<a class="text-focus-blue hover:underline" href="#">Ver fila de aprovações →</a>
+</div>
+</div>
+</section>
+<!-- 6. FUNIL DE VENDAS EXPRESSIVO E PROPORCIONAL ("Da primeira conversa à venda") -->
+<section class="bg-surface-base border border-outline-variant/30 rounded-xl p-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-6">
+<div>
+<h3 class="text-section-title font-section-title text-white">Da primeira conversa à venda</h3>
+<p class="text-metadata font-metadata text-muted-text mt-1">
+              Coorte de entrada · 24 ago a 20 set · Etapas acumuladas; vendas da coorte diferem das vendas fechadas no período.
+            </p>
+</div>
+<div class="text-metadata font-metadata px-3 py-1 rounded bg-navy-institutional text-focus-blue border border-outline-variant/30">
+            Conversão final da coorte: <strong class="font-bold text-white">3,3%</strong> (82 vendas de 2.460 leads)
+          </div>
+</div>
+<!-- Visual em Etapas Conectadas Horizontais Proporcionais -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+<!-- Etapa 1 -->
+<div class="p-4 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>01. Lead</span>
+<span class="text-mist-text">100%</span>
+</div>
+<p class="text-title-lg font-title-lg text-white my-2 tabular-nums">2.460</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-action-blue h-full w-full rounded-full"></div>
+</div>
+</div>
+<p class="text-[11px] font-metadata text-muted-text mt-3 pt-2 border-t border-outline-variant/20">Base inicial de entrada</p>
+</div>
+<!-- Etapa 2 -->
+<div class="p-4 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between relative">
+<div>
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>02. Qualificado</span>
+<span class="text-focus-blue">40,0%</span>
+</div>
+<p class="text-title-lg font-title-lg text-focus-blue my-2 tabular-nums">984</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 40.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-metadata text-muted-text mt-3 pt-2 border-t border-outline-variant/20">Passagem: 40,0% do total</p>
+</div>
+<!-- Etapa 3 -->
+<div class="p-4 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>03. Oportunidade</span>
+<span class="text-focus-blue">41,7%</span>
+</div>
+<p class="text-title-lg font-title-lg text-white my-2 tabular-nums">410</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 41.7%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-metadata text-muted-text mt-3 pt-2 border-t border-outline-variant/20">41,7% dos qualificados</p>
+</div>
+<!-- Etapa 4 -->
+<div class="p-4 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>04. Proposta</span>
+<span class="text-focus-blue">50,0%</span>
+</div>
+<p class="text-title-lg font-title-lg text-white my-2 tabular-nums">205</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-focus-blue h-full rounded-full" style="width: 50.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-metadata text-muted-text mt-3 pt-2 border-t border-outline-variant/20">50,0% das oportunidades</p>
+</div>
+<!-- Etapa 5 -->
+<div class="p-4 rounded-lg bg-surface-raised border border-outline-variant/30 flex flex-col justify-between border-l-2 border-l-emerald-400">
+<div>
+<div class="flex items-center justify-between text-metadata font-metadata text-muted-text">
+<span>05. Venda coorte</span>
+<span class="text-emerald-400">40,0%</span>
+</div>
+<p class="text-title-lg font-title-lg text-emerald-400 my-2 tabular-nums">82</p>
+<div class="w-full h-1.5 bg-canvas-midnight rounded-full overflow-hidden">
+<div class="bg-emerald-400 h-full rounded-full" style="width: 40.0%;"></div>
+</div>
+</div>
+<p class="text-[11px] font-metadata text-muted-text mt-3 pt-2 border-t border-outline-variant/20">40,0% das propostas aceitas</p>
+</div>
+</div>
+<div class="mt-4 px-3 py-2 rounded bg-surface-raised border border-outline-variant/20 text-metadata font-metadata text-muted-text flex items-center justify-between">
+<span>* Nota metodológica: As 126 vendas registradas no período incluem ciclos de negociação de meses anteriores. A coorte específica converteu 82 clientes até o momento.</span>
+<span class="text-focus-blue">Ciclo médio de vendas: 24 dias</span>
+</div>
+</section>
+<!-- 7. DESEMPENHO POR CANAL ("Onde o resultado acontece") -->
+<section class="bg-surface-base border border-outline-variant/30 rounded-xl overflow-hidden">
+<div class="p-space-lg border-b border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
+<div>
+<h3 class="text-section-title font-section-title text-white">Onde o resultado acontece</h3>
+<p class="text-metadata font-metadata text-muted-text">Desempenho discriminado por canal com honestidade de atribuição e integridade das fontes.</p>
+</div>
+<span class="text-metadata font-metadata text-outline">6 canais mapeados</span>
+</div>
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left text-body font-body border-collapse min-w-[800px]">
+<thead>
+<tr class="bg-surface-raised text-metadata font-metadata text-muted-text border-b border-outline-variant/30">
+<th class="py-3 px-space-lg">Canal</th>
+<th class="py-3 px-space-md">Status / Procedência</th>
+<th class="py-3 px-space-md text-right">Leads</th>
+<th class="py-3 px-space-md text-right">Qualificados</th>
+<th class="py-3 px-space-md text-right">Custo Mídia</th>
+<th class="py-3 px-space-md text-right">CPL Qualificado</th>
+<th class="py-3 px-space-lg text-right">Ação</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 text-label font-label text-mist-text">
+<!-- Linha 1: Google Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-space-lg font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                  Google Ads
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-muted-text">Fonte planejada</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">700</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-focus-blue">280</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">R$ 11.200</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums font-semibold text-white">R$ 40,00</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-focus-blue hover:underline">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 2: Meta Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-space-lg font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                  Meta Ads
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-muted-text">Fonte planejada</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">800</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-focus-blue">240</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">R$ 7.200</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums font-semibold text-white">R$ 30,00</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-focus-blue hover:underline">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 3: LinkedIn Ads -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-space-lg font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-focus-blue"></span>
+                  LinkedIn Ads
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-muted-text">Fonte planejada</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">200</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-focus-blue">80</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">R$ 6.200</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums font-semibold text-white">R$ 77,50</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-focus-blue hover:underline">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 4: Orgânico / Busca -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-space-lg font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-slate-supporting"></span>
+                  Orgânico / Busca
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-muted-text">Tráfego próprio</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">400</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-focus-blue">240</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-focus-blue hover:underline">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 5: E-mail Marketing -->
+<tr class="hover:bg-surface-raised/60 transition-colors">
+<td class="py-3 px-space-lg font-medium text-white flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-slate-supporting"></span>
+                  E-mail Marketing
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-surface-raised border border-outline-variant/30 text-muted-text">Importação semanal manual</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums">260</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-focus-blue">144</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-focus-blue hover:underline">Ver detalhes</button>
+</td>
+</tr>
+<!-- Linha 6: WhatsApp (PARCIAL) -->
+<tr class="hover:bg-surface-raised/60 transition-colors bg-amber-500/5">
+<td class="py-3 px-space-lg font-medium text-amber-300 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                  WhatsApp
+                </td>
+<td class="py-3 px-space-md text-metadata font-metadata">
+<span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">Parcial · semana pendente</span>
+</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-amber-300 font-medium">100</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-amber-300/70">—</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-md text-right font-metadata tabular-nums text-outline">—</td>
+<td class="py-3 px-space-lg text-right">
+<button class="text-metadata font-metadata text-amber-300 font-medium hover:underline">Informar dados</button>
+</td>
+</tr>
+</tbody>
+<!-- Linha de Totais Consolidados -->
+<tfoot>
+<tr class="bg-navy-institutional/80 text-metadata font-metadata text-mist-text border-t-2 border-outline-variant/40">
+<td class="py-3.5 px-space-lg font-bold text-white uppercase tracking-wider" colspan="2">Totais consolidados</td>
+<td class="py-3.5 px-space-md text-right tabular-nums font-bold text-white">2.460 Leads</td>
+<td class="py-3.5 px-space-md text-right tabular-nums font-bold text-focus-blue">984 Qualificados</td>
+<td class="py-3.5 px-space-md text-right tabular-nums font-bold text-white">R$ 24.600</td>
+<td class="py-3.5 px-space-md text-right tabular-nums font-bold text-focus-blue">R$ 41,00</td>
+<td class="py-3.5 px-space-lg text-right text-muted-text">Ponderado pago</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="p-space-md bg-surface-raised border-t border-outline-variant/20 text-metadata font-metadata text-muted-text flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="policy">policy</span>
+<span>Regra de integridade: Canais orgânicos e inbound relacional não recebem rateio artificial de mídia paga; o traço explícito (—) evita distorção de CPL.</span>
+</div>
+</section>
+<!-- 8. FAIXA COMPARATIVA DE CAMPANHAS -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<h3 class="text-section-title font-section-title text-white">Desempenho por campanha ativa</h3>
+<span class="text-metadata font-metadata text-muted-text">Monitoramento de ritmo e ações vinculadas ao calendário</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Campanha 1 -->
+<div class="p-space-lg rounded-xl bg-surface-base border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-outline-variant/30">Campanha 01</span>
+<span class="text-metadata font-metadata text-emerald-400 font-medium">92% da meta</span>
+</div>
+<h4 class="text-[18px] font-semibold font-title-lg text-white mt-2">Crescimento B2B</h4>
+<div class="grid grid-cols-2 gap-2 my-3 py-2 border-y border-outline-variant/20 font-metadata text-metadata">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">1.280</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">540</span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<span class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Próxima ação no calendário:</span>
+<p class="text-label font-label text-mist-text mt-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-focus-blue" data-icon="event">event</span>
+                Disparo newsletter técnica (23/09)
+              </p>
+</div>
+</div>
+<!-- Campanha 2 -->
+<div class="p-space-lg rounded-xl bg-surface-base border border-outline-variant/30 flex flex-col justify-between border-l-2 border-l-amber-400">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-outline-variant/30">Campanha 02</span>
+<span class="text-metadata font-metadata text-amber-300 font-medium">78% da meta</span>
+</div>
+<h4 class="text-[18px] font-semibold font-title-lg text-white mt-2">Lançamento de solução</h4>
+<div class="grid grid-cols-2 gap-2 my-3 py-2 border-y border-outline-variant/20 font-metadata text-metadata">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">740</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">280</span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-metadata text-amber-300 uppercase tracking-wider">2 ações atrasadas</span>
+<span class="text-[10px] font-metadata text-muted-text">Gargalo criativo</span>
+</div>
+<p class="text-label font-label text-mist-text mt-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-amber-400" data-icon="schedule">schedule</span>
+                Reunião de criativos de conversão (22/09)
+              </p>
+</div>
+</div>
+<!-- Campanha 3 -->
+<div class="p-space-lg rounded-xl bg-surface-base border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-metadata font-metadata px-2 py-0.5 rounded bg-surface-raised text-focus-blue border border-outline-variant/30">Campanha 03</span>
+<span class="text-metadata font-metadata text-emerald-400 font-medium">88% da meta</span>
+</div>
+<h4 class="text-[18px] font-semibold font-title-lg text-white mt-2">Relacionamento &amp; Base</h4>
+<div class="grid grid-cols-2 gap-2 my-3 py-2 border-y border-outline-variant/20 font-metadata text-metadata">
+<div>
+<span class="text-muted-text">Leads:</span>
+<span class="text-white font-medium ml-1">440</span>
+</div>
+<div>
+<span class="text-muted-text">Qualificados:</span>
+<span class="text-focus-blue font-medium ml-1">164</span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<span class="text-[11px] font-metadata text-muted-text uppercase tracking-wider">Próxima ação no calendário:</span>
+<p class="text-label font-label text-mist-text mt-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-focus-blue" data-icon="event">event</span>
+                Ajuste de fluxo de cadência (24/09)
+              </p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER (Prescribed Component: Footer) -->
+<footer class="w-full border-t border-outline-variant/20 bg-canvas-midnight mt-12">
+<div class="flex flex-col md:flex-row items-center justify-between px-margin py-space-lg w-full text-metadata font-metadata text-muted-text gap-4">
+<div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+<p>© 2026 Prometeus Command Center. Dados sincronizados para tomada de decisão executiva.</p>
+<span class="hidden md:inline text-outline-variant/50">|</span>
+<p class="text-outline">Cenário ilustrativo em 21 set 2026, 09:00</p>
+</div>
+<!-- Links definidos no Shared Components JSON -->
+<div class="flex items-center gap-6">
+<a class="text-muted-text hover:text-mist-text transition-colors" href="#">Integridade &amp; Auditoria</a>
+<a class="text-muted-text hover:text-mist-text transition-colors" href="#">Status do Sistema</a>
+<a class="text-muted-text hover:text-mist-text transition-colors" href="#">Conexão CRM</a>
+</div>
+</div>
+<div class="px-margin py-2.5 bg-surface-base/50 border-t border-outline-variant/10 flex flex-wrap items-center justify-between text-[11px] font-metadata text-muted-text">
+<span>E-mail e WhatsApp: fechamento semanal informado ao Hermes por campanha e ação do calendário</span>
+<span>CRM: próxima etapa, após validação deste dashboard (arquitetura em validação de negócio)</span>
+<span class="text-focus-blue font-medium">Prometeus · Tecnologia que amplia pessoas</span>
+</div>
+</footer>
+</div>
+</body></html>

@@ -12,6 +12,7 @@ import {
   dockerComposeAvailable,
 } from '../infra/postgres/test/helpers/postgres-compose.mjs';
 import { hashPassword, verifyPassword } from '../services/app-api/src/auth/service.js';
+import { discoverMigrations } from '../infra/postgres/src/migration-files.mjs';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 
@@ -114,14 +115,15 @@ function verifyMigrationLedger(harness) {
     harness,
     "select string_agg(version, ',' order by version) from infra.schema_migrations",
   );
-  const expected = Array.from({ length: 18 }, (_, index) => String(index + 1).padStart(4, '0')).join(',');
+  const versions = discoverMigrations(join(repositoryRoot, 'infra/postgres/migrations')).map(({ version }) => version);
+  const expected = versions.join(',');
   if (ledger !== expected) throw new Error(`Unexpected migration ledger: ${ledger}`);
 
   const secondMigration = harness.migrate();
-  if (!secondMigration.stdout.includes('"applied":[]') || !secondMigration.stdout.includes('"0018"')) {
+  if (!secondMigration.stdout.includes('"applied":[]') || !versions.every(version => secondMigration.stdout.includes(`"${version}"`))) {
     throw new Error('Second migration run was not a complete idempotent replay');
   }
-  console.log('Migration ledger 0001-0018 and idempotent replay verified');
+  console.log(`Migration ledger ${versions[0]}-${versions.at(-1)} and idempotent replay verified`);
 }
 
 function seedInertStructuredPlan(harness) {

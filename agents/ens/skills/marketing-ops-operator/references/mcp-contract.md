@@ -26,7 +26,7 @@ types inside `marketing_ops_prepare_plan_v1`:
 `campaign.create_draft`, `campaign.update`, `campaign_item.create`,
 `campaign_item.reschedule`, `content.create_draft`,
 `content.version_create`, `artifact.link_existing`, `campaign.note_add`,
-`approval.submit_editorial`, `approval.submit_operational`.
+`approval.submit_editorial`, `approval.submit_operational`, `campaign.results_record`.
 
 There is no decision action. Never invent or send `approval.approve`,
 `approval.reject`, `approval.decide`, a request status mutation, or any alias.
@@ -272,6 +272,14 @@ prepare it for editorial approval. The preview must say that the new version
 will be immutable. After executing that confirmed plan, read the server-created
 version and prepare `approval.submit_editorial` as a separate plan requiring a
 new confirmation. Never infer approval submission from the freeze confirmation.
+
+## Weekly measured campaign results
+
+For `campaign.results_record`, load
+`skill_view(name="marketing-ops-operator", file_path="references/campaign-results.md")`.
+Read the campaign using `include_results: true` for exact source/report IDs and
+current versions. The proposal requires a measured reporting window, known
+values only and the existing human-reviewed plan card. It does not import leads.
 
 ## Result handling
 

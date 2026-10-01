@@ -1,7 +1,7 @@
 ---
 name: marketing-ops-operator
 description: Use when a Nexus user conversationally asks to inspect, create, or change Marketing Ops campaigns or campaign items, especially when a write requires one contextual confirmation.
-version: 1.3.3
+version: 1.4.0
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -68,6 +68,7 @@ direct mutation tool. The exact action allowlist is:
 - `content.version_create`
 - `artifact.link_existing`
 - `campaign.note_add`
+- `campaign.results_record`
 - `approval.submit_editorial`
 - `approval.submit_operational`
 
@@ -159,6 +160,14 @@ attempt to target an update through `campaign_ref` in the creation plan.
 Never expose or request `delegation_token`, `idempotency_key`, `expected_version`, scopes, tenant IDs, actor IDs, token claims, or MCP tool names. Do not expose raw error codes, tool arguments, transport details, or internal validation paths; summarize failures in natural business language. Ask a follow-up only when a human business decision is genuinely missing.
 
 ## Result handling
+
+For weekly email/WhatsApp or paid-media reporting, read the exact campaign with
+`include_results: true` first. Use only returned sources and reports, and map
+measured values to `campaign.results_record` using the reporting section of
+`references/mcp-contract.md`. Unknown values stay omitted; clicks, conversations,
+identified leads and sales are different measurements. Never create contacts
+from aggregate counts. A revision replaces a named report using its current
+version and requires the same reviewed plan card as a new report.
 
 - Report identifiers and status only after the tool returns them.
 - A partial result is not complete success. List completed, failed, and pending actions plainly.

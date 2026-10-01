@@ -1,5 +1,7 @@
 services:
   marketing-ops:
+    environment:
+      ADS_PUBLIC_ORIGIN: https://${NEXUS_PUBLIC_APP_HOST:-app.solucoes-nexus.tech}
     labels:
       traefik.enable: "false"
 

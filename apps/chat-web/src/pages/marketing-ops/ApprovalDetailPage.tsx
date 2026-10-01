@@ -89,7 +89,7 @@ export default function ApprovalDetailPage({ client = marketingOpsClient, idempo
       ? 'Seu perfil não tem permissão para realizar esta decisão.'
       : 'O serviço não concluiu a operação. Tente novamente e use a correlação abaixo caso o erro persista.';
   return <div className="min-h-screen text-text-primary"><Sidebar />
-    <MarketingOpsMobileBar label="Detalhe da aprovação" icon={<ClipboardCheck className="h-4 w-4 text-brand-primary" />} />
+    <MarketingOpsMobileBar label="Detalhe da aprovação" icon={<ClipboardCheck className="h-4 w-4 text-brand-accent" />} />
     <main className="min-h-screen md:ml-20"><div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 md:py-8">
       <Link to="/marketing-ops/approvals" className="inline-flex items-center text-sm font-medium"><ArrowLeft className="mr-2 h-4 w-4" />Voltar à fila</Link>
       {!valid ? <Alert variant="destructive" className="mt-5"><AlertCircle className="h-4 w-4" /><AlertTitle>Identificador inválido</AlertTitle></Alert>
@@ -99,7 +99,7 @@ export default function ApprovalDetailPage({ client = marketingOpsClient, idempo
               <header className="my-5"><div className="flex flex-wrap gap-2"><Badge>{statusLabel[approval.status] ?? approval.status}</Badge><Badge variant="outline">{kindLabel[approval.kind] ?? approval.kind}</Badge><Badge variant="secondary">Risco {riskLabel[approval.riskLevel] ?? approval.riskLevel}</Badge></div>
                 <h1 className="mt-3 text-3xl font-bold">Solicitação de aprovação</h1><p className="mt-2 text-text-secondary">{approval.reason}</p></header>
               <ApprovalPreview approval={approval} />
-              <section className="mt-4 rounded-lg border bg-white/70 p-4"><h2 className="font-semibold">Histórico</h2>
+              <section className="mt-4 rounded-lg border bg-card p-4"><h2 className="font-semibold">Histórico</h2>
                 <ol className="mt-2 grid gap-2 text-sm"><li>Solicitada por {approval.requestedBy} em {new Date(approval.createdAt).toLocaleString('pt-BR')}</li>
                   {approval.supersedesRequestId ? <li>Ciclo anterior: <Link className="underline" to={`/marketing-ops/approvals/${approval.supersedesRequestId}`}>{approval.supersedesRequestId}</Link></li> : null}
                   {approval.decision ? <li><p>Decisão: {decisionLabel[approval.decision.decision] ?? approval.decision.decision} em {new Date(approval.decision.createdAt).toLocaleString('pt-BR')}</p>

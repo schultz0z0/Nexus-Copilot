@@ -3,12 +3,13 @@ import { Megaphone, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "./Sidebar";
 import { useState } from "react";
+import { BrandLogo } from "./BrandLogo";
 
 export const TopBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 md:left-20 right-0 h-16 flex items-center justify-between px-4 md:px-8 z-40 bg-white/50 backdrop-blur-md border-b border-white/20 md:bg-transparent md:border-none md:backdrop-filter-none">
+    <header className="fixed top-0 left-0 md:left-20 right-0 h-16 flex items-center justify-between px-4 md:px-8 z-40 bg-card backdrop-blur-md border-b border-border md:bg-transparent md:border-none md:backdrop-filter-none">
       <div className="flex items-center gap-2">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
@@ -22,17 +23,16 @@ export const TopBar = () => {
           </SheetContent>
         </Sheet>
         
-        <div className="flex items-center gap-2 glass-surface rounded-full px-4 py-2 shadow-glass">
-          <img src="/icon-robo.svg" alt="Ícone" className="h-5 w-auto" />
-          <span className="text-sm font-medium">Nexus AI</span>
+        <div className="flex items-center gap-2 px-1 py-2">
+          <BrandLogo className="w-32 sm:w-40" />
         </div>
       </div>
 
       
 
-      <Button className="chat-send-button text-white rounded-xl px-6 shadow-glass hover:scale-105 transition-transform">
+      <Button className="chat-send-button text-white rounded-xl px-3 sm:px-6 shadow-glass transition-colors">
         <Megaphone className="w-4 h-4 mr-2" />
-        Marketing ENS
+        Prometeus
       </Button>
     </header>
   );

@@ -45,6 +45,35 @@ test("rejects weak and placeholder assertion keys before signing", async () => {
   }, config), /actor assertion input/i);
 });
 
+test("signs persisted PostgreSQL identity UUIDs without requiring version or variant bits", async () => {
+  const actor = {
+    id: "b0000000-0000-0000-0000-000000000001",
+    tenant_id: "a0000000-0000-0000-0000-000000000001",
+    role: "admin"
+  };
+  const token = await createActorAssertion({
+    actor, correlationId: "22222222-2222-4222-8222-222222222222",
+    method: "GET", path: "/v1/campaigns"
+  }, config);
+  const { payload } = await jwtVerify(token, new TextEncoder().encode(key), {
+    algorithms: ["HS256"], issuer: config.issuer, audience: config.audience
+  });
+  assert.equal(payload.sub, actor.id);
+  assert.equal(payload.tenant_id, actor.tenant_id);
+  assert.equal(payload.actor_role, "admin");
+});
+
+test("still rejects malformed identities and non-UUID request correlation IDs", async () => {
+  const input = {
+    actor: { id: "b0000000-0000-0000-0000-000000000001", tenant_id: "a0000000-0000-0000-0000-000000000001", role: "admin" },
+    correlationId: "22222222-2222-4222-8222-222222222222", method: "GET", path: "/v1/campaigns"
+  };
+  for (const field of ["id", "tenant_id"]) {
+    await assert.rejects(() => createActorAssertion({ ...input, actor: { ...input.actor, [field]: "not-a-uuid" } }, config), /actor assertion input/i);
+  }
+  await assert.rejects(() => createActorAssertion({ ...input, correlationId: "00000000-0000-0000-0000-000000000001" }, config), /actor assertion input/i);
+});
+
 function expectHeader(header) {
   assert.deepEqual(header, { alg: "HS256", typ: "JWT", kid: "bff-v1" });
 }

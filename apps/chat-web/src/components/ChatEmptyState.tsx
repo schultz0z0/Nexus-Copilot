@@ -58,14 +58,14 @@ export function ChatEmptyState({
       <div className="flex flex-col items-center text-center max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
         <Mascot />
         <div className={cn("mt-8 space-y-4", "[@media(max-height:820px)]:mt-4 [@media(max-height:820px)]:space-y-3")}>
-          <h2 className={cn("text-3xl md:text-5xl font-bold text-text-primary tracking-tight", "[@media(max-height:820px)]:md:text-4xl")}>
-            Inteligência que conhece o mercado de seguros.
+          <h2 className={cn("text-3xl md:text-5xl font-medium brand-heading tracking-tight", "[@media(max-height:820px)]:md:text-4xl")}>
+            Amplie a capacidade da sua equipe com IA.
           </h2>
           <p className={cn(
             "text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed",
             "[@media(max-height:820px)]:md:text-lg",
           )}>
-            Crie estratégias, redações e peças visuais em segundos com a curadoria da ENS.
+            Transforme ideias em estratégias, conteúdos e peças visuais com a Prometeus.
           </p>
         </div>
       </div>
@@ -80,11 +80,11 @@ export function ChatEmptyState({
           <button
             key={card.title}
             onClick={() => setPrompt(card.prompt)}
-            className="text-left glass-surface p-4 rounded-2xl hover:bg-white/60 transition-all hover:scale-[1.01] group border border-white/20 hover:border-brand-primary/30 shadow-sm hover:shadow-lg"
+            className="text-left glass-surface p-4 rounded-2xl hover:bg-accent transition-all hover:scale-[1.01] group border border-border hover:border-brand-primary/30 shadow-sm hover:shadow-lg"
           >
             <div className="flex items-start gap-4">
               <div className="bg-brand-primary/10 p-3 rounded-xl group-hover:bg-brand-primary/20 transition-colors shrink-0">
-                <card.icon className="w-5 h-5 text-brand-primary" />
+                <card.icon className="w-5 h-5 text-brand-accent" />
               </div>
               <div className="flex flex-col">
                 <h3 className="font-semibold text-text-primary text-sm">{card.title}</h3>

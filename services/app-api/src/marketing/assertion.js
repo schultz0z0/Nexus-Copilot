@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import { SignJWT } from "jose";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// IAM stores PostgreSQL UUIDs, including deterministic seed IDs without RFC
+// version/variant bits. Identity comes from the validated database session;
+// its bit layout is not an authorization check. Keep request IDs strict below.
+const identityUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const placeholder = /change[-_ ]?me|placeholder|example|replace[-_ ]?me/i;
 
 export function validateAssertionConfig(config) {
@@ -27,7 +31,7 @@ export async function createActorAssertion(input, rawConfig, now = new Date()) {
   const actor = input?.actor;
   const method = String(input?.method ?? "").toUpperCase();
   const path = String(input?.path ?? "");
-  if (!actor || !uuid.test(actor.id) || !uuid.test(actor.tenant_id) ||
+  if (!actor || !identityUuid.test(actor.id) || !identityUuid.test(actor.tenant_id) ||
       !["member", "manager", "admin"].includes(actor.role) ||
       !uuid.test(input.correlationId) || !/^[A-Z]+$/.test(method) ||
       !path.startsWith("/") || path.includes("?")) {

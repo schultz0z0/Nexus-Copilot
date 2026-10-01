@@ -69,7 +69,7 @@ export function CourseReferencePicker({
               onChange={(event) => setSearchValue(event.target.value)}
               disabled={disabled}
               maxLength={200}
-              className="h-11 rounded-[8px] bg-white/80 pl-9"
+              className="h-11 rounded-[8px] bg-card pl-9"
             />
             {referencesQuery.isFetching ? (
               <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-text-muted" />
@@ -88,7 +88,7 @@ export function CourseReferencePicker({
         ) : null}
 
         {referencesQuery.isError ? (
-          <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+          <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
             <AlertTitle>Catálogo oficial indisponível</AlertTitle>
             <AlertDescription>
               A pesquisa não foi concluída.
@@ -98,7 +98,7 @@ export function CourseReferencePicker({
         ) : null}
 
         {referencesQuery.data?.data.length ? (
-          <div className="glass-surface shadow-glass divide-y divide-white/50 overflow-hidden rounded-[8px] border-white/60">
+          <div className="glass-surface shadow-glass divide-y divide-border overflow-hidden rounded-[8px] border-border">
             {referencesQuery.data.data.map((reference) => (
               <Button
                 key={`${reference.documentId}:${reference.referenceKey}`}
@@ -145,7 +145,7 @@ export function CourseReferencePicker({
             })}
             disabled={disabled}
             maxLength={200}
-            className="h-11 rounded-[8px] bg-white/80"
+            className="h-11 rounded-[8px] bg-card"
           />
         </div>
         <div className="space-y-1.5">
@@ -160,7 +160,7 @@ export function CourseReferencePicker({
             })}
             disabled={disabled}
             maxLength={300}
-            className="h-11 rounded-[8px] bg-white/80"
+            className="h-11 rounded-[8px] bg-card"
           />
         </div>
       </>

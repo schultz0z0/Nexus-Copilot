@@ -46,11 +46,11 @@ describe("Picture workspace client", () => {
       fetch: async () => Response.json({ error: "picture_approval_required" }, { status: 409 }),
     });
 
-    await expect(client.newPiece("workspace-1")).rejects.toMatchObject<Partial<PictureWorkspaceApiError>>({
+    await expect(client.newPiece("workspace-1")).rejects.toMatchObject({
       code: "picture_approval_required",
       status: 409,
       message: "Aprove a peça final antes de criar uma nova.",
-    });
+    } satisfies Partial<PictureWorkspaceApiError>);
   });
 
   it("fails before fetch when there is no authenticated session", async () => {

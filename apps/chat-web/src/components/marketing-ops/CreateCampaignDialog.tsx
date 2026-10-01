@@ -52,7 +52,7 @@ export function CreateCampaignDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-[8px] border-white/60 bg-white/90 text-text-primary shadow-glass backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl sm:max-w-md">
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle>Nova campanha</DialogTitle>
@@ -71,7 +71,7 @@ export function CreateCampaignDialog({
               maxLength={200}
               aria-invalid={Boolean(details)}
               aria-describedby={details ? 'campaign-create-error' : undefined}
-              className="h-11 rounded-[8px] bg-white/80"
+              className="h-11 rounded-[8px] bg-card"
             />
             {details ? (
               <div id="campaign-create-error" role="alert" className="rounded-[8px] border border-red-200 bg-red-50 p-3 text-sm text-red-800">

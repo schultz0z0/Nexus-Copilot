@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 !*.env.example
+infra/app/secrets/
+infra/postgres/secrets/
 
 # Dependencies and build output
 node_modules/

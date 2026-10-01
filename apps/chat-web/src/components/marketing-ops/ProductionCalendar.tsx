@@ -37,7 +37,7 @@ const priorityLabels: Record<MarketingOpsItemPriority, string> = {
 };
 
 const itemClasses: Record<MarketingOpsItemStatus, string> = {
-  draft: 'border-slate-300 bg-slate-50 text-slate-800',
+  draft: 'border-border bg-background text-foreground',
   ready: 'border-cyan-300 bg-cyan-50 text-cyan-950',
   in_review: 'border-violet-300 bg-violet-50 text-violet-950',
   completed: 'border-emerald-300 bg-emerald-50 text-emerald-950',
@@ -129,13 +129,13 @@ export function ProductionCalendar({
     <div className="space-y-5">
       <div
         data-testid="production-calendar-scroll"
-        className="glass-surface shadow-glass overflow-x-auto rounded-[8px] border-white/60"
+        className="glass-surface shadow-glass overflow-x-auto rounded-[8px] border-border"
       >
         <div
           role="grid"
           aria-label={view === 'week' ? 'Calendário semanal' : 'Calendário mensal'}
           className={cn(
-            'grid min-w-[760px] grid-cols-7 bg-white/40',
+            'grid min-w-[760px] grid-cols-7 bg-card',
             view === 'week' ? 'min-h-[420px]' : 'auto-rows-[150px]'
           )}
         >
@@ -150,9 +150,9 @@ export function ProductionCalendar({
                     role="gridcell"
                     aria-label={formatDay(day, timeZone, 'long')}
                     className={cn(
-                      'min-w-0 border-b border-r border-slate-200 p-2',
+                      'min-w-0 border-b border-r border-border p-2',
                       view === 'week' && 'min-h-[420px]',
-                      view === 'month' && !day.startsWith(currentMonth) && 'bg-slate-50/70 text-text-muted'
+                      view === 'month' && !day.startsWith(currentMonth) && 'bg-background text-text-muted'
                     )}
                   >
                     <time dateTime={day} className="block text-xs font-semibold capitalize text-text-secondary">
@@ -183,13 +183,13 @@ export function ProductionCalendar({
 
       <section
         aria-label="Lista acessível do período"
-        className="glass-surface shadow-glass rounded-[8px] border-white/60 bg-white/55 p-4"
+        className="glass-surface shadow-glass rounded-[8px] border-border bg-card p-4"
       >
         <h2 className="text-lg font-semibold text-text-primary">Lista acessível do período</h2>
         <p className="mt-1 text-sm text-text-secondary">
           Mesmos {items.length} {items.length === 1 ? 'item' : 'itens'} do calendário, em ordem da agenda.
         </p>
-        <div className="mt-4 divide-y divide-slate-200">
+        <div className="mt-4 divide-y divide-border">
           {items.length === 0 ? (
             <p className="py-4 text-sm text-text-secondary">
               Nenhum item datado neste período. Itens sem data permanecem na visualização em lista.

@@ -34,7 +34,7 @@ const statusLabels: Record<MarketingOpsItemStatus, string> = {
   cancelled: 'Cancelado'
 };
 const statusClasses: Record<MarketingOpsItemStatus, string> = {
-  draft: 'border-slate-300 bg-slate-100 text-slate-700',
+  draft: 'border-border bg-muted text-text-secondary',
   ready: 'border-cyan-200 bg-cyan-50 text-cyan-800',
   in_review: 'border-violet-200 bg-violet-50 text-violet-800',
   completed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
@@ -110,10 +110,10 @@ export function ProductionItemTable({
 
   return (
     <>
-      <div className="glass-surface shadow-glass hidden overflow-hidden rounded-[8px] border-white/60 md:block">
+      <div className="glass-surface shadow-glass hidden overflow-hidden rounded-[8px] border-border md:block">
         <Table>
-          <TableHeader className="bg-white/45">
-            <TableRow className="hover:bg-white/45">
+          <TableHeader className="bg-card">
+            <TableRow className="hover:bg-accent">
               {selectable ? (
                 <TableHead className="w-12">
                   <Checkbox
@@ -137,7 +137,7 @@ export function ProductionItemTable({
           </TableHeader>
           <TableBody>
             {items.map((item) => (
-              <TableRow key={item.id} className="group bg-white/35 hover:bg-white/55">
+              <TableRow key={item.id} className="group bg-card hover:bg-accent">
                 {selectable ? (
                   <TableCell>
                     <Checkbox
@@ -154,7 +154,7 @@ export function ProductionItemTable({
                     onClick={() => onOpen(item.id)}
                     className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                   >
-                    <span className="block font-semibold text-text-primary group-hover:text-brand-primary">
+                    <span className="block font-semibold text-text-primary group-hover:text-brand-accent">
                       {decodeUnicode(item.title)}
                     </span>
                     <span className="mt-1 block text-xs text-text-muted">
@@ -204,9 +204,9 @@ export function ProductionItemTable({
 
       <div className="grid grid-cols-1 gap-3 md:hidden">
         {items.map((item) => (
-          <article key={item.id} className="glass-surface shadow-glass rounded-[8px] border-white/60 p-4">
+          <article key={item.id} className="glass-surface shadow-glass rounded-[8px] border-border p-4">
             {selectable ? (
-              <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="mb-3 flex items-center gap-2 border-b border-border pb-3">
                 <Checkbox
                   checked={selected.has(item.id)}
                   onCheckedChange={(checked) =>
@@ -249,7 +249,7 @@ export function ProductionItemTable({
                 </dd>
               </div>
             </dl>
-            <div className="mt-4 border-t border-slate-100 pt-3">
+            <div className="mt-4 border-t border-border pt-3">
               <OperationalFlags item={item} />
               <div className="mt-3 flex justify-end">
                 <Button type="button" variant="outline" onClick={() => onOpen(item.id)} className="h-10 rounded-[8px]">

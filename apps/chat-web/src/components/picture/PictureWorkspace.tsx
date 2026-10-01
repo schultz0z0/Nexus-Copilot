@@ -75,13 +75,13 @@ export const PictureWorkspace = ({ client: providedClient }: PictureWorkspacePro
   if (state.error && !state.workspace) {
     return (
       <div className="flex h-[calc(100dvh-6rem)] flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm text-red-600">{state.error.message}</p>
+        <p className="text-sm text-status-error">{state.error.message}</p>
         <Button variant="outline" onClick={() => void state.refresh()}>Tentar novamente</Button>
       </div>
     );
   }
   if (state.isLoading || !state.workspace) {
-    return <div className="flex h-[calc(100dvh-6rem)] items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-5 w-5 animate-spin" />Preparando seu workspace Picture...</div>;
+    return <div className="flex h-[calc(100dvh-6rem)] items-center justify-center gap-2 text-sm text-text-muted"><Loader2 className="h-5 w-5 animate-spin" />Preparando seu workspace Picture...</div>;
   }
 
   const panel = (
@@ -97,11 +97,11 @@ export const PictureWorkspace = ({ client: providedClient }: PictureWorkspacePro
   );
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] min-h-0 flex-col bg-slate-50/50">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur md:px-6">
+    <div className="flex h-[calc(100dvh-6rem)] min-h-0 flex-col bg-background">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 backdrop-blur md:px-6">
         <div className="min-w-0">
-          <h1 className="truncate text-base font-semibold text-slate-900">{state.workspace.title || "Nova peça"}</h1>
-          <p className="text-xs text-slate-500">Picture-Hermes · {statusLabels[state.workspace.status] ?? state.workspace.status}</p>
+          <h1 className="truncate text-base font-semibold text-foreground">{state.workspace.title || "Nova peça"}</h1>
+          <p className="text-xs text-text-muted">Picture-Hermes · {statusLabels[state.workspace.status] ?? state.workspace.status}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="lg:hidden">
@@ -123,7 +123,7 @@ export const PictureWorkspace = ({ client: providedClient }: PictureWorkspacePro
         </div>
       </header>
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,11fr)_minmax(22rem,9fr)]">
-        <main className="min-h-0 border-r border-slate-200 bg-white">
+        <main className="min-h-0 border-r border-border bg-card">
           <ChatInterface
             key={state.workspace.chat_session_id}
             experience="picture"
@@ -133,10 +133,10 @@ export const PictureWorkspace = ({ client: providedClient }: PictureWorkspacePro
             onActivitySettled={() => void state.refresh()}
           />
         </main>
-        <aside className="hidden min-h-0 flex-col bg-white lg:flex">
-          <div className="shrink-0 border-b border-slate-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Arquivos da peça</h2>
-            <p className="text-xs text-slate-500">Workspace temporário e candidata final</p>
+        <aside className="hidden min-h-0 flex-col bg-card lg:flex">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold text-foreground">Arquivos da peça</h2>
+            <p className="text-xs text-text-muted">Workspace temporário e candidata final</p>
           </div>
           <div className="min-h-0 flex-1">{panel}</div>
         </aside>

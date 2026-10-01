@@ -122,6 +122,19 @@ services:
       MARKETING_OPS_FEATURE_APPROVALS: ${MARKETING_OPS_FEATURE_APPROVALS:-false}
       MARKETING_OPS_STRUCTURED_PLAN_EXECUTION: ${MARKETING_OPS_STRUCTURED_PLAN_EXECUTION:-false}
       MARKETING_OPS_TENANT_TIME_ZONE: ${MARKETING_OPS_TENANT_TIME_ZONE:-America/Sao_Paulo}
+      ADS_PUBLIC_ORIGIN: ${ADS_PUBLIC_ORIGIN:-}
+      ADS_SETUP_DIRECTORY: /app/data/ads
+      ADS_GOOGLE_CLIENT_ID: ${ADS_GOOGLE_CLIENT_ID:-}
+      ADS_GOOGLE_API_VERSION: ${ADS_GOOGLE_API_VERSION:-}
+      ADS_GOOGLE_SCOPES: ${ADS_GOOGLE_SCOPES:-https://www.googleapis.com/auth/adwords}
+      ADS_GOOGLE_LOGIN_CUSTOMER_ID: ${ADS_GOOGLE_LOGIN_CUSTOMER_ID:-}
+      ADS_META_CLIENT_ID: ${ADS_META_CLIENT_ID:-}
+      ADS_META_API_VERSION: ${ADS_META_API_VERSION:-}
+      ADS_META_LOGIN_CONFIG_ID: ${ADS_META_LOGIN_CONFIG_ID:-}
+      ADS_META_SCOPES: ${ADS_META_SCOPES:-ads_read}
+      ADS_LINKEDIN_CLIENT_ID: ${ADS_LINKEDIN_CLIENT_ID:-}
+      ADS_LINKEDIN_API_VERSION: ${ADS_LINKEDIN_API_VERSION:-}
+      ADS_LINKEDIN_SCOPES: ${ADS_LINKEDIN_SCOPES:-r_ads r_ads_reporting}
     depends_on:
       artifact-server:
         condition: service_healthy
@@ -129,6 +142,8 @@ services:
       - app-internal
       - postgres-data
       - hermes-net
+    volumes:
+      - ads-setup-data:/app/data/ads
     secrets:
       - postgres_app_password
       - marketing_ops_bff_assertion_key
@@ -164,6 +179,8 @@ services:
       start_period: 5s
 
 volumes:
+  ads-setup-data:
+    name: ${ADS_SETUP_VOLUME_NAME:-${COMPOSE_PROJECT_NAME:-ens-app}-ads-setup-data}
   artifact-data:
     name: ${ARTIFACT_DATA_VOLUME_NAME:-ens-artifact-data}
   bridge-data:

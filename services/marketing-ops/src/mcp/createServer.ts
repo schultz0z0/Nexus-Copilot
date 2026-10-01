@@ -9,6 +9,8 @@ import type { DelegatedActor } from '../delegation/verifier.js';
 import { getCampaign, listAuditEvents, listCampaigns } from '../domain/queries.js';
 import { listProductionSchedule } from '../domain/queries.js';
 import { listCampaignTimeline } from '../domain/timeline.js';
+import { listLeadSources, listResultReports } from '../domain/leads.js';
+import { getLeadResults } from '../domain/leadsResults.js';
 import { getContentAsset, listContentAssets, listContentVersions } from '../domain/content.js';
 import { listItemArtifacts } from '../domain/itemArtifacts.js';
 import {
@@ -145,16 +147,22 @@ export function createMarketingOpsMcpServer(deps: MarketingOpsMcpDependencies): 
   }));
 
   server.registerTool('marketing_ops_get_campaign_v1', {
-    title: 'Get campaign', description: 'Gets one campaign visible to the delegated actor.',
-    inputSchema: z.object({ delegation_token: delegationToken, campaign_id: uuid })
+    title: 'Get campaign', description: 'Gets one visible campaign. include_results adds configured lead sources, current measured reports and result totals for a human-reviewed weekly report plan.',
+    inputSchema: z.object({ delegation_token: delegationToken, campaign_id: uuid, include_results: z.boolean().default(false) })
   }, async (input) => runTool('marketing_ops_get_campaign_v1', async (toolCallId, setActor) => {
       if (!deps.features.read) throw appError('feature_disabled', 503, 'Feature read is disabled');
       const actor = await verifyDelegation(input.delegation_token, ['campaign:read'], deps);
       setActor(actor);
       rateLimiter.consume(actor.userId, 'marketing_ops_get_campaign_v1', 'read');
-      return { value: { data: await getCampaign(createMcpCommandContext(
+      const context = createMcpCommandContext(
         deps.pool, actor, 'marketing_ops_get_campaign_v1', toolCallId
-      ), input.campaign_id) } };
+      );
+      const data = await getCampaign(context, input.campaign_id);
+      if (!input.include_results) return { value: { data } };
+      const leadSources = await listLeadSources(context, input.campaign_id);
+      const reports = await listResultReports(context, input.campaign_id);
+      const results = await getLeadResults(context, { campaignId: input.campaign_id });
+      return { value: { data, leadSources, reports, results } };
   }));
 
   server.registerTool('marketing_ops_list_campaign_items_v1', {

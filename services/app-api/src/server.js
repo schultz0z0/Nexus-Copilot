@@ -10,6 +10,8 @@ import { chatRoutes } from "./chat/routes.js";
 import { adminRoutes } from "./admin/routes.js";
 import { attachmentRoutes } from "./attachments/routes.js";
 import { marketingRoutes } from "./marketing/routes.js";
+import { captureRoutes } from "./marketing/capture.js";
+import { adsOAuthRoutes, requestLogSerializer } from "./marketing/adsOAuth.js";
 
 /**
  * Creates and configures the Fastify App API application.
@@ -25,7 +27,8 @@ export async function createApp(options = {}) {
   const db = options.db || createDatabase(config.db);
 
   const app = Fastify({
-    logger: options.logger ?? false,
+    logger: options.logger ? { ...(typeof options.logger === "object" ? options.logger : {}),
+      serializers: { ...(typeof options.logger === "object" ? options.logger.serializers : {}), req: requestLogSerializer } } : false,
   });
 
   await app.register(fastifyCookie, {
@@ -57,6 +60,8 @@ export async function createApp(options = {}) {
   await app.register(attachmentRoutes, { db, config });
   if (config.marketingOps) {
     await app.register(marketingRoutes, { db, config, fetch: options.fetch });
+    await app.register(captureRoutes, { config, fetch: options.fetch, captureProxyLookup: options.captureProxyLookup });
+    await app.register(adsOAuthRoutes, { db, config, fetch: options.fetch });
   }
 
   if (db?.close) {

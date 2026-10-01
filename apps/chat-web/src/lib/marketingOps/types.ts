@@ -570,7 +570,7 @@ export type MarketingOpsPreparedPlanStatus =
 
 export type MarketingOpsPreparedPlanListStatus = MarketingOpsPreparedPlanStatus | 'all';
 
-export type MarketingOpsPlanAction =
+export type MarketingOpsKnownPlanAction =
   | { type: 'campaign.create_draft'; ref: string; name: string; course_slug?: string }
   | { type: 'campaign.update'; campaign_id: string; expected_version: number; patch: Record<string, unknown> }
   | { type: 'campaign_item.create'; kind: string; title: string; campaign_id?: string; campaign_ref?: string; priority?: string; channel?: string; description?: string }
@@ -579,9 +579,11 @@ export type MarketingOpsPlanAction =
   | { type: 'content.version_create'; asset_id?: string; asset_ref?: string; expected_asset_version: number; body: string | null; metadata: Record<string, unknown>; freeze: boolean }
   | { type: 'artifact.link_existing'; item_id: string; expected_item_version: number; artifact_id: string; asset_id?: string }
   | { type: 'campaign.note_add'; campaign_id: string; expected_version: number; note: string }
+  | { type: 'campaign.results_record'; campaign_id: string; report_id?: string; expected_version?: number; report: { sourceId: string; actionId?: string | null; periodFrom: string; periodTo: string; timeZone: string; metrics: Partial<Record<'sent' | 'delivered' | 'opened' | 'clicked' | 'responded' | 'spend' | 'qualified' | 'sales' | 'revenue', number>>; notes?: string | null } }
   | { type: 'approval.submit_editorial'; campaign_id: string; asset_id: string; version_number: number; reason: string; risk_level?: MarketingOpsApprovalRisk; expires_at: string }
-  | { type: 'approval.submit_operational'; campaign_id: string; action_package: MarketingOpsCanonicalActionPackageInput; reason: string; risk_level?: MarketingOpsApprovalRisk; expires_at: string }
-  | { type: string; [key: string]: unknown };
+  | { type: 'approval.submit_operational'; campaign_id: string; action_package: MarketingOpsCanonicalActionPackageInput; reason: string; risk_level?: MarketingOpsApprovalRisk; expires_at: string };
+
+export type MarketingOpsPlanAction = MarketingOpsKnownPlanAction | { type: string; [key: string]: unknown };
 
 export interface MarketingOpsPreparedPlanSummary {
   id: string;
@@ -589,6 +591,7 @@ export interface MarketingOpsPreparedPlanSummary {
   status: MarketingOpsPreparedPlanStatus;
   expiresAt: string;
   actions: MarketingOpsPlanAction[];
+  actionLabels?: Array<{ actionIndex: number; campaign: string; source: string; action: string | null }>;
   requiredScopes: string[];
   result?: MarketingOpsPlanExecutionResult | null;
   executedAt?: string | null;

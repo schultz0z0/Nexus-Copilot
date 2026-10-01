@@ -77,7 +77,7 @@ export function InAppNotifications({
           type="button"
           variant="outline"
           size="icon"
-          className="relative h-10 w-10 rounded-[8px] bg-white/80"
+          className="relative h-10 w-10 rounded-[8px] bg-card"
           aria-label={`Notificações, ${unread.length} ${unread.length === 1 ? 'não lida' : 'não lidas'}`}
         >
           <Bell className="h-4 w-4" />
@@ -94,9 +94,9 @@ export function InAppNotifications({
       <PopoverContent
         align="end"
         aria-label="Notificações"
-        className="glass-surface w-[min(24rem,calc(100vw-2rem))] rounded-[8px] border-white/60 p-0 shadow-glass"
+        className="glass-surface w-[min(24rem,calc(100vw-2rem))] rounded-[8px] border-border p-0 shadow-glass"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
             <h2 className="font-semibold text-text-primary">Notificações</h2>
             <p aria-live="polite" className="text-xs text-text-muted">
@@ -127,7 +127,7 @@ export function InAppNotifications({
           </div>
         ) : notificationsQuery.isError ? (
           <div className="p-4 text-sm">
-            <p className="flex items-center font-medium text-red-800">
+            <p className="flex items-center font-medium text-status-error">
               <AlertCircle className="mr-2 h-4 w-4" />
               Não foi possível carregar as notificações
             </p>
@@ -153,12 +153,12 @@ export function InAppNotifications({
                 <button
                   type="button"
                   onClick={() => openNotification(notification)}
-                  className="flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-b-0 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary"
+                  className="flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary"
                 >
                   <span
                     aria-hidden="true"
                     className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                      notification.readAt === null ? 'bg-brand-primary' : 'bg-slate-300'
+                      notification.readAt === null ? 'bg-brand-primary' : 'bg-muted'
                     }`}
                   />
                   <span className="min-w-0">

@@ -66,6 +66,9 @@ export function deepLinkForCompletedAction(
 ): MarketingOpsDeepLink | null {
   const value = object(resource);
   if (!value) return null;
+  if (actionType === 'campaign.results_record' && typeof value.campaignId === 'string') {
+    return campaignDeepLink(value.campaignId);
+  }
   if (actionType.startsWith('approval.submit_') && typeof value.id === 'string') {
     return approvalDeepLink(value.id);
   }

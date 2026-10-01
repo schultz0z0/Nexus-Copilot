@@ -19,10 +19,10 @@ const config = {
   }
 };
 
-function db() {
+function db(sessionUser = user) {
   return {
     async query(sql) {
-      if (sql.includes("iam.resolve_session")) return { rows: [{ ...user, session_id: "s", expires_at: new Date(Date.now() + 60_000) }] };
+      if (sql.includes("iam.resolve_session")) return { rows: [{ ...sessionUser, session_id: "s", expires_at: new Date(Date.now() + 60_000) }] };
       if (sql.includes("avatar_url")) return { rows: [{ avatar_url: null }] };
       return { rows: [] };
     }, close: async () => {}
@@ -36,6 +36,31 @@ test("denies anonymous requests before opening the Marketing Ops connection", as
   assert.equal(response.statusCode, 401);
   assert.equal(called, false);
   await app.close();
+});
+
+test("lists campaigns and production for an authenticated seeded PostgreSQL identity", async () => {
+  const seeded = { ...user, user_id: "b0000000-0000-0000-0000-000000000001", tenant_id: "a0000000-0000-0000-0000-000000000001", role: "admin" };
+  const forwarded = [];
+  const app = await createApp({ config, db: db(seeded), fetch: async (url, init) => {
+    const { payload } = await jwtVerify(new Headers(init.headers).get("x-ens-actor-assertion"), new TextEncoder().encode(assertionKey), {
+      algorithms: ["HS256"], issuer: "ens-app-api", audience: "ens-marketing-ops"
+    });
+    assert.equal(payload.sub, seeded.user_id);
+    assert.equal(payload.tenant_id, seeded.tenant_id);
+    assert.equal(payload.actor_role, "admin");
+    forwarded.push(String(url));
+    return new Response(JSON.stringify({ data: [], page: { limit: 25, count: 0, nextCursor: null } }), { headers: { "content-type": "application/json" } });
+  } });
+  try {
+    for (const resource of ["campaigns", "campaign-items"]) {
+      const response = await app.inject({ method: "GET", url: `/api/marketing/${resource}?limit=25`, cookies: { ens_session: "opaque-session" } });
+      assert.equal(response.statusCode, 200);
+      assert.deepEqual(response.json().data, []);
+    }
+    assert.deepEqual(forwarded, ["http://marketing-ops:8091/v1/campaigns?limit=25", "http://marketing-ops:8091/v1/campaign-items?limit=25"]);
+  } finally {
+    await app.close();
+  }
 });
 
 test("strips forged identity and forwards a request-bound signed assertion", async () => {
@@ -238,4 +263,62 @@ test("passes through upstream error statuses (404, 409, 410, 503) without topolo
     assert.doesNotMatch(JSON.stringify(body), /marketing-ops:8091|topology/i);
     await app.close();
   }
+});
+
+test("proxies administrative Ads setup without forwarding forged session headers or returning credentials", async () => {
+  const admin = { ...user, role: "admin" };
+  const syntheticSecret = "synthetic-app-secret-for-proxy-regression";
+  const calls = [];
+  const app = await createApp({ config, db: db(admin), fetch: async (url, init) => {
+    const headers = new Headers(init.headers);
+    const { payload } = await jwtVerify(headers.get("x-ens-actor-assertion"), new TextEncoder().encode(assertionKey), {
+      algorithms: ["HS256"], issuer: "ens-app-api", audience: "ens-marketing-ops"
+    });
+    assert.equal(payload.actor_role, "admin");
+    assert.equal(payload.path, new URL(url).pathname);
+    assert.equal(headers.has("x-ens-oauth-session"), false);
+    assert.equal(headers.has("authorization"), false);
+    if (init.method === "POST") {
+      assert.equal(headers.get("if-match"), '"1"');
+      assert.equal(headers.get("idempotency-key"), "setup-proposal-1");
+      assert.equal(JSON.parse(init.body).clientSecret, syntheticSecret);
+    }
+    calls.push(String(url));
+    return new Response(JSON.stringify({ data: { hasClientSecret: true, version: 2 } }), {
+      headers: { "content-type": "application/json", etag: '"2"' }
+    });
+  } });
+  try {
+    for (const provider of ["meta", "google", "linkedin"]) {
+      for (const method of ["GET", "POST"]) {
+        const response = await app.inject({ method, url: `/api/marketing/ads-integrations/${provider}/setup`,
+          cookies: { ens_session: "opaque-session" },
+          headers: { "x-ens-oauth-session": "forged", authorization: "Bearer forged", "if-match": '"1"',
+            "idempotency-key": "setup-proposal-1", ...(method === "POST" ? { "content-type": "application/json" } : {}) },
+          ...(method === "POST" ? { payload: { clientId: "synthetic-client", clientSecret: syntheticSecret } } : {}) });
+        assert.equal(response.statusCode, 200);
+        assert.equal(response.headers.etag, '"2"');
+        assert.doesNotMatch(response.body, new RegExp(syntheticSecret));
+      }
+    }
+    assert.equal(calls.length, 6);
+  } finally { await app.close(); }
+});
+
+test("malformed Ads setup JSON never echoes submitted credential fragments in errors or logs", async () => {
+  const syntheticSecret = "synthetic-credential-must-not-be-echoed";
+  let logs = "";
+  let forwarded = false;
+  const app = await createApp({ config, db: db({ ...user, role: "admin" }),
+    logger: { stream: { write(chunk) { logs += chunk; } } },
+    fetch: async () => { forwarded = true; return new Response(); } });
+  try {
+    const response = await app.inject({ method: "POST", url: "/api/marketing/ads-integrations/meta/setup",
+      cookies: { ens_session: "opaque-session" }, headers: { "content-type": "application/json" },
+      payload: `{"clientSecret":${syntheticSecret}}` });
+    assert.equal(response.statusCode, 400);
+    assert.equal(forwarded, false);
+    assert.doesNotMatch(response.body, new RegExp(syntheticSecret));
+    assert.doesNotMatch(logs, new RegExp(syntheticSecret));
+  } finally { await app.close(); }
 });

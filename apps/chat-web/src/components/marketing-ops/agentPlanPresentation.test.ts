@@ -7,9 +7,22 @@ import {
   formatShortHash,
   formatShortId
 } from './agentPlanPresentation';
-import type { MarketingOpsPlanAction } from '@/lib/marketingOps/types';
+import type { MarketingOpsKnownPlanAction, MarketingOpsPlanAction } from '@/lib/marketingOps/types';
 
 describe('agentPlanPresentation', () => {
+  it('shows exact measurements, period and replacement before a report plan is executed', () => {
+    const action: MarketingOpsKnownPlanAction = { type: 'campaign.results_record', campaign_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', report_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', expected_version: 2, report: { sourceId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', periodFrom: '2026-09-21', periodTo: '2026-09-27', timeZone: 'America/Sao_Paulo', metrics: { sales: 0, revenue: 100.5 } } };
+    const presentation = presentPlanAction(action);
+    expect(presentation.supported).toBe(true);
+    expect(presentation.title).toBe('Revisar resultados da campanha');
+    expect(presentation.description).toContain('2026-09-21 a 2026-09-27');
+    expect(presentation.description).toContain('Vendas: 0');
+    expect(presentation.description).toContain('Receita (R$): 100,5');
+    expect(presentation.description).toContain('Substitui relatório');
+    expect(presentation.description).toContain('Sem ação vinculada');
+    expect(presentPlanAction(action, { campaign: 'Campanha real', source: 'Email semanal', action: null }).description).toContain('Campanha: Campanha real | Fonte: Email semanal');
+    expect(presentPlanAction({ ...action, report: { ...action.report, actionId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' } }).description).toContain('Ação: dddddddd...dddddddddddd');
+  });
   it('formats short hash and short ID safely', () => {
     expect(formatShortHash('abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890')).toBe('abcdef123456');
     expect(formatShortHash('short')).toBe('short');

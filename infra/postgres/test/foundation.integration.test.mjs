@@ -4,6 +4,8 @@ import { after, before, describe, test } from 'node:test';
 import { Client } from 'pg';
 
 import { runMigrations } from '../src/migrate.mjs';
+import { discoverMigrations } from '../src/migration-files.mjs';
+import { fileURLToPath } from 'node:url';
 import { dockerComposeAvailable, PostgresComposeHarness } from './helpers/postgres-compose.mjs';
 
 const ids = {
@@ -63,10 +65,11 @@ describe(
     });
 
     test('applies all migrations to an empty database and skips them on the second run', () => {
-      assert.match(firstMigrationOutput, /"applied":\["0001","0002","0003","0004","0005","0006","0007","0008","0009","0010","0011","0012","0013","0014","0015","0016","0017","0018"\]/);
+      const versions = discoverMigrations(fileURLToPath(new URL('../migrations/', import.meta.url))).map(({ version }) => version);
+      assert.ok(firstMigrationOutput.includes(`"applied":${JSON.stringify(versions)}`));
       const secondOutput = harness.migrate().stdout;
       assert.match(secondOutput, /"applied":\[\]/);
-      assert.match(secondOutput, /"skipped":\["0001","0002","0003","0004","0005","0006","0007","0008","0009","0010","0011","0012","0013","0014","0015","0016","0017","0018"\]/);
+      assert.ok(secondOutput.includes(`"skipped":${JSON.stringify(versions)}`));
     });
 
     test('creates non-owner application roles and owner-controlled RLS tables', async () => {
@@ -154,10 +157,17 @@ describe(
           'app_private.tenant_canary:tenant_canary_insert:INSERT',
           'app_private.tenant_canary:tenant_canary_select:SELECT',
           'app_private.tenant_canary:tenant_canary_update:UPDATE',
+          'iam.memberships:memberships_delete_current_tenant:DELETE',
+          'iam.memberships:memberships_insert_current_tenant:INSERT',
           'iam.memberships:memberships_select_current_tenant:SELECT',
+          'iam.memberships:memberships_update_current_tenant:UPDATE',
           'iam.memberships:nexus_owner_all:ALL',
           'iam.principals:nexus_owner_all:ALL',
+          'iam.principals:principals_delete_current_tenant:DELETE',
+          'iam.principals:principals_insert_current_tenant:INSERT',
           'iam.principals:principals_select_current:SELECT',
+          'iam.principals:principals_select_current_tenant:SELECT',
+          'iam.principals:principals_update_current_tenant:UPDATE',
           'iam.tenants:nexus_owner_all:ALL',
           'iam.tenants:tenants_select_current:SELECT',
           'iam.user_chat_integrations:nexus_app_all:ALL',

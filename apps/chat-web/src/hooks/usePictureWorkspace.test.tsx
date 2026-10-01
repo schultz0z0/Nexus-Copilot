@@ -18,7 +18,7 @@ const setup = (status: PictureWorkspace["status"] = "drafting") => {
   const client: PictureWorkspaceClient = {
     current: vi.fn(async () => current),
     details: vi.fn(async () => current),
-    files: vi.fn(async () => [{ id: "file-1", filename: "brief.json", relative_path: "brief/brief.json", category: "brief", content_type: "application/json", lifecycle: "workspace" }]),
+    files: vi.fn(async () => [{ id: "file-1", filename: "brief.json", relative_path: "brief/brief.json", category: "brief", content_type: "application/json", lifecycle: "workspace" as const }]),
     approve: vi.fn(async () => { current = { ...current, status: "validated" }; return current; }),
     newPiece: vi.fn(async () => { current = makeWorkspace("two", "drafting"); return current; }),
     accessFile: vi.fn(async () => ({ url: "https://files/test", expiresAt: "2099-01-01T00:00:00Z" })),

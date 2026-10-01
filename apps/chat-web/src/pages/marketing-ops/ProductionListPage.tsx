@@ -158,13 +158,13 @@ export default function ProductionListPage({
       <Sidebar />
       <MarketingOpsMobileBar
         label="Produção"
-        icon={<CalendarRange className="h-4 w-4 text-brand-primary" />}
+        icon={<CalendarRange className="h-4 w-4 text-brand-accent" />}
         action={canWrite ? (
           <Button
             size="icon"
             onClick={() => setCreateOpen(true)}
             aria-label="Novo item"
-            className="shadow-glass h-10 w-10 rounded-full text-slate-950"
+            className="shadow-glass h-10 w-10 rounded-full text-foreground"
           >
             <Plus className="h-5 w-5" />
           </Button>
@@ -183,23 +183,23 @@ export default function ProductionListPage({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <nav aria-label="Visualizações da produção" className="flex rounded-[8px] border border-slate-200 bg-white/70 p-1">
+              <nav aria-label="Visualizações da produção" className="flex rounded-[8px] border border-border bg-card p-1">
                 <Link
                   to={{ pathname: '/marketing-ops/production', search }}
                   aria-current="page"
-                  className="flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-slate-950"
+                  className="flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-foreground"
                 >
                   <LayoutList className="mr-2 h-4 w-4" /> Lista
                 </Link>
                 <Link
                   to={{ pathname: '/marketing-ops/production/week', search }}
-                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-white"
+                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-accent"
                 >
                   Semana
                 </Link>
                 <Link
                   to={{ pathname: '/marketing-ops/production/month', search }}
-                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-white"
+                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-accent"
                 >
                   Mês
                 </Link>
@@ -217,7 +217,7 @@ export default function ProductionListPage({
                   variant="outline"
                   disabled={selectedItems.length === 0}
                   onClick={() => setBatchOpen(true)}
-                  className="h-10 rounded-[8px] bg-white/80"
+                  className="h-10 rounded-[8px] bg-card"
                 >
                   <ListChecks className="mr-2 h-4 w-4" />
                   Lote ({selectedItems.length})
@@ -249,19 +249,19 @@ export default function ProductionListPage({
 
           <section aria-live="polite" aria-busy={scheduleQuery.isLoading} className="py-5">
             {scheduleQuery.isLoading ? (
-              <div aria-label="Carregando produção" className="glass-surface shadow-glass overflow-hidden rounded-[8px] border-white/60">
+              <div aria-label="Carregando produção" className="glass-surface shadow-glass overflow-hidden rounded-[8px] border-border">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="grid h-20 grid-cols-6 items-center gap-4 border-b border-slate-100 px-4 last:border-b-0">
-                    <div className="col-span-2 h-4 animate-pulse rounded bg-slate-200" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
+                  <div key={index} className="grid h-20 grid-cols-6 items-center gap-4 border-b border-border px-4 last:border-b-0">
+                    <div className="col-span-2 h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
                   </div>
                 ))}
               </div>
             ) : scheduleQuery.isError ? (
-              <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+              <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>{accessDenied ? 'Acesso não autorizado' : 'Não foi possível carregar a produção'}</AlertTitle>
                 <AlertDescription>
@@ -273,7 +273,7 @@ export default function ProductionListPage({
                 </AlertDescription>
               </Alert>
             ) : items.length === 0 ? (
-              <div className="glass-surface shadow-glass flex min-h-64 flex-col items-center justify-center rounded-[8px] border-white/60 px-4 py-10 text-center">
+              <div className="glass-surface shadow-glass flex min-h-64 flex-col items-center justify-center rounded-[8px] border-border px-4 py-10 text-center">
                 <Inbox className="h-9 w-9 text-text-muted" />
                 <h2 className="mt-4 text-lg font-semibold text-text-primary">
                   {hasFilters ? 'Nenhum item encontrado' : 'Nenhum item de produção ainda'}
@@ -315,7 +315,7 @@ export default function ProductionListPage({
                       variant="outline"
                       onClick={() => scheduleQuery.fetchNextPage()}
                       disabled={scheduleQuery.isFetchingNextPage}
-                      className="h-11 rounded-[8px] bg-white/80"
+                      className="h-11 rounded-[8px] bg-card"
                     >
                       {scheduleQuery.isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Carregar mais

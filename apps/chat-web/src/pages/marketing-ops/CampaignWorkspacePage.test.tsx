@@ -119,6 +119,7 @@ function renderWorkspace(
             element={(
               <CampaignWorkspacePage
                 client={client}
+                leadsClient={{ results: async () => ({ data: { capturedLeads: 0, contactsCold: 0, whatsappClicks: 0, qualified: null, sales: null, revenue: null, spend: null, weekly: [], channels: [], campaigns: [], coverage: { sources: 0, reports: 0, partialReportsExcluded: 0, metricReports: { qualified: 0, sales: 0, revenue: 0, spend: 0 } }, lastUpdated: null } }) } as unknown as import('@/lib/marketingOps/leads').LeadClient}
                 canWrite={options.canWrite ?? true}
                 canArchive={options.canArchive ?? true}
                 tenantRole={options.tenantRole ?? 'manager'}
@@ -137,6 +138,73 @@ function renderWorkspace(
 afterEach(() => cleanup());
 
 describe('CampaignWorkspacePage', () => {
+  it('explains missing planning requirements and returns to the first missing field without losing saved text', async () => {
+    const base = campaign({
+      referenceType: null, referenceTitleSnapshot: null, startsOn: null, endsOn: null,
+      objective: 'Objetivo já salvo', briefing: 'Briefing já salvo',
+    });
+    const client = makeClient({
+      getCampaign: vi.fn().mockResolvedValue(result(base)),
+      transitionCampaign: vi.fn().mockRejectedValue(new MarketingOpsApiError(
+        'campaign_requirements_missing', 422, 'Campaign is missing required planning fields',
+        'corr-planning', { fields: ['referenceType', 'referenceTitleSnapshot', 'startsOn', 'endsOn'] },
+      )),
+    });
+    const user = userEvent.setup();
+    renderWorkspace(client);
+    await user.click(await screen.findByRole('button', { name: /^planejar$/i }));
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Complete os campos abaixo para planejar a campanha. Seu rascunho foi preservado.');
+    expect(alert.textContent).toContain('Tipo de referência');
+    expect(alert.textContent).toContain('Título da referência');
+    expect(alert.textContent).toContain('Início');
+    expect(alert.textContent).toContain('Término');
+    expect(alert.textContent).toContain('corr-planning');
+    expect(alert.textContent).not.toContain('Campaign is missing');
+    await user.click(screen.getByRole('button', { name: 'Completar planejamento' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Tipo de referência')));
+    expect((screen.getByLabelText('Objetivo') as HTMLTextAreaElement).value).toBe('Objetivo já salvo');
+    expect((screen.getByRole('textbox', { name: /^Briefing$/ }) as HTMLTextAreaElement).value).toBe('Briefing já salvo');
+    expect(client.updateCampaign).not.toHaveBeenCalled();
+  });
+
+  it('points missing primary ownership to the team tab without assigning anyone automatically', async () => {
+    const client = makeClient({ transitionCampaign: vi.fn().mockRejectedValue(new MarketingOpsApiError(
+      'campaign_requirements_missing', 422, 'Campaign is missing required planning fields',
+      'corr-owner', { fields: ['primaryOwner'] },
+    )) });
+    const user = userEvent.setup();
+    renderWorkspace(client);
+    await user.click(await screen.findByRole('button', { name: /^planejar$/i }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Responsável principal');
+    await user.click(screen.getByRole('button', { name: 'Definir responsável' }));
+    expect(screen.getByRole('tab', { name: 'Equipe' }).getAttribute('data-state')).toBe('active');
+    expect(client.addParticipant).not.toHaveBeenCalled();
+  });
+
+  it('opens a real overview without demo metrics and retains an unsaved plan across tabs', async () => {
+    const client = makeClient();
+    const user = userEvent.setup();
+    renderWorkspace(client);
+    expect(await screen.findByRole('tab', { name: 'Visão geral' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Fontes' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Leads' })).toBeTruthy();
+    expect(await screen.findByText('Resultados ainda não medidos')).toBeTruthy();
+    expect(screen.queryByLabelText(/^objetivo$/i)).toBeNull();
+    expect(screen.queryByText('Crescimento B2B')).toBeNull();
+    await user.click(screen.getByRole('tab', { name: 'Planejamento' }));
+    await user.click(await screen.findByRole('tab', { name: 'Planejamento' }));
+    const objective = await screen.findByLabelText(/^objetivo$/i);
+    await user.clear(objective);
+    await user.type(objective, 'Plano em revisão');
+    await user.click(screen.getByRole('tab', { name: 'Visão geral' }));
+    expect(client.updateCampaign).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('tab', { name: /Planejamento/ }));
+    expect((screen.getByLabelText(/^objetivo$/i) as HTMLTextAreaElement).value).toBe('Plano em revisão');
+    await user.click(screen.getByRole('button', { name: /salvar alterações/i }));
+    await waitFor(() => expect(client.updateCampaign).toHaveBeenCalledWith(campaignId, 3, { objective: 'Plano em revisão' }, 'idem-workspace'));
+  });
+
   it('preserves local values on 409 and reapplies only the local patch over the fresh version', async () => {
     const current = campaign({ objective: 'Objetivo do servidor', version: 4 });
     const updated = campaign({ objective: 'Objetivo local', version: 5 });
@@ -156,6 +224,7 @@ describe('CampaignWorkspacePage', () => {
     const user = userEvent.setup();
     renderWorkspace(client);
 
+    await user.click(await screen.findByRole('tab', { name: 'Planejamento' }));
     const objective = await screen.findByLabelText(/^objetivo$/i) as HTMLTextAreaElement;
     await user.clear(objective);
     await user.type(objective, 'Objetivo local');
@@ -186,6 +255,7 @@ describe('CampaignWorkspacePage', () => {
     const user = userEvent.setup();
     renderWorkspace(client);
 
+    await user.click(await screen.findByRole('tab', { name: 'Planejamento' }));
     const objective = await screen.findByLabelText(/^objetivo$/i);
     await user.clear(objective);
     await user.type(objective, 'Objetivo editado');
@@ -232,6 +302,7 @@ describe('CampaignWorkspacePage', () => {
     const user = userEvent.setup();
     renderWorkspace(client);
 
+    await user.click(await screen.findByRole('tab', { name: 'Planejamento' }));
     await screen.findByLabelText(/tipo de referência/i);
     await user.selectOptions(screen.getByLabelText(/tipo de referência/i), 'course');
     await user.type(screen.getByRole('searchbox', { name: /buscar curso oficial/i }), 'riscos');
@@ -270,6 +341,7 @@ describe('CampaignWorkspacePage', () => {
     const user = userEvent.setup();
     renderWorkspace(client);
 
+    await user.click(await screen.findByRole('tab', { name: 'Planejamento' }));
     await user.type(await screen.findByRole('searchbox', { name: /buscar curso oficial/i }), 'novo');
     expect((await screen.findByRole('alert')).textContent).toContain('corr-rag');
     const audience = screen.getByLabelText(/^público$/i);
@@ -351,9 +423,13 @@ describe('CampaignWorkspacePage', () => {
       currentUserId: owner.userId
     });
 
+    await user.click(await screen.findByRole('tab', { name: 'Equipe' }));
     expect(await screen.findByRole('heading', { name: 'Pessoas' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Materiais' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Atividade' })).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Materiais' }));
+    expect(await screen.findByRole('heading', { name: 'Materiais' })).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Histórico' }));
+    expect(await screen.findByRole('heading', { name: 'Atividade' })).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Equipe' }));
 
     await user.selectOptions(screen.getByLabelText(/papel de beatriz lima/i), 'editor');
     expect(await screen.findByText('Versão 4')).toBeTruthy();
@@ -383,6 +459,7 @@ describe('CampaignWorkspacePage', () => {
       currentUserId: viewerId
     });
 
+    await userEvent.setup().click(await screen.findByRole('tab', { name: 'Planejamento' }));
     const name = await screen.findByLabelText(/^nome$/i) as HTMLInputElement;
     await waitFor(() => expect(name.matches(':disabled')).toBe(true));
     expect(screen.queryByRole('button', { name: /salvar alterações/i })).toBeNull();
@@ -406,6 +483,7 @@ describe('CampaignWorkspacePage', () => {
 
     const readOnlyClient = makeClient();
     renderWorkspace(readOnlyClient, { canWrite: false, canArchive: false });
+    await userEvent.setup().click(await screen.findByRole('tab', { name: 'Planejamento' }));
     const name = await screen.findByLabelText(/^nome$/i) as HTMLInputElement;
     expect(name.matches(':disabled')).toBe(true);
     expect(screen.queryByRole('button', { name: /salvar alterações/i })).toBeNull();

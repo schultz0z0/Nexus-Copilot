@@ -76,7 +76,7 @@ const emptyForm = (): ItemForm => ({
   dueAt: ''
 });
 
-const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
+const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-card px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
 
 function utcInput(value: string | null, timeZone: string): string {
   if (!value) return '';
@@ -337,7 +337,7 @@ export function ProductionItemDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-[8px] border-white/60 bg-white/95 text-text-primary shadow-glass backdrop-blur-xl sm:max-w-3xl">
+      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-[8px] border-border bg-card text-text-primary shadow-glass backdrop-blur-xl sm:max-w-3xl">
         <DialogHeader>
           <div className="flex items-center justify-between gap-2 pr-6">
             <DialogTitle>{isCreate ? 'Novo item' : 'Detalhes do item'}</DialogTitle>
@@ -358,7 +358,7 @@ export function ProductionItemDialog({
 
         {itemQuery.isLoading || (!isCreate && itemQuery.data && hydratedVersion !== itemQuery.data.version) ? (
           <div aria-label="Carregando item" className="flex min-h-48 items-center justify-center">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin text-brand-primary" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-brand-accent" />
             Carregando item
           </div>
         ) : missing ? (
@@ -409,7 +409,7 @@ export function ProductionItemDialog({
                   onChange={(event) => setField('title', event.target.value)}
                   maxLength={200}
                   disabled={isFieldDisabled}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                   required
                 />
               </Field>
@@ -491,7 +491,7 @@ export function ProductionItemDialog({
                   value={form.startsAt}
                   onChange={(event) => setField('startsAt', event.target.value)}
                   disabled={isFieldDisabled}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
               </Field>
 
@@ -502,7 +502,7 @@ export function ProductionItemDialog({
                   value={form.dueAt}
                   onChange={(event) => setField('dueAt', event.target.value)}
                   disabled={isFieldDisabled}
-                  className="h-11 rounded-[8px] bg-white/80"
+                  className="h-11 rounded-[8px] bg-card"
                 />
               </Field>
 
@@ -520,7 +520,7 @@ export function ProductionItemDialog({
               </div>
             </div>
 
-            <p className="mb-4 rounded-[8px] bg-slate-50 px-3 py-2 text-xs text-text-secondary">
+            <p className="mb-4 rounded-[8px] bg-background px-3 py-2 text-xs text-text-secondary">
               Informe o horário local de <strong>{timeZone}</strong>. A API persiste o instante em UTC.
             </p>
 
@@ -626,7 +626,7 @@ export function ProductionItemDialog({
             ) : null}
 
             {!isCreate && canWrite && transitions.length ? (
-              <section aria-label="Transições do item" className="mb-4 rounded-[8px] border border-slate-200 p-3">
+              <section aria-label="Transições do item" className="mb-4 rounded-[8px] border border-border p-3">
                 <p className="mb-2 text-sm font-medium">Alterar status</p>
                 <div className="flex flex-wrap gap-2">
                   {transitions.map((transition) => {
@@ -666,7 +666,7 @@ export function ProductionItemDialog({
                           {transition.label}
                         </Button>
                         {blocked && blockReason ? (
-                          <p className="mt-1 text-xs text-amber-600">
+                          <p className="mt-1 text-xs text-status-warning">
                             {blockReason}
                           </p>
                         ) : null}

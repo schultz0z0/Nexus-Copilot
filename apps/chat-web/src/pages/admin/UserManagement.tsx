@@ -380,7 +380,7 @@ export default function UserManagement() {
                 Novo Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-surface border-white/10 text-foreground sm:max-w-[425px]" style={{ backgroundColor: '#ffffff' }}>
+            <DialogContent className="glass-surface border-border text-foreground sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Criar Novo Usuário</DialogTitle>
                 <DialogDescription className="text-muted-foreground">
@@ -394,7 +394,7 @@ export default function UserManagement() {
                     id="name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                    className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
                     placeholder="Ex: João Silva"
                   />
                 </div>
@@ -405,8 +405,8 @@ export default function UserManagement() {
                     type="email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
-                    placeholder="joao@ens.edu.br"
+                    className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                    placeholder="nome@empresa.com.br"
                   />
                 </div>
                 <div className="space-y-2">
@@ -416,14 +416,14 @@ export default function UserManagement() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                    className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
                     placeholder="••••••••"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Papel</Label>
                   <Select value={newRole} onValueChange={(value) => setNewRole(value as AppRole)}>
-                    <SelectTrigger id="role" className="bg-white/5 border-white/10 text-foreground focus:ring-primary/50">
+                    <SelectTrigger id="role" className="bg-white/5 border-border text-foreground focus:ring-primary/50">
                       <SelectValue placeholder="Selecione o papel" />
                     </SelectTrigger>
                     <SelectContent>
@@ -447,17 +447,17 @@ export default function UserManagement() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="glass-surface border-white/10 text-foreground">
+          <Card className="glass-surface border-border text-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total de Usuários</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
+              <Users className="h-4 w-4 text-brand-accent" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">Membros ativos na plataforma</p>
             </CardContent>
           </Card>
-          <Card className="glass-surface border-white/10 text-foreground">
+          <Card className="glass-surface border-border text-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Administradores</CardTitle>
               <ShieldCheck className="h-4 w-4 text-purple-400" />
@@ -467,7 +467,7 @@ export default function UserManagement() {
               <p className="text-xs text-muted-foreground">Acesso total ao sistema</p>
             </CardContent>
           </Card>
-          <Card className="glass-surface border-white/10 text-foreground">
+          <Card className="glass-surface border-border text-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Managers</CardTitle>
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
@@ -477,7 +477,7 @@ export default function UserManagement() {
               <p className="text-xs text-muted-foreground">Gestao de trabalhos validados</p>
             </CardContent>
           </Card>
-          <Card className="glass-surface border-white/10 text-foreground">
+          <Card className="glass-surface border-border text-foreground">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Membros</CardTitle>
               <UserPlus className="h-4 w-4 text-blue-400" />
@@ -489,15 +489,15 @@ export default function UserManagement() {
           </Card>
         </div>
 
-        <div className="glass-surface rounded-xl border border-white/10 overflow-hidden shadow-2xl shadow-black/20">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between gap-4">
+        <div className="glass-surface rounded-xl border border-border overflow-hidden shadow-2xl shadow-black/20">
+          <div className="p-4 border-b border-border flex items-center justify-between gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por nome ou e-mail..."
-                className="pl-9 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:bg-white/10 transition-all"
+                className="pl-9 bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:bg-white/10 transition-all"
               />
             </div>
             <div className="text-sm text-muted-foreground hidden md:block">
@@ -506,15 +506,15 @@ export default function UserManagement() {
           </div>
 
           {loading ? (
-            <div className="p-20 flex flex-col items-center justify-center text-white/40 animate-pulse">
-              <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
+            <div className="p-20 flex flex-col items-center justify-center text-text-muted animate-pulse">
+              <Loader2 className="w-10 h-10 animate-spin mb-4 text-brand-accent" />
                           <p className="text-foreground">Carregando equipe...</p>
             </div>
           ) : (
             <div className="relative overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-white/10 hover:bg-white/5">
+                  <TableRow className="border-border hover:bg-white/5">
                     <TableHead className="text-muted-foreground pl-6">Usuário</TableHead>
                     <TableHead className="text-muted-foreground">Função</TableHead>
                     <TableHead className="text-muted-foreground">Status</TableHead>
@@ -531,7 +531,7 @@ export default function UserManagement() {
                           <p className="text-sm max-w-xs mx-auto">Tente buscar por outro termo ou adicione um novo usuário.</p>
                           <Button 
                             variant="outline" 
-                            className="mt-4 border-white/10 hover:bg-white/5"
+                            className="mt-4 border-border hover:bg-white/5"
                             onClick={() => {
                               setSearchTerm("");
                               setIsCreateOpen(true);
@@ -544,12 +544,12 @@ export default function UserManagement() {
                     </TableRow>
                   ) : (
                     filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id} className="border-white/10 hover:bg-white/5 transition-colors group">
+                      <TableRow key={profile.id} className="border-border hover:bg-white/5 transition-colors group">
                         <TableCell className="pl-6 py-4">
                           <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10 border-2 border-white/10 group-hover:border-primary/50 transition-colors">
+                            <Avatar className="h-10 w-10 border-2 border-border group-hover:border-primary/50 transition-colors">
                               <AvatarImage src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`} />
-                              <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                              <AvatarFallback className="bg-primary/20 text-brand-accent font-bold">
                                 {getInitials(profile.full_name)}
                               </AvatarFallback>
                             </Avatar>
@@ -641,7 +641,7 @@ export default function UserManagement() {
         setIsResetOpen(open);
         if (!open) setSelectedUser(null);
       }}>
-        <DialogContent className="glass-surface border-white/10 text-foreground" style={{ backgroundColor: '#ffffff' }}>
+        <DialogContent className="glass-surface border-border text-foreground">
           <DialogHeader>
             <DialogTitle>Redefinir Senha</DialogTitle>
           </DialogHeader>
@@ -653,7 +653,7 @@ export default function UserManagement() {
                 type="password"
                 value={resetPassword}
                 onChange={(e) => setResetPassword(e.target.value)}
-                className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
                 placeholder="••••••••"
               />
             </div>
@@ -679,7 +679,7 @@ export default function UserManagement() {
           setEditHermesBaseUrl("");
         }
       }}>
-        <DialogContent className="glass-surface border-white/10 text-foreground sm:max-w-[425px]" style={{ backgroundColor: '#ffffff' }}>
+        <DialogContent className="glass-surface border-border text-foreground sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -689,7 +689,7 @@ export default function UserManagement() {
           <form onSubmit={handleUpdateUser} className="space-y-6 mt-4">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group cursor-pointer">
-                <Avatar className="h-24 w-24 border-2 border-white/20 group-hover:border-primary/50 transition-all">
+                <Avatar className="h-24 w-24 border-2 border-border group-hover:border-primary/50 transition-all">
                   <AvatarImage src={editAvatarPreview || (selectedUserForEdit?.email ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedUserForEdit.email}` : "")} />
                   <AvatarFallback className="text-2xl">
                     {getInitials(editName)}
@@ -718,7 +718,7 @@ export default function UserManagement() {
                 id="edit-name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
                 placeholder="Ex: João Silva"
               />
             </div>
@@ -726,7 +726,7 @@ export default function UserManagement() {
             <div className="space-y-2">
               <Label htmlFor="edit-role">Papel</Label>
               <Select value={editRole} onValueChange={(value) => setEditRole(value as AppRole)}>
-                <SelectTrigger id="edit-role" className="bg-white/5 border-white/10 text-foreground focus:ring-primary/50">
+                <SelectTrigger id="edit-role" className="bg-white/5 border-border text-foreground focus:ring-primary/50">
                   <SelectValue placeholder="Selecione o papel" />
                 </SelectTrigger>
                 <SelectContent>
@@ -739,7 +739,7 @@ export default function UserManagement() {
               </Select>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
+            <div className="rounded-xl border border-border bg-white/5 p-4 space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="edit-hermes-enabled">Endpoint Hermes personalizado</Label>
@@ -762,7 +762,7 @@ export default function UserManagement() {
                   onChange={(e) => setEditHermesBaseUrl(e.target.value)}
                   placeholder="https://api-hermes.exemplo.com"
                   disabled={!editHermesEnabled}
-                  className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
+                  className="bg-white/5 border-border text-foreground placeholder:text-muted-foreground focus:ring-primary/50"
                 />
                 <p className="text-xs text-muted-foreground">
                   Salve em branco apenas se o endpoint personalizado estiver desligado.
@@ -785,9 +785,9 @@ export default function UserManagement() {
         setIsDeleteOpen(open);
         if (!open) setUserToDelete(null);
       }}>
-        <DialogContent className="glass-surface border-white/10 text-foreground sm:max-w-[425px]" style={{ backgroundColor: '#ffffff' }}>
+        <DialogContent className="glass-surface border-border text-foreground sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-red-500 flex items-center gap-2">
+            <DialogTitle className="text-status-error flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
               Confirmar Exclusão
             </DialogTitle>

@@ -59,7 +59,7 @@ const channels: Array<{ value: MarketingOpsCampaignChannel; label: string }> = [
   { value: 'press', label: 'Imprensa' },
   { value: 'other', label: 'Outro' }
 ];
-const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
+const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-card px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
 
 export function ProductionFilters({
   filters,
@@ -76,7 +76,7 @@ export function ProductionFilters({
   return (
     <section
       aria-label="Filtros de produção"
-      className="glass-surface shadow-glass rounded-[8px] border-white/60 px-4 py-4 sm:px-5"
+      className="glass-surface shadow-glass rounded-[8px] border-border px-4 py-4 sm:px-5"
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
         <div className="space-y-1.5 xl:col-span-3">
@@ -137,10 +137,10 @@ export function ProductionFilters({
                 placeholder="ID do usuário"
                 aria-invalid={assigneeInvalid}
                 aria-describedby={assigneeInvalid ? 'production-assignee-error' : undefined}
-                className="h-11 rounded-[8px] bg-white/80"
+                className="h-11 rounded-[8px] bg-card"
               />
               {assigneeInvalid ? (
-                <p id="production-assignee-error" className="text-xs text-red-700">
+                <p id="production-assignee-error" className="text-xs text-status-error">
                   Informe um ID de usuário válido.
                 </p>
               ) : null}

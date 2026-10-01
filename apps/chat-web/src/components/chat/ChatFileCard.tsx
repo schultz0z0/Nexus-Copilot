@@ -113,12 +113,12 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
       <div
         className={cn(
           "overflow-hidden rounded-2xl border shadow-sm",
-          isUser ? "border-white/20 bg-white/10" : "border-slate-200/70 bg-white/70",
+          isUser ? "border-border bg-white/10" : "border-border bg-card",
         )}
       >
         {isImage ? (
           <button type="button" onClick={handleOpen} className="block w-full text-left" aria-label={`Ampliar ${activePart.name}`}>
-            <div className={cn("overflow-hidden", isUser ? "bg-white/10" : "bg-slate-100/80")}>
+            <div className={cn("overflow-hidden", isUser ? "bg-white/10" : "bg-muted")}>
               <img src={displayUrl} alt={activePart.name} className="max-h-[280px] w-full object-cover" />
             </div>
           </button>
@@ -134,30 +134,30 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
           <div
             className={cn(
               "grid h-12 w-12 shrink-0 place-items-center rounded-xl border",
-              isUser ? "border-white/20 bg-white/10" : "border-slate-200 bg-white",
+              isUser ? "border-border bg-white/10" : "border-border bg-card",
             )}
           >
             {isImage ? (
-              <ImageIcon className={cn("h-5 w-5", isUser ? "text-white" : "text-slate-700")} />
+              <ImageIcon className={cn("h-5 w-5", isUser ? "text-white" : "text-text-secondary")} />
             ) : (
-              <FileText className={cn("h-5 w-5", isUser ? "text-white" : "text-slate-700")} />
+              <FileText className={cn("h-5 w-5", isUser ? "text-white" : "text-text-secondary")} />
             )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className={cn("truncate text-sm font-medium", isUser ? "text-white" : "text-slate-900")}>{activePart.name}</p>
-            <p className={cn("text-xs", isUser ? "text-white/80" : "text-slate-600")}>
+            <p className={cn("truncate text-sm font-medium", isUser ? "text-white" : "text-foreground")}>{activePart.name}</p>
+            <p className={cn("text-xs", isUser ? "text-white/80" : "text-text-secondary")}>
               {isImage ? "Imagem" : isVideo ? "Video" : "Arquivo"}
               {extension ? ` • ${extension.toUpperCase()}` : ""}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            <Button type="button" size="icon" variant="ghost" className={cn("h-9 w-9 rounded-full", isUser ? "hover:bg-white/20" : "hover:bg-slate-100")} onClick={handleOpen} aria-label={isImage ? `Ampliar ${activePart.name}` : `Abrir ${activePart.name}`}>
+            <Button type="button" size="icon" variant="ghost" className={cn("h-9 w-9 rounded-full", isUser ? "hover:bg-white/20" : "hover:bg-accent")} onClick={handleOpen} aria-label={isImage ? `Ampliar ${activePart.name}` : `Abrir ${activePart.name}`}>
               {isImage ? <Maximize2 className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
             </Button>
 
-            <Button type="button" size="icon" variant="ghost" className={cn("h-9 w-9 rounded-full", isUser ? "hover:bg-white/20" : "hover:bg-slate-100")} onClick={handleDownload} aria-label={`Baixar ${activePart.name}`}>
+            <Button type="button" size="icon" variant="ghost" className={cn("h-9 w-9 rounded-full", isUser ? "hover:bg-white/20" : "hover:bg-accent")} onClick={handleDownload} aria-label={`Baixar ${activePart.name}`}>
               <Download className="h-4 w-4" />
             </Button>
           </div>
@@ -166,8 +166,8 @@ export function ChatFileCard({ part, role }: ChatFileCardProps) {
 
       {isImage ? (
         <Dialog open={Boolean(previewUrl)} onOpenChange={(open) => !open && setPreviewUrl(null)}>
-          <DialogContent className="w-[96vw] max-w-6xl border-white/20 bg-white/95 p-0 text-slate-900 shadow-2xl backdrop-blur-xl">
-            <DialogHeader className="border-b border-slate-200/80 px-6 py-4">
+          <DialogContent className="w-[96vw] max-w-6xl border-border bg-card p-0 text-foreground shadow-2xl backdrop-blur-xl">
+            <DialogHeader className="border-b border-border px-6 py-4">
               <div className="flex items-start justify-between gap-4 pr-8">
                 <div className="min-w-0 space-y-1">
                   <DialogTitle className="truncate">{activePart.name}</DialogTitle>

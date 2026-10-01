@@ -63,11 +63,25 @@ function dependencies(overrides: Partial<PlanExecutorDependencies> = {}): PlanEx
     submitOperationalApproval: vi.fn().mockResolvedValue({
       id: ids.artifact, kind: 'operational', status: 'pending'
     }),
+    createResultReport: vi.fn().mockResolvedValue({ id: ids.asset, campaignId: ids.campaign }),
+    updateResultReport: vi.fn().mockResolvedValue({ id: ids.asset, campaignId: ids.campaign, version: 2 }),
     ...overrides
   };
 }
 
 describe('Marketing Ops plan executor', () => {
+  it('records or revises measured reports with stable plan keys and a campaign link', async () => {
+    const deps = dependencies();
+    const report = { sourceId: ids.item, actionId: null, periodFrom: '2026-09-21', periodTo: '2026-09-27', timeZone: 'America/Sao_Paulo', metrics: { sent: 100, sales: 0 }, notes: null };
+    const result = await executeMarketingOpsPlan(context, plan([
+      { type: 'campaign.results_record', campaign_id: ids.campaign, report },
+      { type: 'campaign.results_record', campaign_id: ids.campaign, report_id: ids.asset, expected_version: 1, report }
+    ]), deps);
+    expect(result.status).toBe('completed');
+    expect(deps.createResultReport).toHaveBeenCalledWith(expect.objectContaining({ planActionIndex: 0 }), ids.campaign, report, `plan:${result.plan_id}:0`);
+    expect(deps.updateResultReport).toHaveBeenCalledWith(expect.objectContaining({ planActionIndex: 1 }), ids.campaign, ids.asset, 1, report, `plan:${result.plan_id}:1`);
+    expect(result.deep_links).toEqual(expect.arrayContaining([expect.objectContaining({ resource_type: 'campaign', resource_id: ids.campaign })]));
+  });
   it('submits approval requests but exposes no decision dependency', async () => {
     const deps = dependencies();
     const result = await executeMarketingOpsPlan(context, plan([

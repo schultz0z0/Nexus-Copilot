@@ -1,4 +1,4 @@
-import type { MarketingOpsPlanAction, MarketingOpsPreparedPlanStatus } from '@/lib/marketingOps/types';
+import type { MarketingOpsKnownPlanAction, MarketingOpsPlanAction, MarketingOpsPreparedPlanStatus } from '@/lib/marketingOps/types';
 
 export interface PresentedAction {
   supported: boolean;
@@ -40,7 +40,9 @@ export function planStatusPresentation(status: MarketingOpsPreparedPlanStatus): 
   }
 }
 
-export function presentPlanAction(action: MarketingOpsPlanAction): PresentedAction {
+export function presentPlanAction(rawAction: MarketingOpsPlanAction, labels?: { campaign: string; source: string; action: string | null }): PresentedAction {
+  // Known actions are validated by the plan API. Preserve unknown kinds below.
+  const action = rawAction as MarketingOpsKnownPlanAction;
   switch (action.type) {
     case 'campaign.create_draft': {
       const parts = [`Nome: "${action.name}"`];
@@ -115,6 +117,17 @@ export function presentPlanAction(action: MarketingOpsPlanAction): PresentedActi
         description: `Campanha: ${formatShortId(action.campaign_id)} | Nota: "${action.note}"`
       };
 
+    case 'campaign.results_record': {
+      const report = action.report;
+      const metricLabels: Record<string, string> = { sent: 'Enviados', delivered: 'Entregues', opened: 'Aberturas', clicked: 'Cliques', responded: 'Respostas', spend: 'Investimento (R$)', qualified: 'Qualificados', sales: 'Vendas', revenue: 'Receita (R$)' };
+      const measurements = Object.entries(report.metrics).map(([key, value]) => `${metricLabels[key] ?? key}: ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(value)}`);
+      return {
+        supported: true,
+        title: action.report_id ? 'Revisar resultados da campanha' : 'Registrar resultados da campanha',
+        description: [`Campanha: ${labels?.campaign ?? formatShortId(action.campaign_id)}`, `Fonte: ${labels?.source ?? formatShortId(report.sourceId)}`, report.actionId ? `Ação: ${labels?.action ?? formatShortId(report.actionId)}` : 'Sem ação vinculada', `${report.periodFrom} a ${report.periodTo} (${report.timeZone})`, ...(action.report_id ? [`Substitui relatório ${formatShortId(action.report_id)} · versão ${action.expected_version}`] : []), ...measurements, ...(report.notes ? [report.notes] : [])].join(' | ')
+      };
+    }
+
     case 'approval.submit_editorial': {
       const parts = [
         `Campanha: ${formatShortId(action.campaign_id)}`,
@@ -129,7 +142,7 @@ export function presentPlanAction(action: MarketingOpsPlanAction): PresentedActi
     }
 
     case 'approval.submit_operational': {
-      const pkg = action.action_package as Record<string, unknown> | undefined;
+      const pkg = action.action_package;
       const actionType = pkg?.actionType ? String(pkg.actionType) : 'pacote operacional';
       return {
         supported: true,
@@ -139,7 +152,7 @@ export function presentPlanAction(action: MarketingOpsPlanAction): PresentedActi
     }
 
     default: {
-      const typeStr = typeof action?.type === 'string' ? action.type : 'desconhecido';
+      const typeStr = typeof rawAction?.type === 'string' ? rawAction.type : 'desconhecido';
       return {
         supported: false,
         title: 'Ação não suportada',

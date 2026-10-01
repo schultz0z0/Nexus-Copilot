@@ -12,6 +12,7 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache tini tzdata
+RUN mkdir -p /app/data/ads && chown node:node /app/data/ads && chmod 700 /app/data/ads
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist

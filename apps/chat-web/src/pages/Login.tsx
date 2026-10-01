@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { OrbLoader } from "@/components/ui/OrbLoader";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -101,14 +102,12 @@ const Login = () => {
 
       <div className="w-full max-w-md space-y-8 z-10">
         <div className="flex flex-col items-center text-center">
-          <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 shadow-glass border border-white/10 backdrop-blur-md">
-            <img src="/logo.svg" alt="ENS Logo" className="w-16 h-16" />
-          </div>
-          <h2 className="text-3xl font-bold text-text-primary tracking-tight">Nexus AI</h2>
-          <p className="text-text-secondary mt-2">Escola de Negócios e Seguros</p>
+          <BrandLogo className="w-56 mb-6" />
+          <h1 className="text-3xl font-medium brand-heading tracking-tight">Bem-vindo à Prometeus</h1>
+          <p className="text-text-secondary mt-2">Tecnologia que amplia pessoas.</p>
         </div>
 
-        <div className="glass-surface p-8 rounded-2xl shadow-glass border border-white/10 backdrop-blur-xl">
+        <div className="glass-surface p-8 rounded-2xl shadow-glass border border-border backdrop-blur-xl">
           {mode === "login" ? (
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
@@ -122,7 +121,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/5 border-white/10 focus:border-brand-primary/50 transition-colors"
+                  className="bg-white/5 border-border focus:border-brand-primary/50 transition-colors"
                 />
               </div>
 
@@ -132,7 +131,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setMode("requestReset")}
-                    className="text-xs text-brand-primary hover:underline"
+                    className="text-xs text-brand-accent hover:underline"
                   >
                     Esqueceu a senha?
                   </button>
@@ -146,7 +145,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-white/10 focus:border-brand-primary/50 transition-colors"
+                  className="bg-white/5 border-border focus:border-brand-primary/50 transition-colors"
                 />
               </div>
 
@@ -184,7 +183,7 @@ const Login = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
-                      className="bg-white/5 border-white/10"
+                      className="bg-white/5 border-border"
                     />
                   </div>
                 )}
@@ -201,7 +200,7 @@ const Login = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      className="bg-white/5 border-white/10"
+                      className="bg-white/5 border-border"
                     />
                   </div>
                 )}

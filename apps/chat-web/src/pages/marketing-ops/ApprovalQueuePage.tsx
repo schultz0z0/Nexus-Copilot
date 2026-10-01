@@ -37,7 +37,7 @@ function filtersFrom(params: URLSearchParams): MarketingOpsApprovalFilters {
 
 function ApprovalCard({ approval }: { approval: MarketingOpsApprovalRequest }) {
   return (
-    <li className="rounded-lg border border-white/60 bg-white/80 p-4 shadow-sm">
+    <li className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <Link to={`/marketing-ops/approvals/${approval.id}`} className="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{statusLabel[approval.status]}</Badge>
@@ -64,7 +64,7 @@ export default function ApprovalQueuePage({ client = marketingOpsClient }: { cli
     const next = new URLSearchParams(current); if (value) next.set(key, value); else next.delete(key); return next;
   }, { replace: true });
   return <div className="min-h-screen text-text-primary"><Sidebar />
-    <MarketingOpsMobileBar label="Aprovações" icon={<ClipboardCheck className="h-4 w-4 text-brand-primary" />} />
+    <MarketingOpsMobileBar label="Aprovações" icon={<ClipboardCheck className="h-4 w-4 text-brand-accent" />} />
     <main className="min-h-screen md:ml-20"><div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-8">
       <header className="mb-5"><h1 className="text-3xl font-bold">Aprovações de negócio</h1>
         <p className="mt-1 text-sm text-text-secondary">Decisões humanas sobre versões e pacotes congelados.</p></header>
@@ -72,7 +72,7 @@ export default function ApprovalQueuePage({ client = marketingOpsClient }: { cli
       <section aria-live="polite" aria-busy={query.isLoading} className="py-5">
         {query.isLoading ? <p className="flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Carregando aprovações</p>
           : query.isError ? <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Não foi possível carregar as aprovações</AlertTitle><AlertDescription><Button variant="outline" onClick={() => query.refetch()}>Tentar novamente</Button></AlertDescription></Alert>
-            : approvals.length === 0 ? <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border bg-white/70"><Inbox className="h-8 w-8" /><h2 className="mt-3 font-semibold">Nenhuma aprovação encontrada</h2></div>
+            : approvals.length === 0 ? <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border bg-card"><Inbox className="h-8 w-8" /><h2 className="mt-3 font-semibold">Nenhuma aprovação encontrada</h2></div>
               : <><ul className="grid gap-3">{approvals.map((approval) => <ApprovalCard key={approval.id} approval={approval} />)}</ul>
                 {query.hasNextPage ? <div className="mt-5 text-center"><Button variant="outline" disabled={query.isFetchingNextPage} onClick={() => query.fetchNextPage()}>Carregar mais</Button></div> : null}</>}
       </section>

@@ -1,0 +1,1270 @@
+{
+  "format": "prometeus-design-system",
+  "formatVersion": "1.0.0",
+  "version": "1.0.0",
+  "updatedAt": "2026-09-26",
+  "language": "pt-BR",
+  "brand": {
+    "name": "Prometeus",
+    "signature": "Tecnologia que amplia pessoas",
+    "personality": [
+      "precisa",
+      "humana",
+      "confiante",
+      "tecnológica"
+    ],
+    "mode": "dark",
+    "themeFollowsOS": false,
+    "retiredDisplayNames": [
+      "ENS",
+      "Marketing ENS",
+      "Nexus AI"
+    ],
+    "preserveTechnicalIdentifiers": true
+  },
+  "provenance": {
+    "website": "https://agenciaprometeus.com.br/",
+    "websiteInspectedAt": "2026-09-26",
+    "originalManual": "docs/brandbook/Manual da Marca Prometeus (1).pdf",
+    "originalManualExcludedPages": [
+      1
+    ],
+    "approvedImplementation": "apps/chat-web",
+    "runtimeSource": "apps/chat-web/src/index.css",
+    "runtimeSourceSha256": "4539267315ac3244ba9d0defca1c4e7924f833c83db9ea0ef204f40a5e03ca1a",
+    "adapter": "apps/chat-web/tailwind.config.ts",
+    "interactionContract": "apps/chat-web/DESIGN.md",
+    "documentRole": "Versioned snapshot and portable instructions; not imported automatically by the app. Custom JSON format, not a DTCG interchange file.",
+    "changePolicy": "Update runtime, JSON, Markdown and visual manual together; verify aliases and visual regressions. Existing behavior and security contracts remain authoritative."
+  },
+  "tokens": {
+    "--prometeus-midnight": {
+      "cssVariable": "--prometeus-midnight",
+      "cssValue": "225.000 66.667% 4.706%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "225.000 66.667% 4.706%",
+      "resolvedHex": "#040814",
+      "cssUsage": "hsl(var(--prometeus-midnight))"
+    },
+    "--prometeus-blue": {
+      "cssVariable": "--prometeus-blue",
+      "cssValue": "216.126 94.089% 39.804%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "216.126 94.089% 39.804%",
+      "resolvedHex": "#0652C5",
+      "cssUsage": "hsl(var(--prometeus-blue))"
+    },
+    "--prometeus-white": {
+      "cssVariable": "--prometeus-white",
+      "cssValue": "0.000 0.000% 100.000%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--prometeus-white))"
+    },
+    "--prometeus-navy": {
+      "cssVariable": "--prometeus-navy",
+      "cssValue": "222.000 36.585% 16.078%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "222.000 36.585% 16.078%",
+      "resolvedHex": "#1A2338",
+      "cssUsage": "hsl(var(--prometeus-navy))"
+    },
+    "--prometeus-slate": {
+      "cssVariable": "--prometeus-slate",
+      "cssValue": "220.000 28.916% 32.549%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "220.000 28.916% 32.549%",
+      "resolvedHex": "#3B4B6B",
+      "cssUsage": "hsl(var(--prometeus-slate))"
+    },
+    "--prometeus-mist": {
+      "cssVariable": "--prometeus-mist",
+      "cssValue": "214.286 31.818% 91.373%",
+      "type": "color",
+      "layer": "primitive",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "214.286 31.818% 91.373%",
+      "resolvedHex": "#E2E8F0",
+      "cssUsage": "hsl(var(--prometeus-mist))"
+    },
+    "--brand-primary": {
+      "cssVariable": "--brand-primary",
+      "cssValue": "var(--prometeus-blue)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-blue",
+      "resolvedHsl": "216.126 94.089% 39.804%",
+      "resolvedHex": "#0652C5",
+      "cssUsage": "hsl(var(--brand-primary))"
+    },
+    "--brand-secondary": {
+      "cssVariable": "--brand-secondary",
+      "cssValue": "216 88% 49%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "216 88% 49%",
+      "resolvedHex": "#0F67EB",
+      "cssUsage": "hsl(var(--brand-secondary))"
+    },
+    "--brand-accent": {
+      "cssVariable": "--brand-accent",
+      "cssValue": "215 95% 76%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "215 95% 76%",
+      "resolvedHex": "#88B8FC",
+      "cssUsage": "hsl(var(--brand-accent))"
+    },
+    "--text-primary": {
+      "cssVariable": "--text-primary",
+      "cssValue": "var(--prometeus-white)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-white",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--text-primary))"
+    },
+    "--text-secondary": {
+      "cssVariable": "--text-secondary",
+      "cssValue": "var(--prometeus-mist)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-mist",
+      "resolvedHsl": "214.286 31.818% 91.373%",
+      "resolvedHex": "#E2E8F0",
+      "cssUsage": "hsl(var(--text-secondary))"
+    },
+    "--text-muted": {
+      "cssVariable": "--text-muted",
+      "cssValue": "218 18% 67%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "218 18% 67%",
+      "resolvedHex": "#9CA7BA",
+      "cssUsage": "hsl(var(--text-muted))"
+    },
+    "--background": {
+      "cssVariable": "--background",
+      "cssValue": "var(--prometeus-midnight)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-midnight",
+      "resolvedHsl": "225.000 66.667% 4.706%",
+      "resolvedHex": "#040814",
+      "cssUsage": "hsl(var(--background))"
+    },
+    "--foreground": {
+      "cssVariable": "--foreground",
+      "cssValue": "var(--text-primary)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--text-primary",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--foreground))"
+    },
+    "--surface": {
+      "cssVariable": "--surface",
+      "cssValue": "223 45% 8%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "223 45% 8%",
+      "resolvedHex": "#0B101E",
+      "cssUsage": "hsl(var(--surface))"
+    },
+    "--surface-subtle": {
+      "cssVariable": "--surface-subtle",
+      "cssValue": "223 39% 11%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "223 39% 11%",
+      "resolvedHex": "#111727",
+      "cssUsage": "hsl(var(--surface-subtle))"
+    },
+    "--card": {
+      "cssVariable": "--card",
+      "cssValue": "var(--surface)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--surface",
+      "resolvedHsl": "223 45% 8%",
+      "resolvedHex": "#0B101E",
+      "cssUsage": "hsl(var(--card))"
+    },
+    "--card-foreground": {
+      "cssVariable": "--card-foreground",
+      "cssValue": "var(--foreground)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--foreground",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--card-foreground))"
+    },
+    "--popover": {
+      "cssVariable": "--popover",
+      "cssValue": "var(--surface-subtle)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--surface-subtle",
+      "resolvedHsl": "223 39% 11%",
+      "resolvedHex": "#111727",
+      "cssUsage": "hsl(var(--popover))"
+    },
+    "--popover-foreground": {
+      "cssVariable": "--popover-foreground",
+      "cssValue": "var(--foreground)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--foreground",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--popover-foreground))"
+    },
+    "--glass-surface": {
+      "cssVariable": "--glass-surface",
+      "cssValue": "var(--surface)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--surface",
+      "resolvedHsl": "223 45% 8%",
+      "resolvedHex": "#0B101E",
+      "cssUsage": "hsl(var(--glass-surface))"
+    },
+    "--glass-border": {
+      "cssVariable": "--glass-border",
+      "cssValue": "var(--prometeus-slate)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-slate",
+      "resolvedHsl": "220.000 28.916% 32.549%",
+      "resolvedHex": "#3B4B6B",
+      "cssUsage": "hsl(var(--glass-border))"
+    },
+    "--primary": {
+      "cssVariable": "--primary",
+      "cssValue": "var(--prometeus-blue)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-blue",
+      "resolvedHsl": "216.126 94.089% 39.804%",
+      "resolvedHex": "#0652C5",
+      "cssUsage": "hsl(var(--primary))"
+    },
+    "--primary-foreground": {
+      "cssVariable": "--primary-foreground",
+      "cssValue": "var(--prometeus-white)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-white",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--primary-foreground))"
+    },
+    "--secondary": {
+      "cssVariable": "--secondary",
+      "cssValue": "var(--prometeus-navy)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-navy",
+      "resolvedHsl": "222.000 36.585% 16.078%",
+      "resolvedHex": "#1A2338",
+      "cssUsage": "hsl(var(--secondary))"
+    },
+    "--secondary-foreground": {
+      "cssVariable": "--secondary-foreground",
+      "cssValue": "var(--prometeus-mist)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-mist",
+      "resolvedHsl": "214.286 31.818% 91.373%",
+      "resolvedHex": "#E2E8F0",
+      "cssUsage": "hsl(var(--secondary-foreground))"
+    },
+    "--muted": {
+      "cssVariable": "--muted",
+      "cssValue": "var(--surface-subtle)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--surface-subtle",
+      "resolvedHsl": "223 39% 11%",
+      "resolvedHex": "#111727",
+      "cssUsage": "hsl(var(--muted))"
+    },
+    "--muted-foreground": {
+      "cssVariable": "--muted-foreground",
+      "cssValue": "var(--text-muted)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--text-muted",
+      "resolvedHsl": "218 18% 67%",
+      "resolvedHex": "#9CA7BA",
+      "cssUsage": "hsl(var(--muted-foreground))"
+    },
+    "--accent": {
+      "cssVariable": "--accent",
+      "cssValue": "var(--prometeus-navy)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-navy",
+      "resolvedHsl": "222.000 36.585% 16.078%",
+      "resolvedHex": "#1A2338",
+      "cssUsage": "hsl(var(--accent))"
+    },
+    "--accent-foreground": {
+      "cssVariable": "--accent-foreground",
+      "cssValue": "var(--prometeus-white)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-white",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--accent-foreground))"
+    },
+    "--destructive": {
+      "cssVariable": "--destructive",
+      "cssValue": "0 72% 51%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "0 72% 51%",
+      "resolvedHex": "#DC2828",
+      "cssUsage": "hsl(var(--destructive))"
+    },
+    "--destructive-foreground": {
+      "cssVariable": "--destructive-foreground",
+      "cssValue": "var(--prometeus-white)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-white",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--destructive-foreground))"
+    },
+    "--success": {
+      "cssVariable": "--success",
+      "cssValue": "142 71% 45%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "142 71% 45%",
+      "resolvedHex": "#21C45D",
+      "cssUsage": "hsl(var(--success))"
+    },
+    "--warning": {
+      "cssVariable": "--warning",
+      "cssValue": "38 92% 50%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "38 92% 50%",
+      "resolvedHex": "#F59F0A",
+      "cssUsage": "hsl(var(--warning))"
+    },
+    "--info": {
+      "cssVariable": "--info",
+      "cssValue": "var(--brand-accent)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--brand-accent",
+      "resolvedHsl": "215 95% 76%",
+      "resolvedHex": "#88B8FC",
+      "cssUsage": "hsl(var(--info))"
+    },
+    "--status-error": {
+      "cssVariable": "--status-error",
+      "cssValue": "0 94% 82%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "0 94% 82%",
+      "resolvedHex": "#FCA6A6",
+      "cssUsage": "hsl(var(--status-error))"
+    },
+    "--status-warning": {
+      "cssVariable": "--status-warning",
+      "cssValue": "43 96% 72%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "43 96% 72%",
+      "resolvedHex": "#FCD573",
+      "cssUsage": "hsl(var(--status-warning))"
+    },
+    "--status-success": {
+      "cssVariable": "--status-success",
+      "cssValue": "156 72% 67%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "156 72% 67%",
+      "resolvedHex": "#6EE7B7",
+      "cssUsage": "hsl(var(--status-success))"
+    },
+    "--border": {
+      "cssVariable": "--border",
+      "cssValue": "222 28% 23%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "222 28% 23%",
+      "resolvedHex": "#2A344B",
+      "cssUsage": "hsl(var(--border))"
+    },
+    "--input": {
+      "cssVariable": "--input",
+      "cssValue": "var(--prometeus-slate)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-slate",
+      "resolvedHsl": "220.000 28.916% 32.549%",
+      "resolvedHex": "#3B4B6B",
+      "cssUsage": "hsl(var(--input))"
+    },
+    "--ring": {
+      "cssVariable": "--ring",
+      "cssValue": "var(--brand-accent)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--brand-accent",
+      "resolvedHsl": "215 95% 76%",
+      "resolvedHex": "#88B8FC",
+      "cssUsage": "hsl(var(--ring))"
+    },
+    "--radius": {
+      "cssVariable": "--radius",
+      "cssValue": "0.75rem",
+      "type": "dimension",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    },
+    "--sidebar-background": {
+      "cssVariable": "--sidebar-background",
+      "cssValue": "var(--surface)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--surface",
+      "resolvedHsl": "223 45% 8%",
+      "resolvedHex": "#0B101E",
+      "cssUsage": "hsl(var(--sidebar-background))"
+    },
+    "--sidebar-foreground": {
+      "cssVariable": "--sidebar-foreground",
+      "cssValue": "var(--prometeus-mist)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-mist",
+      "resolvedHsl": "214.286 31.818% 91.373%",
+      "resolvedHex": "#E2E8F0",
+      "cssUsage": "hsl(var(--sidebar-foreground))"
+    },
+    "--sidebar-primary": {
+      "cssVariable": "--sidebar-primary",
+      "cssValue": "var(--primary)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--primary",
+      "resolvedHsl": "216.126 94.089% 39.804%",
+      "resolvedHex": "#0652C5",
+      "cssUsage": "hsl(var(--sidebar-primary))"
+    },
+    "--sidebar-primary-foreground": {
+      "cssVariable": "--sidebar-primary-foreground",
+      "cssValue": "var(--primary-foreground)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--primary-foreground",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--sidebar-primary-foreground))"
+    },
+    "--sidebar-accent": {
+      "cssVariable": "--sidebar-accent",
+      "cssValue": "var(--accent)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--accent",
+      "resolvedHsl": "222.000 36.585% 16.078%",
+      "resolvedHex": "#1A2338",
+      "cssUsage": "hsl(var(--sidebar-accent))"
+    },
+    "--sidebar-accent-foreground": {
+      "cssVariable": "--sidebar-accent-foreground",
+      "cssValue": "var(--accent-foreground)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--accent-foreground",
+      "resolvedHsl": "0.000 0.000% 100.000%",
+      "resolvedHex": "#FFFFFF",
+      "cssUsage": "hsl(var(--sidebar-accent-foreground))"
+    },
+    "--sidebar-border": {
+      "cssVariable": "--sidebar-border",
+      "cssValue": "var(--border)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--border",
+      "resolvedHsl": "222 28% 23%",
+      "resolvedHex": "#2A344B",
+      "cssUsage": "hsl(var(--sidebar-border))"
+    },
+    "--sidebar-ring": {
+      "cssVariable": "--sidebar-ring",
+      "cssValue": "var(--ring)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--ring",
+      "resolvedHsl": "215 95% 76%",
+      "resolvedHex": "#88B8FC",
+      "cssUsage": "hsl(var(--sidebar-ring))"
+    },
+    "--scrollbar-thumb": {
+      "cssVariable": "--scrollbar-thumb",
+      "cssValue": "var(--prometeus-slate)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--prometeus-slate",
+      "resolvedHsl": "220.000 28.916% 32.549%",
+      "resolvedHex": "#3B4B6B",
+      "cssUsage": "hsl(var(--scrollbar-thumb))"
+    },
+    "--scrollbar-track": {
+      "cssVariable": "--scrollbar-track",
+      "cssValue": "var(--background)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--background",
+      "resolvedHsl": "225.000 66.667% 4.706%",
+      "resolvedHex": "#040814",
+      "cssUsage": "hsl(var(--scrollbar-track))"
+    },
+    "--scrollbar-hover": {
+      "cssVariable": "--scrollbar-hover",
+      "cssValue": "218 24% 47%",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "resolvedHsl": "218 24% 47%",
+      "resolvedHex": "#5B7095",
+      "cssUsage": "hsl(var(--scrollbar-hover))"
+    },
+    "--scrollbar-active": {
+      "cssVariable": "--scrollbar-active",
+      "cssValue": "var(--brand-accent)",
+      "type": "color",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css",
+      "aliasOf": "--brand-accent",
+      "resolvedHsl": "215 95% 76%",
+      "resolvedHex": "#88B8FC",
+      "cssUsage": "hsl(var(--scrollbar-active))"
+    },
+    "--shadow-sm": {
+      "cssVariable": "--shadow-sm",
+      "cssValue": "0 2px 8px hsl(var(--background) / 0.25)",
+      "type": "shadow",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    },
+    "--shadow-md": {
+      "cssVariable": "--shadow-md",
+      "cssValue": "0 8px 24px hsl(var(--background) / 0.4)",
+      "type": "shadow",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    },
+    "--shadow-lg": {
+      "cssVariable": "--shadow-lg",
+      "cssValue": "0 16px 40px hsl(var(--background) / 0.55)",
+      "type": "shadow",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    },
+    "--font-sans": {
+      "cssVariable": "--font-sans",
+      "cssValue": "'Space Grotesk', system-ui, -apple-system, sans-serif",
+      "type": "fontFamily",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    },
+    "--font-mono": {
+      "cssVariable": "--font-mono",
+      "cssValue": "'Geist Mono', ui-monospace, monospace",
+      "type": "fontFamily",
+      "layer": "semantic",
+      "provenance": "implemented",
+      "source": "apps/chat-web/src/index.css"
+    }
+  },
+  "officialPalette": {
+    "midnight": "#040814",
+    "blue": "#0652C5",
+    "white": "#FFFFFF",
+    "navy": "#1A2338",
+    "slate": "#3B4B6B",
+    "mist": "#E2E8F0"
+  },
+  "typography": {
+    "ui": {
+      "token": "--font-sans",
+      "family": "Space Grotesk",
+      "weights": [
+        400,
+        500,
+        600,
+        700
+      ]
+    },
+    "technical": {
+      "token": "--font-mono",
+      "family": "Geist Mono",
+      "weights": [
+        400,
+        500
+      ]
+    },
+    "logotype": {
+      "family": "Outfit",
+      "usage": "Original artwork only; never reconstruct logo as text."
+    },
+    "scale": {
+      "provenance": "recommended-for-new-content; use existing component sizes when editing current screens",
+      "caption": {
+        "px": 12,
+        "lineHeightPx": 16
+      },
+      "label": {
+        "px": 14,
+        "lineHeightPx": 20
+      },
+      "body": {
+        "px": 16,
+        "lineHeightPx": 24
+      },
+      "subtitle": {
+        "px": 18,
+        "lineHeightPx": 28
+      },
+      "section": {
+        "px": 24,
+        "lineHeightPx": 32
+      },
+      "page": {
+        "px": 32,
+        "lineHeightPx": 40
+      },
+      "display": {
+        "css": "clamp(2rem, 5vw, 4.5rem)",
+        "lineHeight": 1.05
+      }
+    },
+    "rules": [
+      "Body text uses solid colors.",
+      "Silver gradient limited to welcome/editorial hero.",
+      "Keep editable form text at 16px on mobile.",
+      "Use sentence case; uppercase only short editorial eyebrows."
+    ]
+  },
+  "spacing": {
+    "unit": "px",
+    "base": 4,
+    "preferredScale": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64,
+      96
+    ],
+    "provenance": "recommended subset of existing Tailwind scale",
+    "recipes": {
+      "iconLabelGap": 8,
+      "fieldStackGap": 16,
+      "cardPadding": 24,
+      "mobilePageGutter": 16,
+      "desktopPageGutter": 32,
+      "sectionGap": 32
+    }
+  },
+  "radii": {
+    "unit": "px",
+    "base": 12,
+    "tailwindRoundedSm": 8,
+    "tailwindRoundedMd": 10,
+    "tailwindRoundedLg": 12,
+    "panelRoundedXl": 12,
+    "panelRounded2xl": 16,
+    "composer": 24,
+    "pill": 9999,
+    "note": "Tailwind lg is overridden; xl remains Tailwind default 12px. Do not assume standard Tailwind md/lg sizes."
+  },
+  "responsive": {
+    "unit": "px",
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280,
+      "2xl": 1536
+    },
+    "containerMax": 1400,
+    "containerPadding": 32,
+    "desktopRail": 80,
+    "header": 64,
+    "mascotBubblesMinWidth": 1024,
+    "testWidths": [
+      320,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "rules": [
+      "Mobile first; preserve reading order.",
+      "No horizontal page overflow; bound code/table overflow to named regions.",
+      "Stack actions and fields when text no longer fits.",
+      "Use min-width:0 and overflow-wrap:anywhere for long text and IDs.",
+      "44px touch targets recommended; current compact desktop buttons are 36/40px.",
+      "Do not add a permanent desktop rail on narrow screens."
+    ]
+  },
+  "motion": {
+    "composerTransitionMs": 160,
+    "accordionTransitionMs": 200,
+    "recommendedRangeMs": [
+      120,
+      200
+    ],
+    "reducedMotion": {
+      "animationDurationMs": 0.01,
+      "animationIterationCount": 1,
+      "transitionDurationMs": 0.01,
+      "scrollBehavior": "auto"
+    },
+    "rules": [
+      "Animate state changes, not reading surfaces.",
+      "Preserve original mascot; decorative pulse must respect reduced motion.",
+      "No perpetual rotating glow around composer."
+    ]
+  },
+  "components": {
+    "button": {
+      "source": "apps/chat-web/src/components/ui/button.tsx",
+      "provenance": "implemented",
+      "variants": {
+        "default": {
+          "background": "--primary",
+          "foreground": "--primary-foreground",
+          "hover": "primary at 90% opacity",
+          "active": "primary at 80% opacity"
+        },
+        "secondary": {
+          "background": "--secondary",
+          "foreground": "--secondary-foreground"
+        },
+        "outline": {
+          "background": "--background",
+          "border": "--input",
+          "hover": "--accent"
+        },
+        "ghost": {
+          "background": "transparent",
+          "hover": "--accent"
+        },
+        "link": {
+          "foreground": "--brand-accent",
+          "hover": "underline"
+        },
+        "destructive": {
+          "background": "--destructive",
+          "foreground": "--destructive-foreground"
+        }
+      },
+      "heightPx": {
+        "sm": 36,
+        "default": 40,
+        "lg": 44,
+        "icon": 40
+      },
+      "paddingXPx": {
+        "sm": 12,
+        "default": 16,
+        "lg": 32
+      },
+      "radiusPx": 10,
+      "iconPx": 16,
+      "fontPx": 14,
+      "focus": {
+        "ringPx": 2,
+        "offsetPx": 2,
+        "token": "--ring"
+      },
+      "disabled": {
+        "opacity": 0.5,
+        "pointerEvents": "none"
+      },
+      "busyRecipe": {
+        "provenance": "recommended composition; no loading prop in Button",
+        "ariaBusy": true,
+        "disabled": true,
+        "label": "Salvando…",
+        "preserveWidth": true
+      }
+    },
+    "input": {
+      "source": "apps/chat-web/src/components/ui/input.tsx",
+      "provenance": "implemented",
+      "heightPx": 40,
+      "paddingXPx": 12,
+      "radiusPx": 10,
+      "fontPx": {
+        "mobile": 16,
+        "mdUp": 14
+      },
+      "background": "--background",
+      "border": "--input",
+      "placeholder": "--muted-foreground",
+      "focus": {
+        "ringPx": 2,
+        "offsetPx": 2,
+        "token": "--ring"
+      },
+      "errorRecipe": {
+        "ariaInvalid": true,
+        "ariaDescribedby": "unique error text id",
+        "text": "--status-error",
+        "provenance": "recommended composition"
+      }
+    },
+    "card": {
+      "source": "apps/chat-web/src/components/ui/card.tsx",
+      "provenance": "implemented",
+      "background": "--card",
+      "foreground": "--card-foreground",
+      "border": "--border",
+      "radiusPx": 12,
+      "paddingPx": 24,
+      "titlePx": 24
+    },
+    "dialog": {
+      "source": "apps/chat-web/src/components/ui/dialog.tsx",
+      "provenance": "implemented",
+      "background": "--background",
+      "overlay": "hsl(var(--background) / 0.8)",
+      "maxWidthPx": 512,
+      "paddingPx": 24,
+      "zIndex": 50,
+      "requirements": [
+        "Accessible title and description",
+        "Focus contained while open",
+        "Escape closes unless critical flow explicitly prevents it",
+        "Return focus to trigger",
+        "Constrain height and scroll body on mobile"
+      ]
+    },
+    "tabs": {
+      "source": "apps/chat-web/src/components/ui/tabs.tsx",
+      "provenance": "implemented",
+      "listHeightPx": 40,
+      "listBackground": "--muted",
+      "activeBackground": "--background",
+      "activeForeground": "--foreground",
+      "requirements": [
+        "Arrow key navigation",
+        "Linked tab and panel IDs",
+        "Visible selected and focus states"
+      ]
+    },
+    "select": {
+      "source": "apps/chat-web/src/components/ui/select.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Reuse Radix primitive",
+        "Opaque popover",
+        "Keyboard navigation",
+        "Text label and visible selected value"
+      ]
+    },
+    "checkbox": {
+      "source": "apps/chat-web/src/components/ui/checkbox.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Label associated with input",
+        "Expose checked/indeterminate state",
+        "Expand touch hit area without changing glyph"
+      ]
+    },
+    "switch": {
+      "source": "apps/chat-web/src/components/ui/switch.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Persistent label",
+        "State conveyed beyond color",
+        "Do not repurpose as a destructive confirmation"
+      ]
+    },
+    "tooltip": {
+      "source": "apps/chat-web/src/components/ui/tooltip.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Available on focus as well as hover",
+        "No essential information only in tooltip",
+        "Do not replace accessible name"
+      ]
+    },
+    "table": {
+      "source": "apps/chat-web/src/components/ui/table.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Real table semantics",
+        "Column headers",
+        "Wrap descriptive text",
+        "Use local horizontal scroll for irreducible data grids",
+        "Empty, loading and error states"
+      ]
+    },
+    "badge": {
+      "source": "apps/chat-web/src/components/ui/badge.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Status text always present",
+        "Keep foreground/background pairs together",
+        "Never use a dark badge foreground on an unfilled dark panel"
+      ]
+    },
+    "toast": {
+      "source": "apps/chat-web/src/components/ui/sonner.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Feedback supplementary to persistent mutation result",
+        "Actionable error text",
+        "Use polite announcements for nonurgent feedback"
+      ]
+    },
+    "skeleton": {
+      "source": "apps/chat-web/src/components/ui/skeleton.tsx",
+      "provenance": "implemented",
+      "requirements": [
+        "Match expected content geometry",
+        "Single accessible loading message",
+        "Respect reduced motion"
+      ]
+    },
+    "composer": {
+      "source": "apps/chat-web/src/index.css",
+      "provenance": "implemented",
+      "className": "chat-composer-radiant",
+      "radiusPx": 24,
+      "border": "--prometeus-slate",
+      "background": "--surface",
+      "focusBorder": "--ring",
+      "focusShadow": "0 0 0 3px hsl(var(--primary) / 0.18)"
+    },
+    "userBubble": {
+      "source": "apps/chat-web/src/index.css",
+      "provenance": "implemented",
+      "className": "chat-user-bubble",
+      "background": "linear-gradient(160deg, hsl(var(--brand-secondary)), hsl(var(--primary)) 80%)",
+      "foreground": "--primary-foreground"
+    },
+    "brandLogo": {
+      "source": "apps/chat-web/src/components/BrandLogo.tsx",
+      "provenance": "implemented",
+      "defaultWidthPx": 160,
+      "symbolBoxPx": 64,
+      "requirements": [
+        "Original artwork",
+        "Preserve transparent padding and aspect ratio",
+        "Meaningful alt or empty alt when redundant"
+      ]
+    },
+    "mascot": {
+      "source": "apps/chat-web/src/components/Mascot.tsx",
+      "provenance": "implemented",
+      "asset": "apps/chat-web/public/mascot.svg",
+      "widthPx": 120,
+      "heightPx": 140,
+      "bubbles": [
+        "Vamos crescer? 👋",
+        "Potencialize já! ✨"
+      ],
+      "bubblesMinViewportPx": 1024,
+      "requirements": [
+        "Keep original robot",
+        "Not a replacement for logo",
+        "Do not recolor cyan eyes",
+        "Decorative bubbles are not buttons"
+      ]
+    }
+  },
+  "assets": {
+    "logoPrimary": {
+      "path": "apps/chat-web/public/brand/prometeus-logo.png",
+      "manualPath": "assets/prometeus-logo.png",
+      "sha256": "df60fff6f4760533455777dd2b570de3cb646f705e1817294fe4b4fecdf0ec13",
+      "doNotModifyArtwork": true
+    },
+    "logoWhite": {
+      "path": "apps/chat-web/public/brand/prometeus-logo-white.png",
+      "manualPath": "assets/prometeus-logo-white.png",
+      "sha256": "8ff4bbad26890b7340735e0dfffb829051569ebca4151ec00f003d5811648443",
+      "doNotModifyArtwork": true
+    },
+    "symbol": {
+      "path": "apps/chat-web/public/brand/prometeus-symbol.png",
+      "manualPath": "assets/prometeus-symbol.png",
+      "sha256": "a4f9a9c9e82dab13490123330e8cc37e80a31768f6db400744a440f4a602f54d",
+      "doNotModifyArtwork": true
+    },
+    "mascot": {
+      "path": "apps/chat-web/public/mascot.svg",
+      "manualPath": "assets/mascot.svg",
+      "sha256": "cf6ac34d0e4fc2aa83b0c83f9050bc922ad38b915fdc3ec9c14c10b2a0ad5bcc",
+      "doNotModifyArtwork": true
+    }
+  },
+  "accessibility": {
+    "standardTarget": "WCAG 2.2 AA; target for new work, not a certification of the entire existing product",
+    "minContrast": {
+      "normalText": 4.5,
+      "largeText": 3,
+      "essentialUI": 3
+    },
+    "preferredTouchTargetPx": 44,
+    "focusToken": "--ring",
+    "inlineStatusTokens": {
+      "error": "--status-error",
+      "warning": "--status-warning",
+      "success": "--status-success",
+      "info": "--brand-accent"
+    },
+    "requirements": [
+      "Keyboard access and visible focus",
+      "Labels not placeholders",
+      "Color plus text/icon for status",
+      "Readable at 200% text zoom and 320 CSS px reflow",
+      "aria-live plus persistent result for mutations",
+      "Respect prefers-reduced-motion and forced-colors",
+      "Verify actual composited colors including hover and gradients"
+    ]
+  },
+  "agentContract": {
+    "readFirst": [
+      "AGENTS.md",
+      "docs/brandbook/design-system.md",
+      "docs/brandbook/design-system.json",
+      "apps/chat-web/DESIGN.md"
+    ],
+    "reuseFirst": [
+      "BrandLogo",
+      "Mascot",
+      "components/ui/*",
+      "semantic Tailwind classes"
+    ],
+    "mustNot": [
+      "Redraw or retype the logo",
+      "Replace the original robot",
+      "Introduce light/teal ENS theme",
+      "Rename tenant IDs, headers, persisted data or internal ENS paths as a visual change",
+      "Treat model prose as authorization",
+      "Change layout or workflow as an incidental branding change",
+      "Assume JSON is automatically consumed by the app"
+    ],
+    "newComponentProcedure": [
+      "Find existing primitive",
+      "Specify anatomy and states",
+      "Use semantic tokens",
+      "Design mobile behavior",
+      "Implement accessibility and interaction contract",
+      "Verify viewport and keyboard behavior",
+      "Update affected docs/tokens together"
+    ]
+  },
+  "compositionRecipes": {
+    "marketingDashboard": {
+      "provenance": "implemented real results and explicit demonstration; palette and runtime tokens unchanged",
+      "updatedAt": "2026-09-30",
+      "source": "apps/chat-web/DESIGN.md",
+      "overview": {
+        "indicators": [
+          "leads",
+          "periodSales",
+          "periodRevenue",
+          "paidMediaInvestment"
+        ],
+        "charts": [
+          "weeklyLeadTrend",
+          "leadChannelDistribution"
+        ],
+        "health": "one short measurement notice; no positive conclusion without goals and adequate coverage",
+        "campaigns": "compact linked rows"
+      },
+      "onDemand": [
+        "contactImports",
+        "captureIdentityReview",
+        "weeklyMeasuredReports",
+        "reportRevisions",
+        "sourceCoverage"
+      ],
+      "campaign": {
+        "scope": "single persisted campaign plus period filters",
+        "charts": [
+          "weeklyLeadTrend",
+          "leadChannelDistribution"
+        ],
+        "workspaceTabs": [
+          "overview",
+          "planning",
+          "team",
+          "sources",
+          "leads",
+          "materials",
+          "history"
+        ],
+        "draft": "retain across tabs; explicit save/discard in planning"
+      },
+      "dataRules": [
+        "Keep fixtures separate from persisted campaigns",
+        "Unavailable is not zero",
+        "Cold contacts and WhatsApp clicks are not captured leads",
+        "Aggregate reports do not create people or fill a person-level funnel",
+        "Revisions replace measured values and preserve history",
+        "Partial coverage prevents a positive health conclusion",
+        "Do not invent charts for unmeasured results",
+        "Period sales differ from lead-entry cohort wins",
+        "Paid qualified lead cost excludes unpaid channels"
+      ],
+      "dataModes": {
+        "real": {
+          "route": "/marketing-ops/dashboard",
+          "readModel": "/api/marketing/results",
+          "campaignRoute": "/marketing-ops/campaigns/:campaignId"
+        },
+        "demo": {
+          "route": "/marketing-ops/dashboard?mode=demo",
+          "campaignRoute": "/marketing-ops/dashboard/campaigns/:demoCampaignId",
+          "onDemand": ["cohortFunnel", "opportunities", "paidMediaByPlatform", "operationalPriorities"],
+          "restriction": "explicitly illustrative; never join by campaign name or persist simulated reports"
+        }
+      },
+      "interaction": [
+        "Use semantic links for campaign pages",
+        "Use existing Radix dialogs and tabs",
+        "Return focus after closing a dialog",
+        "No concurrent dialogs",
+        "Only the tab strip can scroll horizontally on mobile"
+      ]
+    }
+  }
+}

@@ -181,13 +181,13 @@ export default function ProductionCalendarPage({
       <Sidebar />
       <MarketingOpsMobileBar
         label={`Produção · ${viewLabel}`}
-        icon={<CalendarDaysIcon className="h-4 w-4 text-brand-primary" />}
+        icon={<CalendarDaysIcon className="h-4 w-4 text-brand-accent" />}
         action={canWrite ? (
           <Button
             size="icon"
             onClick={() => setCreateOpen(true)}
             aria-label="Novo item"
-            className="shadow-glass h-10 w-10 rounded-full text-slate-950"
+            className="shadow-glass h-10 w-10 rounded-full text-foreground"
           >
             <Plus className="h-5 w-5" />
           </Button>
@@ -204,10 +204,10 @@ export default function ProductionCalendarPage({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <nav aria-label="Visualizações da produção" className="flex rounded-[8px] border border-slate-200 bg-white/70 p-1">
+              <nav aria-label="Visualizações da produção" className="flex rounded-[8px] border border-border bg-card p-1">
                 <Link
                   to={{ pathname: '/marketing-ops/production', search }}
-                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-white"
+                  className="flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-accent"
                 >
                   <LayoutList className="mr-2 h-4 w-4" /> Lista
                 </Link>
@@ -215,8 +215,8 @@ export default function ProductionCalendarPage({
                   to={{ pathname: '/marketing-ops/production/week', search }}
                   aria-current={view === 'week' ? 'page' : undefined}
                   className={view === 'week'
-                    ? 'flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-slate-950'
-                    : 'flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-white'}
+                    ? 'flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-foreground'
+                    : 'flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-accent'}
                 >
                   Semana
                 </Link>
@@ -224,8 +224,8 @@ export default function ProductionCalendarPage({
                   to={{ pathname: '/marketing-ops/production/month', search }}
                   aria-current={view === 'month' ? 'page' : undefined}
                   className={view === 'month'
-                    ? 'flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-slate-950'
-                    : 'flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-white'}
+                    ? 'flex h-9 items-center rounded-[6px] bg-brand-primary px-3 text-sm font-medium text-foreground'
+                    : 'flex h-9 items-center rounded-[6px] px-3 text-sm font-medium text-text-secondary hover:bg-accent'}
                 >
                   Mês
                 </Link>
@@ -267,12 +267,12 @@ export default function ProductionCalendarPage({
 
           <section aria-live="polite" aria-busy={scheduleQuery.isLoading} className="py-5">
             {scheduleQuery.isLoading ? (
-              <div className="glass-surface shadow-glass flex min-h-80 items-center justify-center rounded-[8px] border-white/60">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin text-brand-primary" />
+              <div className="glass-surface shadow-glass flex min-h-80 items-center justify-center rounded-[8px] border-border">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin text-brand-accent" />
                 Carregando calendário
               </div>
             ) : scheduleQuery.isError ? (
-              <Alert variant="destructive" className="rounded-[8px] border-white/60 bg-white/80 shadow-glass backdrop-blur-xl">
+              <Alert variant="destructive" className="rounded-[8px] border-border bg-card shadow-glass backdrop-blur-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>{accessDenied ? 'Acesso não autorizado' : 'Não foi possível carregar o calendário'}</AlertTitle>
                 <AlertDescription>
@@ -286,7 +286,7 @@ export default function ProductionCalendarPage({
             ) : (
               <>
                 {items.length === 0 ? (
-                  <div className="glass-surface shadow-glass mb-4 flex items-center gap-3 rounded-[8px] border-white/60 px-4 py-3">
+                  <div className="glass-surface shadow-glass mb-4 flex items-center gap-3 rounded-[8px] border-border px-4 py-3">
                     <Inbox className="h-5 w-5 shrink-0 text-text-muted" />
                     <div>
                       <h2 className="font-semibold text-text-primary">
@@ -318,7 +318,7 @@ export default function ProductionCalendarPage({
                       variant="outline"
                       onClick={() => scheduleQuery.fetchNextPage()}
                       disabled={scheduleQuery.isFetchingNextPage}
-                      className="h-11 rounded-[8px] bg-white/80"
+                      className="h-11 rounded-[8px] bg-card"
                     >
                       {scheduleQuery.isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Carregar mais

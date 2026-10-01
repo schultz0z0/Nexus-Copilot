@@ -85,16 +85,16 @@ export const PictureFilesPanel = ({
     if (!effectiveSelection) selectFile(files[0].id);
   }, [candidateArtifactId, effectiveSelection, files, selectFile]);
 
-  if (isLoading) return <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />Carregando arquivos...</div>;
-  if (error && files.length === 0) return <div className="flex h-full items-center justify-center px-6 text-center text-sm text-red-600">Não foi possível carregar os arquivos da peça.</div>;
-  if (files.length === 0) return <div className="flex h-full min-h-64 items-center justify-center px-8 text-center text-sm leading-6 text-slate-500">Converse com o Hermes e envie suas referências. Briefing, planos, versões e a peça final aparecerão aqui.</div>;
+  if (isLoading) return <div className="flex h-full items-center justify-center gap-2 text-sm text-text-muted"><Loader2 className="h-4 w-4 animate-spin" />Carregando arquivos...</div>;
+  if (error && files.length === 0) return <div className="flex h-full items-center justify-center px-6 text-center text-sm text-status-error">Não foi possível carregar os arquivos da peça.</div>;
+  if (files.length === 0) return <div className="flex h-full min-h-64 items-center justify-center px-8 text-center text-sm leading-6 text-text-muted">Converse com o Hermes e envie suas referências. Briefing, planos, versões e a peça final aparecerão aqui.</div>;
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[minmax(10rem,0.9fr)_minmax(14rem,1.1fr)]">
-      <div className="overflow-y-auto border-b border-slate-200 p-3">
+      <div className="overflow-y-auto border-b border-border p-3">
         {groups.map(([category, entries]) => (
           <section key={category} className="mb-4">
-            <h3 className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{categoryLabels[category] ?? category}</h3>
+            <h3 className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">{categoryLabels[category] ?? category}</h3>
             <div className="space-y-1">
               {entries.map((entry) => {
                 const candidate = Boolean(candidateArtifactId)
@@ -105,9 +105,9 @@ export const PictureFilesPanel = ({
                     type="button"
                     key={entry.id}
                     onClick={() => selectFile(entry.id)}
-                    className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-slate-100", effectiveSelection === entry.id && "bg-cyan-50 text-cyan-900")}
+                    className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-accent", effectiveSelection === entry.id && "bg-primary/15 text-brand-accent")}
                   >
-                    <File className="h-4 w-4 shrink-0 text-slate-400" />
+                    <File className="h-4 w-4 shrink-0 text-text-muted" />
                     <span className="min-w-0 flex-1 truncate">
                       {entry.filename}{version ? ` (v${version})` : ""}
                     </span>

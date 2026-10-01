@@ -156,7 +156,7 @@ export function AgentPlanCard({
     info: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-800',
     success: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800',
     destructive: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800',
-    muted: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+    muted: 'bg-muted text-text-secondary border-border dark:bg-slate-800 dark:text-text-secondary dark:border-border'
   }[statusInfo.tone];
 
   return (
@@ -169,7 +169,7 @@ export function AgentPlanCard({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-primary/10 p-1.5 text-primary">
+          <div className="rounded-lg bg-primary/10 p-1.5 text-brand-accent">
             <Hash className="h-4 w-4" />
           </div>
           <div>
@@ -206,20 +206,20 @@ export function AgentPlanCard({
       <div className="mt-2 space-y-2">
         <ol className="divide-y divide-border/50 rounded-lg border border-border/50 bg-muted/30">
           {plan.actions.map((action, index) => {
-            const presented = presentPlanAction(action);
+            const presented = presentPlanAction(action, plan.actionLabels?.find(label => label.actionIndex === index));
             return (
               <li key={index} className="p-2.5 text-xs">
                 <div className="flex items-start gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-brand-accent">
                     {index + 1}
                   </span>
                   <div className="flex-1 space-y-0.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`font-semibold ${presented.supported ? 'text-foreground' : 'text-destructive'}`}>
+                      <span className={`font-semibold ${presented.supported ? 'text-foreground' : 'text-status-error'}`}>
                         {presented.title}
                       </span>
                       {!presented.supported && (
-                        <span className="inline-flex items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                        <span className="inline-flex items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-status-error">
                           <AlertCircle className="h-3 w-3" />
                           Ação não suportada
                         </span>
@@ -253,7 +253,7 @@ export function AgentPlanCard({
                 <button
                   type="button"
                   onClick={() => setShowCriticalConfirm(false)}
-                  className="rounded border border-rose-300 bg-white px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-50 dark:border-rose-700 dark:bg-slate-900 dark:text-slate-200 transition"
+                  className="rounded border border-rose-300 bg-card px-2.5 py-1 font-medium text-text-secondary hover:bg-accent dark:border-rose-700 dark:bg-slate-900 dark:text-text-secondary transition"
                 >
                   Cancelar
                 </button>
@@ -265,7 +265,7 @@ export function AgentPlanCard({
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-destructive">
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-status-error">
           <XCircle className="h-4 w-4 shrink-0" />
           <span>{errorMessage}</span>
         </div>
@@ -277,7 +277,7 @@ export function AgentPlanCard({
           success: 'border-emerald-300 bg-emerald-50/90 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200',
           warning: 'border-amber-300 bg-amber-50/90 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
           destructive: 'border-rose-300 bg-rose-50/90 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200',
-          muted: 'border-slate-300 bg-slate-50/90 text-slate-800 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200'
+          muted: 'border-border bg-background text-foreground dark:border-border dark:bg-slate-900/60 dark:text-text-secondary'
         }[receiptPresentation.tone]}`}>
           <div className="flex items-center gap-2">
             {receiptPresentation.tone === 'success' ? (

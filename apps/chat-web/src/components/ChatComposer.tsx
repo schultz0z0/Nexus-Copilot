@@ -117,14 +117,14 @@ function OptionMenu<T extends string>({ label, value, options, disabled, onChang
         <Button
           type="button"
           variant="ghost"
-          className="h-9 rounded-full border border-white/30 bg-white/35 px-3 text-xs font-medium text-slate-700 hover:bg-white/50"
+          className="h-9 rounded-full border border-border bg-card px-3 text-xs font-medium text-text-secondary hover:bg-accent"
           disabled={disabled}
         >
           <span className="max-w-[120px] truncate">{label}: {selected}</span>
           <ChevronDown className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="glass-surface border-white/20 bg-white/80 backdrop-blur-md shadow-glass min-w-[190px]">
+      <DropdownMenuContent align="start" className="glass-surface border-border bg-card backdrop-blur-md shadow-glass min-w-[190px]">
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
@@ -135,7 +135,7 @@ function OptionMenu<T extends string>({ label, value, options, disabled, onChang
             className="cursor-pointer justify-between"
           >
             <span>{option.label}</span>
-            {option.value === value && <Check className="h-4 w-4 text-brand-primary" aria-hidden="true" />}
+            {option.value === value && <Check className="h-4 w-4 text-brand-accent" aria-hidden="true" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -288,8 +288,8 @@ export function ChatComposer({
       />
 
       {isDragActive && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl border-2 border-dashed border-brand-primary/50 bg-white/65 backdrop-blur-sm">
-          <p className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm">
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl border-2 border-dashed border-brand-primary/50 bg-card backdrop-blur-sm">
+          <p className="rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm">
             Solte seus arquivos aqui para anexar ao chat
           </p>
         </div>
@@ -297,8 +297,8 @@ export function ChatComposer({
 
       {imageGenerationMode && imageGenerationOptions && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <div className="flex h-9 items-center gap-2 rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3 text-xs font-semibold text-slate-800">
-            <ImageIcon className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+          <div className="flex h-9 items-center gap-2 rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3 text-xs font-semibold text-foreground">
+            <ImageIcon className="h-4 w-4 text-brand-accent" aria-hidden="true" />
             <span>Gerar imagem</span>
           </div>
 
@@ -331,11 +331,11 @@ export function ChatComposer({
             variant="ghost"
             size="icon"
             aria-label="Sair do modo gerar imagem"
-            className="h-9 w-9 rounded-full border border-white/30 bg-white/30 hover:bg-white/50"
+            className="h-9 w-9 rounded-full border border-border bg-card hover:bg-accent"
             onClick={onExitImageGenerationMode}
             disabled={disabled}
           >
-            <X className="h-4 w-4 text-slate-700" aria-hidden="true" />
+            <X className="h-4 w-4 text-text-secondary" aria-hidden="true" />
           </Button>
         </div>
       )}
@@ -345,21 +345,21 @@ export function ChatComposer({
           {attachments.map((att) => (
             <div
               key={att.id}
-              className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/30 px-2 py-2 shadow-sm"
+              className="flex items-center gap-2 rounded-2xl border border-border bg-card px-2 py-2 shadow-sm"
             >
               {att.kind === "image" && att.previewUrl ? (
-                <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/30 bg-white/30">
+                <div className="h-12 w-12 overflow-hidden rounded-xl border border-border bg-card">
                   <img src={att.previewUrl} alt={att.file.name} className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="h-12 w-12 grid place-items-center rounded-xl border border-white/30 bg-white/20">
-                  <FileText className="h-5 w-5 text-slate-700" aria-hidden="true" />
+                <div className="h-12 w-12 grid place-items-center rounded-xl border border-border bg-white/20">
+                  <FileText className="h-5 w-5 text-text-secondary" aria-hidden="true" />
                 </div>
               )}
 
               <div className="min-w-0">
-                <p className="max-w-[180px] truncate text-xs font-medium text-slate-800">{att.file.name}</p>
-                <p className="text-[10px] text-slate-600">
+                <p className="max-w-[180px] truncate text-xs font-medium text-foreground">{att.file.name}</p>
+                <p className="text-[10px] text-text-secondary">
                   {att.kind === "image" ? "Imagem" : "Arquivo"} • {(att.file.size / 1024 / 1024).toFixed(1)} MB
                 </p>
               </div>
@@ -369,10 +369,10 @@ export function ChatComposer({
                 variant="ghost"
                 size="icon"
                 aria-label={`Remover ${att.file.name}`}
-                className="h-9 w-9 rounded-full hover:bg-white/40"
+                className="h-9 w-9 rounded-full hover:bg-accent"
                 onClick={() => onRemoveAttachment(att.id)}
               >
-                <X className="h-4 w-4 text-slate-700" aria-hidden="true" />
+                <X className="h-4 w-4 text-text-secondary" aria-hidden="true" />
               </Button>
             </div>
           ))}
@@ -396,7 +396,7 @@ export function ChatComposer({
           <DropdownMenuContent
             align="start"
             sideOffset={8}
-            className="glass-surface border-white/20 bg-white/40 backdrop-blur-md shadow-glass min-w-[260px]"
+            className="glass-surface border-border bg-card backdrop-blur-md shadow-glass min-w-[260px]"
           >
             {menuItems.map((item) => {
               const content = (
@@ -410,7 +410,7 @@ export function ChatComposer({
                   }}
                   className="cursor-pointer"
                 >
-                  <item.icon className="mr-2 h-4 w-4 text-slate-700" aria-hidden="true" />
+                  <item.icon className="mr-2 h-4 w-4 text-text-secondary" aria-hidden="true" />
                   {item.label}
                 </DropdownMenuItem>
               );

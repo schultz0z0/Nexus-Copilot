@@ -74,8 +74,8 @@ export function ChatContentPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-5xl border-white/20 bg-white/95 p-0 text-slate-900 shadow-2xl backdrop-blur-xl">
-        <DialogHeader className="border-b border-slate-200/80 px-6 py-4">
+      <DialogContent className="w-[96vw] max-w-5xl border-border bg-card p-0 text-foreground shadow-2xl backdrop-blur-xl">
+        <DialogHeader className="border-b border-border px-6 py-4">
           <div className="flex items-start justify-between gap-4 pr-8">
             <div className="space-y-1">
               <DialogTitle>{title}</DialogTitle>
@@ -103,22 +103,22 @@ export function ChatContentPreviewDialog({
               </div>
             ) : mode === "html" ? (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="rounded-2xl border border-border bg-card p-3">
                   <iframe
                     title={title}
                     sandbox=""
                     srcDoc={content}
-                    className="h-[60vh] w-full rounded-xl border border-slate-200 bg-white"
+                    className="h-[60vh] w-full rounded-xl border border-border bg-card"
                   />
                 </div>
-                <pre className="overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs text-slate-100">
+                <pre className="overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs text-text-secondary">
                   <code>{content}</code>
                 </pre>
               </div>
             ) : (
               <pre
                 className={cn(
-                  "overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs text-slate-100",
+                  "overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs text-text-secondary",
                   mode === "text" && "whitespace-pre-wrap break-words",
                 )}
               >

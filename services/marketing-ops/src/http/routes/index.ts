@@ -15,6 +15,7 @@ import { registerTimeline } from './timeline.js';
 import { registerNotifications } from './notifications.js';
 import { registerApprovals } from './approvals.js';
 import { registerAgentPlans } from './agentPlans.js';
+import { registerLeads, registerPublicLeads, type CaptureKeyring } from './leads.js';
 import { AgentPlanService } from '../../plans/service.js';
 import type { ArtifactClient } from '../../integrations/artifactClient.js';
 import type { RagCourseClient } from '../../integrations/ragCourseClient.js';
@@ -22,6 +23,10 @@ import type { DelegationKeyring } from '../../delegation/claims.js';
 import { createMcpRouter } from '../../mcp/http.js';
 import { DEFAULT_TENANT_TIME_ZONE } from '../../domain/scheduling.js';
 import type { MetricsRegistry } from '../../observability/metrics.js';
+import type { AdsIntegrationService } from '../../domain/ads.js';
+import { registerAds } from './ads.js';
+import type { WebAnalyticsService } from '../../domain/webAnalytics.js';
+import { registerWebAnalytics } from './webAnalytics.js';
 
 export interface ApiRouterDependencies {
   pool: Pool;
@@ -36,15 +41,22 @@ export interface ApiRouterDependencies {
   tenantTimeZone?: string;
   metrics?: Pick<MetricsRegistry, 'increment'>;
   agentPlanService?: AgentPlanService;
+  captureKeyring?: CaptureKeyring;
+  adsService?: AdsIntegrationService;
+  webAnalyticsService?:WebAnalyticsService;
 }
 
 export function createApiRouter(deps: ApiRouterDependencies): Router {
   const router = Router();
+  registerPublicLeads(router, deps.pool, deps.features, deps.captureKeyring);
   router.use(corsMiddleware(deps.corsOrigins));
   registerCapabilities(router, deps.features);
   router.use('/v1', privateResponseMiddleware);
   router.use('/v1', authMiddleware(deps.pool, deps.verifyAssertion));
   registerCampaigns(router, deps.pool, deps.ragCourseClient, deps.features);
+  registerLeads(router, deps.pool, deps.features);
+  if (deps.adsService) registerAds(router, deps.adsService, deps.features,deps.webAnalyticsService);
+  if(deps.webAnalyticsService) registerWebAnalytics(router,deps.webAnalyticsService,deps.features);
   registerParticipants(router, deps.pool, deps.features);
   registerMaterials(router, deps.pool, deps.artifactClient, deps.features);
   registerReferences(router, deps.ragCourseClient, deps.features);

@@ -14,17 +14,20 @@ import { AuthenticatedQueryProvider } from "./components/AuthenticatedQueryProvi
 import { marketingOpsFlags } from "./lib/marketingOps/flags";
 
 const CampaignListPage = lazy(() => import("./pages/marketing-ops/CampaignListPage"));
+const MarketingDashboardPage = lazy(() => import("./pages/marketing-ops/MarketingDashboardPage"));
 const CampaignWorkspacePage = lazy(() => import("./pages/marketing-ops/CampaignWorkspacePage"));
 const ProductionListPage = lazy(() => import("./pages/marketing-ops/ProductionListPage"));
 const ProductionWeekPage = lazy(() => import("./pages/marketing-ops/ProductionWeekPage"));
 const ProductionMonthPage = lazy(() => import("./pages/marketing-ops/ProductionMonthPage"));
 const ApprovalQueuePage = lazy(() => import("./pages/marketing-ops/ApprovalQueuePage"));
 const ApprovalDetailPage = lazy(() => import("./pages/marketing-ops/ApprovalDetailPage"));
+const IntegrationsPage = lazy(() => import("./pages/settings/IntegrationsPage"));
+const WebAnalyticsPage = lazy(() => import("./pages/marketing-ops/WebAnalyticsPage"));
 const marketingOps = marketingOpsFlags(import.meta.env);
 
 const CampaignRouteLoading = () => (
-  <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-text-secondary">
-    <Loader2 className="mr-2 h-4 w-4 animate-spin text-brand-primary" />
+  <div className="flex min-h-screen items-center justify-center bg-background text-sm text-text-secondary">
+    <Loader2 className="mr-2 h-4 w-4 animate-spin text-brand-accent" />
     Carregando campanhas
   </div>
 );
@@ -62,6 +65,16 @@ const AuthenticatedApp = () => {
 
             {marketingOps.read ? (
               <>
+                <Route path="/settings/integrations" element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><IntegrationsPage /></Suspense></ProtectedRoute>} />
+                <Route path="/marketing-ops/analytics" element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><WebAnalyticsPage /></Suspense></ProtectedRoute>} />
+                <Route
+                  path="/marketing-ops/dashboard"
+                  element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><MarketingDashboardPage /></Suspense></ProtectedRoute>}
+                />
+                <Route
+                  path="/marketing-ops/dashboard/campaigns/:demoCampaignId"
+                  element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><MarketingDashboardPage /></Suspense></ProtectedRoute>}
+                />
                 <Route
                   path="/marketing-ops/campaigns"
                   element={

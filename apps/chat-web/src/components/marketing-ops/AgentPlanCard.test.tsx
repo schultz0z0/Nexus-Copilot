@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MarketingOpsClient } from '@/lib/marketingOps/client';
-import type { MarketingOpsPlanExecutionResult, MarketingOpsPreparedPlanSummary, MarketingOpsResult } from '@/lib/marketingOps/types';
+import type { MarketingOpsPlanAction, MarketingOpsPlanExecutionResult, MarketingOpsPreparedPlanSummary, MarketingOpsResult } from '@/lib/marketingOps/types';
 import { AgentPlanCard } from './AgentPlanCard';
 
 const samplePlan: MarketingOpsPreparedPlanSummary = {
@@ -174,7 +174,7 @@ describe('AgentPlanCard', () => {
         failed: [],
         pending: [],
         deep_links: [
-          { href: '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111', label: 'Abrir' } as any
+          { href: '/marketing-ops/campaigns/11111111-1111-4111-8111-111111111111', label: 'Abrir' } as unknown as string
         ]
       }
     };

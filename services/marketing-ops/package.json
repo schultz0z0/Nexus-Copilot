@@ -10,7 +10,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "vitest run --exclude src/campaignList.performance.test.ts --exclude src/schedule.performance.test.ts --exclude src/approvals.performance.test.ts",
+    "test": "vitest run --exclude src/campaignList.performance.test.ts --exclude src/schedule.performance.test.ts --exclude src/approvals.performance.test.ts --pool=forks --maxWorkers=1",
     "test:campaign-list-performance": "vitest run src/campaignList.performance.test.ts --pool=forks --maxWorkers=1",
     "test:schedule-performance": "vitest run src/schedule.performance.test.ts --pool=forks --maxWorkers=1",
     "test:approvals-performance": "vitest run src/approvals.performance.test.ts --pool=forks --maxWorkers=1",

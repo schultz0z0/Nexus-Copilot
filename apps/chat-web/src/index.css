@@ -2,254 +2,153 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
+/* Prometeus: canonical runtime tokens, adapted by tailwind.config.ts.
+   Original palette from docs/brandbook. Derived tones ensure readable UI states. */
 @layer base {
   :root {
-    /* Brand Colors - Blue/Purple/Cyan palette */
-    --brand-primary: 189 100% 36%;
-    --brand-secondary: 189 92% 44%;
-    --brand-accent: 189 90% 56%;
-    
-    /* Text Colors */
-    --text-primary: 222 47% 11%;
-    --text-secondary: 215 20% 25%;
-    --text-muted: 215 14% 45%;
-    
-    /* Surface Colors */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --surface: 0 0% 100%;
-    --surface-subtle: 220 60% 98%;
-    
-    /* Glass Surface (with alpha) */
-    --glass-surface: 0 0% 100%;
-    --glass-border: 0 0% 100%;
-    
-    /* Semantic Colors */
-    --primary: 189 100% 27%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 220 40% 96%;
-    --secondary-foreground: 189 100% 36%;
-    
-    --muted: 220 40% 96%;
-    --muted-foreground: 215 14% 45%;
-    
-    --accent: 220 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    
+    color-scheme: dark;
+    --prometeus-midnight: 225.000 66.667% 4.706%; /* #040814 */
+    --prometeus-blue: 216.126 94.089% 39.804%; /* #0652C5 */
+    --prometeus-white: 0.000 0.000% 100.000%; /* #FFFFFF */
+    --prometeus-navy: 222.000 36.585% 16.078%; /* #1A2338 */
+    --prometeus-slate: 220.000 28.916% 32.549%; /* #3B4B6B */
+    --prometeus-mist: 214.286 31.818% 91.373%; /* #E2E8F0 */
+    --brand-primary: var(--prometeus-blue);
+    --brand-secondary: 216 88% 49%;
+    --brand-accent: 215 95% 76%;
+    --text-primary: var(--prometeus-white);
+    --text-secondary: var(--prometeus-mist);
+    --text-muted: 218 18% 67%;
+    --background: var(--prometeus-midnight);
+    --foreground: var(--text-primary);
+    --surface: 223 45% 8%;
+    --surface-subtle: 223 39% 11%;
+    --card: var(--surface);
+    --card-foreground: var(--foreground);
+    --popover: var(--surface-subtle);
+    --popover-foreground: var(--foreground);
+    --glass-surface: var(--surface);
+    --glass-border: var(--prometeus-slate);
+    --primary: var(--prometeus-blue);
+    --primary-foreground: var(--prometeus-white);
+    --secondary: var(--prometeus-navy);
+    --secondary-foreground: var(--prometeus-mist);
+    --muted: var(--surface-subtle);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--prometeus-navy);
+    --accent-foreground: var(--prometeus-white);
+    --destructive: 0 72% 51%;
+    --destructive-foreground: var(--prometeus-white);
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
-    --info: 199 89% 48%;
-    
-    /* UI Elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 189 100% 36%;
-    --radius: 1rem;
-    
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 215 20% 25%;
-    --sidebar-primary: 189 100% 36%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 189 100% 36%;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 4px 0 rgb(11 18 32 / 0.1);
-    --shadow-md: 0 8px 24px -4px rgb(11 18 32 / 0.2);
-    --shadow-lg: 0 16px 40px -6px rgb(11 18 32 / 0.24);
+    --info: var(--brand-accent);
+    --status-error: 0 94% 82%;
+    --status-warning: 43 96% 72%;
+    --status-success: 156 72% 67%;
+    --border: 222 28% 23%;
+    --input: var(--prometeus-slate);
+    --ring: var(--brand-accent);
+    --radius: 0.75rem;
+    --sidebar-background: var(--surface);
+    --sidebar-foreground: var(--prometeus-mist);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+    --scrollbar-thumb: var(--prometeus-slate);
+    --scrollbar-track: var(--background);
+    --scrollbar-hover: 218 24% 47%;
+    --scrollbar-active: var(--brand-accent);
+    --shadow-sm: 0 2px 8px hsl(var(--background) / 0.25);
+    --shadow-md: 0 8px 24px hsl(var(--background) / 0.4);
+    --shadow-lg: 0 16px 40px hsl(var(--background) / 0.55);
+    --font-sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, monospace;
   }
-
-  .dark {
-    --brand-primary: 189 100% 36%;
-    --brand-secondary: 189 92% 44%;
-    --brand-accent: 189 90% 56%;
-    
-    --background: 222 47% 11%;
-    --foreground: 220 40% 98%;
-    
-    --text-primary: 220 40% 98%;
-    --text-secondary: 215 20% 75%;
-    --text-muted: 215 14% 65%;
-    
-    --primary: 189 100% 36%;
-    --primary-foreground: 222 47% 11%;
-    
-    --secondary: 217 33% 18%;
-    --secondary-foreground: 220 40% 98%;
-    
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
-    
-    --accent: 217 33% 18%;
-    --accent-foreground: 220 40% 98%;
-    
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 220 40% 98%;
-    
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 189 100% 36%;
-    
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 220 40% 98%;
-    --sidebar-primary: 189 100% 36%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 18%;
-    --sidebar-accent-foreground: 220 40% 98%;
-    --sidebar-border: 217 33% 18%;
-    --sidebar-ring: 189 100% 36%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
   }
-
   body {
-    @apply text-foreground;
-    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-    background: radial-gradient(ellipse at top, hsl(220, 60%, 98%), hsl(30, 100%, 97%) 50%, hsl(220, 100%, 98%));
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    background-image: radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.09), transparent 60%);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-}
-
-@property --chat-ring-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes chat-ring-spin {
-  to {
-    --chat-ring-angle: 360deg;
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), a, select { cursor: pointer; }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+  ::selection { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--scrollbar-track)); }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--scrollbar-thumb));
+    border: 2px solid hsl(var(--scrollbar-track));
+    border-radius: 8px;
   }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--scrollbar-hover)); }
+  ::-webkit-scrollbar-thumb:active { background: hsl(var(--scrollbar-active)); }
 }
-
 @layer utilities {
-  .chat-composer-radiant {
-    --chat-ring-angle: 0deg;
-    position: relative;
-    border-radius: 1.5rem;
-    isolation: isolate;
-  }
-
-  .chat-composer-radiant::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: conic-gradient(
-      from var(--chat-ring-angle),
-      rgba(0, 157, 183, 0.1) 0deg,
-      rgba(0, 157, 183, 0.06) 230deg,
-      rgba(0, 157, 183, 0.45) 286deg,
-      rgba(0, 157, 183, 0.84) 315deg,
-      rgba(0, 157, 183, 0.52) 338deg,
-      rgba(0, 157, 183, 0.1) 360deg
-    );
-    padding: 2px;
-    animation: chat-ring-spin 3.4s linear infinite;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    filter: blur(0.45px) drop-shadow(0 0 4px rgba(0, 157, 183, 0.44));
-    opacity: 0.95;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .chat-composer-radiant::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background:
-      radial-gradient(circle at 18% 30%, rgba(0, 157, 183, 0.26), transparent 46%),
-      radial-gradient(circle at 84% 70%, rgba(0, 157, 183, 0.22), transparent 44%),
-      conic-gradient(
-        from var(--chat-ring-angle),
-        rgba(0, 157, 183, 0.04) 0deg,
-        rgba(0, 157, 183, 0.02) 250deg,
-        rgba(0, 157, 183, 0.28) 305deg,
-        rgba(0, 157, 183, 0.36) 330deg,
-        rgba(0, 157, 183, 0.06) 360deg
-      );
-    padding: 2px;
-    animation: chat-ring-spin 5.4s linear infinite reverse;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    filter: blur(3.5px);
-    opacity: 0.7;
-    mix-blend-mode: screen;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .chat-composer-radiant > * {
-    position: relative;
-    z-index: 1;
-  }
-
   .glass-surface {
-    background: linear-gradient(135deg, hsla(0, 0%, 100%, 0.5), hsla(0, 0%, 100%, 0.25));
-    backdrop-filter: blur(18px);
-    border: 1px solid hsla(0, 0%, 100%, 0.25);
+    background: linear-gradient(145deg, hsl(var(--surface-subtle)), hsl(var(--surface)));
+    border: 1px solid hsl(var(--border));
   }
-  
   .glass-sidebar {
-    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.45), hsla(220, 60%, 98%, 0.35));
+    background: hsl(var(--sidebar-background) / 0.97);
     backdrop-filter: blur(20px);
   }
-  
-  .gradient-primary {
-    background: linear-gradient(135deg, rgba(0, 157, 183, 0.9), rgba(0, 157, 183, 0.74));
+  .gradient-primary, .chat-send-button, .chat-user-bubble {
+    background: linear-gradient(160deg, hsl(var(--brand-secondary)), hsl(var(--primary)) 80%);
+    color: hsl(var(--primary-foreground));
   }
-
-  .chat-user-bubble {
-    background: linear-gradient(135deg, rgba(0, 157, 183, 0.92), rgba(0, 157, 183, 0.76));
-    box-shadow:
-      0 18px 34px -18px rgba(0, 157, 183, 0.58),
-      0 8px 20px -10px rgba(11, 18, 32, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.24);
-  }
-
+  .chat-user-bubble { box-shadow: 0 8px 24px hsl(var(--primary) / 0.12); }
   .chat-send-button {
-    background: linear-gradient(135deg, rgba(0, 157, 183, 0.82), rgba(0, 157, 183, 0.62));
-    border: 1px solid rgba(0, 157, 183, 0.5);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 16px 28px -14px rgba(0, 157, 183, 0.62),
-      0 8px 18px -12px rgba(11, 18, 32, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border: 1px solid hsl(var(--brand-accent) / 0.35);
+    box-shadow: 0 8px 24px hsl(var(--primary) / 0.2), inset 0 1px 0 hsl(var(--prometeus-white) / 0.12);
   }
-
-  .chat-send-button:hover {
-    background: linear-gradient(135deg, rgba(0, 157, 183, 0.9), rgba(0, 157, 183, 0.74));
-  }
-  
+  .chat-send-button:hover:not(:disabled) { filter: brightness(1.12); }
   .shadow-glass {
-    box-shadow:
-      0 18px 42px -24px rgba(11, 18, 32, 0.34),
-      0 8px 22px -14px rgba(11, 18, 32, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    box-shadow: var(--shadow-md), inset 0 1px 0 hsl(var(--prometeus-white) / 0.025);
   }
-
+  .brand-heading {
+    color: hsl(var(--foreground));
+    background: linear-gradient(180deg, hsl(var(--prometeus-white)) 25%, hsl(var(--text-muted)) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .chat-composer-radiant {
+    position: relative;
+    border-radius: 1.5rem;
+    border: 1px solid hsl(var(--prometeus-slate));
+    background: hsl(var(--surface));
+    box-shadow: 0 0 32px hsl(var(--primary) / 0.08);
+    transition: border-color 160ms, box-shadow 160ms;
+  }
+  .chat-composer-radiant:focus-within {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
+  }
   .chat-history-scroll [data-radix-scroll-area-viewport] > div {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  * { scrollbar-color: auto; }
+  .brand-heading { background: none; -webkit-text-fill-color: CanvasText; }
+  .chat-composer-radiant { border-color: CanvasText; }
 }

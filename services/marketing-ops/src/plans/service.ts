@@ -18,6 +18,8 @@ import {
   type PlanExecutorContext
 } from './executor.js';
 import { PreparedPlanRepository } from './repository.js';
+import { randomUUID } from 'node:crypto';
+import { withActorTransaction } from '../db/actorTransaction.js';
 
 export interface AgentPlanServiceDependencies {
   pool: Pool;
@@ -116,7 +118,28 @@ export class AgentPlanService {
       : filter.status && filter.status !== 'pending'
         ? await this.repository.listRecent(actor, filter.chatSessionId, filter.status, filter.limit)
         : await this.repository.listPending(actor, filter.chatSessionId, filter.limit);
-    return records.map(toSummaryDTO);
+    const summaries = records.map(toSummaryDTO);
+    // Presentation metadata is read from the server under RLS, outside the
+    // signed actions. Model-supplied labels cannot disguise a target.
+    if (summaries.some(summary => summary.actions.some(action => action.type === 'campaign.results_record'))) {
+      await withActorTransaction(this.deps.pool, actor, randomUUID(), async client => {
+        for (const summary of summaries) {
+          const labels: NonNullable<PreparedAgentPlanSummaryDTO['actionLabels']> = [];
+          for (const [actionIndex, action] of summary.actions.entries()) {
+            if (action.type !== 'campaign.results_record') continue;
+            const target = await client.query(`select campaign.name as campaign,source.name as source,item.title as action
+              from marketing_ops.lead_sources source
+              join marketing_ops.campaigns campaign on campaign.id=source.campaign_id
+              left join marketing_ops.campaign_items item on item.id=$3 and item.campaign_id=campaign.id
+              where source.id=$1 and source.campaign_id=$2`, [action.report.sourceId, action.campaign_id, action.report.actionId]);
+            const row = target.rows[0];
+            if (row) labels.push({ actionIndex, campaign: row.campaign, source: row.source, action: row.action });
+          }
+          if (labels.length) summary.actionLabels = labels;
+        }
+      });
+    }
+    return summaries;
   }
 
   async executePlan(

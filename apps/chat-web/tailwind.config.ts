@@ -20,6 +20,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        status: {
+          error: "hsl(var(--status-error))",
+          warning: "hsl(var(--status-warning))",
+          success: "hsl(var(--status-success))",
+        },
         brand: {
           primary: "hsl(var(--brand-primary))",
           secondary: "hsl(var(--brand-secondary))",
@@ -70,7 +75,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Outfit", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["var(--font-sans)"],
+        mono: ["var(--font-mono)"],
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -13,7 +13,7 @@ describe("downloadChatFile", () => {
       href: "",
       download: "",
       rel: "",
-    } as HTMLAnchorElement;
+    } as unknown as HTMLAnchorElement;
     const createElement = vi.fn(() => createdLink);
     const createObjectURL = vi.fn(() => "blob:download");
     const revokeObjectURL = vi.fn();

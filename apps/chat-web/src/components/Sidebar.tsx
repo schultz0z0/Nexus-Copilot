@@ -1,4 +1,4 @@
-import { MessageSquare, Image, Settings, LogOut, Camera, Key, Loader2, ClipboardCheck, Megaphone, CalendarRange } from "lucide-react";
+import { MessageSquare, Image, Settings, LogOut, Camera, Key, Loader2, ClipboardCheck, Megaphone, CalendarRange, BarChart3, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { marketingOpsFlags } from "@/lib/marketingOps/flags";
+import { BrandLogo } from "./BrandLogo";
 
 interface SidebarProps {
   activeTab?: "chat" | "image";
@@ -20,7 +21,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: SidebarProps) => {
-  const { isAdmin, signOut, user } = useAuth();
+  const { isAdmin, normalizedRole, signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -136,7 +137,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
 
   return (
     <aside className={cn(
-      "glass-sidebar border-r border-white/10 flex flex-col items-center py-6 gap-4 z-50",
+      "glass-sidebar border-r border-border flex flex-col items-center py-6 gap-4 z-50",
       isMobile ? "h-full w-full bg-transparent border-none pointer-events-auto" : "fixed left-0 top-0 h-screen w-20 hidden md:flex"
     )}>
       <Button
@@ -146,7 +147,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
         onClick={() => { navigate("/"); onMobileClose?.(); }}
         aria-label="Ir para a página inicial"
       >
-        <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
+        <BrandLogo symbol decorative />
       </Button>
 
       <div className="flex-1 flex flex-col gap-4 mt-8">
@@ -155,7 +156,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
           size="icon"
           className={cn(
             "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-            isActive("chat") && "bg-brand-primary/20 text-brand-primary"
+            isActive("chat") && "bg-brand-primary/20 text-brand-accent"
           )}
           onClick={() => handleNavigation("chat")}
           aria-label="Abrir chatbot"
@@ -169,7 +170,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
           size="icon"
           className={cn(
             "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-            isActive("image") && "bg-brand-primary/20 text-brand-primary"
+            isActive("image") && "bg-brand-primary/20 text-brand-accent"
           )}
           onClick={() => handleNavigation("image")}
           aria-label="Abrir gerador de imagens"
@@ -180,12 +181,26 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
 
         {marketingOps.read ? (
           <>
+            <Button variant="ghost" size="icon" className={cn("w-12 h-12 rounded-full glass-surface shadow-glass", location.pathname === "/settings/integrations" && "bg-brand-primary/20 text-brand-accent")} onClick={() => { navigate("/settings/integrations"); onMobileClose?.(); }} aria-label="Abrir integrações" title="Integrações"><Link2 className="h-5 w-5" /></Button>
             <Button
               variant="ghost"
               size="icon"
               className={cn(
                 "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-                location.pathname.startsWith("/marketing-ops/campaigns") && "bg-brand-primary/20 text-brand-primary"
+                location.pathname === "/marketing-ops/dashboard" && "bg-brand-primary/20 text-brand-accent"
+              )}
+              onClick={() => { navigate("/marketing-ops/dashboard"); onMobileClose?.(); }}
+              aria-label="Abrir dashboard de marketing"
+              title="Dashboard"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
+                location.pathname.startsWith("/marketing-ops/campaigns") && "bg-brand-primary/20 text-brand-accent"
               )}
               onClick={() => { navigate("/marketing-ops/campaigns"); onMobileClose?.(); }}
               aria-label="Abrir campanhas"
@@ -198,7 +213,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
               size="icon"
               className={cn(
                 "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-                location.pathname.startsWith("/marketing-ops/production") && "bg-brand-primary/20 text-brand-primary"
+                location.pathname.startsWith("/marketing-ops/production") && "bg-brand-primary/20 text-brand-accent"
               )}
               onClick={() => { navigate("/marketing-ops/production"); onMobileClose?.(); }}
               aria-label="Abrir esteira de produção"
@@ -212,7 +227,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
                 size="icon"
                 className={cn(
                   "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-                  location.pathname.startsWith("/marketing-ops/approvals") && "bg-brand-primary/20 text-brand-primary"
+                  location.pathname.startsWith("/marketing-ops/approvals") && "bg-brand-primary/20 text-brand-accent"
                 )}
                 onClick={() => { navigate("/marketing-ops/approvals"); onMobileClose?.(); }}
                 aria-label="Abrir aprovações de negócio"
@@ -233,7 +248,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
             size="icon"
             className={cn(
               "w-12 h-12 rounded-full glass-surface shadow-glass hover:scale-105 transition-transform",
-              location.pathname.includes("/admin") && "bg-brand-primary/20 text-brand-primary"
+              location.pathname.includes("/admin") && "bg-brand-primary/20 text-brand-accent"
             )}
             onClick={() => { navigate("/admin/users"); onMobileClose?.(); }}
             aria-label="Abrir administração de usuários"
@@ -259,24 +274,26 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
             </Avatar>
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-white text-slate-900 border-slate-200 sm:max-w-[480px] z-[60]">
+        <DialogContent className="bg-card text-foreground border-border sm:max-w-[480px] z-[60]">
           <DialogHeader>
             <DialogTitle>Configurações de Perfil</DialogTitle>
-            <DialogDescription className="text-slate-500">Gerencie sua foto, nome e senha.</DialogDescription>
+            <DialogDescription className="text-text-muted">Gerencie sua foto, nome e senha.</DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 gap-6">
+            {marketingOps.read && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/settings/integrations"); onMobileClose?.(); }}><Link2 aria-hidden="true" className="mr-2 h-4 w-4" />Integrações</Button>}
+            {marketingOps.read && ['admin', 'manager'].includes(normalizedRole) && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/marketing-ops/analytics"); onMobileClose?.(); }}><BarChart3 aria-hidden="true" className="mr-2 h-4 w-4" />Análise do site</Button>}
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border-2 border-slate-100">
+              <Avatar className="h-16 w-16 border-2 border-border">
                 <AvatarImage src={avatarPreview || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                <AvatarFallback className="bg-primary/10 text-brand-accent font-bold">
                   {(fullName || user.email || "U").slice(0,2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <Label htmlFor="avatar">Foto de perfil</Label>
                 <div className="mt-2 flex items-center gap-2">
-                  <Input id="avatar" type="file" accept="image/*" className="text-slate-600 file:text-primary" onChange={(e) => {
+                  <Input id="avatar" type="file" accept="image/*" className="text-text-secondary file:text-brand-accent" onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       const file = e.target.files[0];
                       if (file.size > 2 * 1024 * 1024) {
@@ -287,7 +304,7 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
                       setAvatarPreview(URL.createObjectURL(file));
                     }
                   }} />
-                  <Button variant="outline" size="sm" className="border-slate-200 text-slate-700 hover:bg-slate-50">
+                  <Button variant="outline" size="sm" className="border-border text-text-secondary hover:bg-accent">
                     <Camera className="w-4 h-4 mr-2" />Trocar
                   </Button>
                 </div>
@@ -296,28 +313,28 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
 
             <div className="space-y-2">
               <Label htmlFor="fullName">Nome de usuário</Label>
-              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className="bg-card border-border text-foreground focus-visible:ring-primary" />
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div className="space-y-1">
                 <Label htmlFor="currentPassword">Senha atual</Label>
-                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Sua senha atual" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Sua senha atual" className="bg-card border-border text-foreground focus-visible:ring-primary" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="newPassword">Nova senha</Label>
-                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nova senha (mín. 8 caracteres)" className="bg-white border-slate-200 text-slate-900 focus-visible:ring-primary" />
+                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nova senha (mín. 8 caracteres)" className="bg-card border-border text-foreground focus-visible:ring-primary" />
               </div>
-              <Button type="submit" variant="outline" className="w-full border-slate-200 text-slate-700 hover:bg-slate-50">
+              <Button type="submit" variant="outline" className="w-full border-border text-text-secondary hover:bg-accent">
                 <Key className="w-4 h-4 mr-2" /> Atualizar senha
               </Button>
             </form>
 
             <div className="relative mt-6 flex items-end gap-2 px-4">
-              <img src="/mascot.svg" width={80} height={100} alt="Mascote" className="drop-shadow-lg" />
-              <div className="relative -top-12 bg-white rounded-2xl rounded-bl-none px-4 py-3 text-sm text-slate-700 shadow-md border border-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                Olá, <span className="font-semibold text-primary">{fullName || user.email?.split('@')[0]}</span>!
-                <div className="absolute -bottom-[8px] left-0 w-4 h-4 bg-white border-b border-r border-slate-100 transform rotate-45 skew-x-12 shadow-[2px_2px_2px_-1px_rgba(0,0,0,0.05)]"></div>
+              <img src="/mascot.svg" width={80} height={100} alt="Mascote robô da Prometeus" className="drop-shadow-lg" />
+              <div className="relative -top-12 bg-card rounded-2xl rounded-bl-none px-4 py-3 text-sm text-text-secondary shadow-md border border-border animate-in fade-in slide-in-from-bottom-2 duration-500">
+                Olá, <span className="font-semibold text-brand-accent">{fullName || user.email?.split('@')[0]}</span>!
+                <div className="absolute -bottom-[8px] left-0 w-4 h-4 bg-card border-b border-r border-border transform rotate-45 skew-x-12 shadow-[2px_2px_2px_-1px_rgba(0,0,0,0.05)]"></div>
               </div>
             </div>
           </div>

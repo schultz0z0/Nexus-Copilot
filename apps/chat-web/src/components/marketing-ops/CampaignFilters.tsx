@@ -46,7 +46,7 @@ const channels: Array<{ value: MarketingOpsCampaignChannel; label: string }> = [
   { value: 'other', label: 'Outro' }
 ];
 
-const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-white/80 px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
+const selectClass = 'h-11 w-full rounded-[8px] border border-input bg-card px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function CampaignFilters({
@@ -80,7 +80,7 @@ export function CampaignFilters({
   };
 
   return (
-    <section aria-label="Filtros de campanhas" className="glass-surface shadow-glass rounded-[8px] border-white/60 px-4 py-4 sm:px-5">
+    <section aria-label="Filtros de campanhas" className="glass-surface shadow-glass rounded-[8px] border-border px-4 py-4 sm:px-5">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
         <div className="space-y-1.5 xl:col-span-4">
           <Label htmlFor="campaign-search">Buscar campanhas</Label>
@@ -93,7 +93,7 @@ export function CampaignFilters({
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Nome ou referência"
               maxLength={200}
-              className="h-11 rounded-[8px] bg-white/80 pl-9"
+              className="h-11 rounded-[8px] bg-card pl-9"
             />
           </div>
         </div>
@@ -151,10 +151,10 @@ export function CampaignFilters({
             placeholder="ID do usuário"
             aria-invalid={responsibleInvalid}
             aria-describedby={responsibleInvalid ? 'campaign-responsible-error' : undefined}
-            className="h-11 rounded-[8px] bg-white/80"
+            className="h-11 rounded-[8px] bg-card"
           />
           {responsibleInvalid ? (
-            <p id="campaign-responsible-error" className="text-xs text-red-700">Informe um ID de usuário válido.</p>
+            <p id="campaign-responsible-error" className="text-xs text-status-error">Informe um ID de usuário válido.</p>
           ) : null}
         </div>
 
@@ -165,7 +165,7 @@ export function CampaignFilters({
             type="date"
             value={filters.periodFrom ?? ''}
             onChange={(event) => onFilterChange('periodFrom', event.target.value || undefined)}
-            className="h-11 rounded-[8px] bg-white/80"
+            className="h-11 rounded-[8px] bg-card"
           />
         </div>
 
@@ -176,7 +176,7 @@ export function CampaignFilters({
             type="date"
             value={filters.periodTo ?? ''}
             onChange={(event) => onFilterChange('periodTo', event.target.value || undefined)}
-            className="h-11 rounded-[8px] bg-white/80"
+            className="h-11 rounded-[8px] bg-card"
           />
         </div>
 

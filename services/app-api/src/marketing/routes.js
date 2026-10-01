@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import { validateSession } from "../auth/service.js";
 import { createActorAssertion } from "./assertion.js";
+import { oauthSessionBinding } from "./adsOAuth.js";
 
 const correlationPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const requestHeaderAllowlist = [
@@ -34,6 +35,7 @@ export async function marketingRoutes(fastify, options) {
       const suffixWithQuery = request.raw.url.slice("/api/marketing".length);
       const [rawPath, rawQuery] = suffixWithQuery.split("?", 2);
       const upstreamPath = `/v1${rawPath || "/"}`;
+      const providerOperation = /^\/v1\/web-analytics\/(ga4|clarity)\/(resources|resource|connect|sync)$/.test(upstreamPath);
       const upstreamUrl = `${marketing.internalUrl}${upstreamPath}${rawQuery ? `?${rawQuery}` : ""}`;
       const headers = new Headers();
       for (const name of requestHeaderAllowlist) {
@@ -41,6 +43,9 @@ export async function marketingRoutes(fastify, options) {
         if (typeof value === "string") headers.set(name, value);
       }
       headers.set("x-correlation-id", correlationId);
+      if (/^\/v1\/ads-integrations\/(meta|google|linkedin)\/(authorize|callback)$/.test(upstreamPath) || upstreamPath === "/v1/web-analytics/ga4/authorize") {
+        headers.set("x-ens-oauth-session", oauthSessionBinding(sessionToken, marketing.assertion));
+      }
       headers.set("x-ens-actor-assertion", await createActorAssertion({
         actor, correlationId, method: request.method, path: upstreamPath
       }, marketing.assertion));
@@ -63,7 +68,7 @@ export async function marketingRoutes(fastify, options) {
           body,
           ...(body === request.raw ? { duplex: "half" } : {}),
           redirect: "manual",
-          signal: AbortSignal.timeout(marketing.timeoutMs)
+          signal: AbortSignal.timeout(providerOperation ? 120_000 : marketing.timeoutMs)
         });
         reply.code(upstream.status);
         for (const name of responseHeaderAllowlist) {

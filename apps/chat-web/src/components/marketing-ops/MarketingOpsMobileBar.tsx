@@ -15,7 +15,7 @@ export function MarketingOpsMobileBar({ label, icon, action }: MarketingOpsMobil
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/40 bg-white/70 px-4 shadow-sm backdrop-blur-xl md:hidden">
+    <div className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-card px-4 shadow-sm backdrop-blur-xl md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
@@ -23,14 +23,14 @@ export function MarketingOpsMobileBar({ label, icon, action }: MarketingOpsMobil
             size="icon"
             aria-label="Abrir menu"
             title="Menu"
-            className="glass-surface shadow-glass h-10 w-10 rounded-full"
+            className="glass-surface shadow-glass h-11 w-11 rounded-full"
           >
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="z-[70] w-20 border-none bg-transparent p-0 shadow-none [&>button]:-right-12 [&>button]:top-3 [&>button]:rounded-full [&>button]:bg-white/90 [&>button]:p-2 [&>button]:opacity-100 [&>button]:shadow-md"
+          className="z-[70] w-20 border-none bg-transparent p-0 shadow-none [&>button]:-right-12 [&>button]:top-3 [&>button]:rounded-full [&>button]:bg-card [&>button]:inline-flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:p-2 [&>button]:opacity-100 [&>button]:shadow-md"
         >
           <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
           <SheetDescription className="sr-only">Acesse as áreas principais do aplicativo.</SheetDescription>
@@ -38,7 +38,7 @@ export function MarketingOpsMobileBar({ label, icon, action }: MarketingOpsMobil
         </SheetContent>
       </Sheet>
 
-      <div className="flex max-w-[calc(100%-7rem)] items-center gap-2 rounded-full bg-white/70 px-3 py-2 text-sm font-semibold text-text-primary shadow-sm">
+      <div className="flex max-w-[calc(100%-7rem)] items-center gap-2 rounded-full bg-card px-3 py-2 text-sm font-semibold text-text-primary shadow-sm">
         {icon}
         <span className="truncate">{label}</span>
       </div>

@@ -7,7 +7,7 @@ describe("api client", () => {
 
   beforeEach(() => {
     fetchMock = vi.fn();
-    globalThis.fetch = fetchMock;
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   afterEach(() => {

@@ -132,10 +132,10 @@ export const ChatHistorySidebar = ({
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="bg-white/50 backdrop-blur-sm shadow-sm border border-white/20 hover:bg-white/80 transition-all rounded-r-xl rounded-l-none h-10 w-8"
+          className="bg-card backdrop-blur-sm shadow-sm border border-border hover:bg-accent transition-all rounded-r-xl rounded-l-none h-10 w-8"
           title="Abrir Histórico"
         >
-          <PanelLeftOpen className="w-4 h-4 text-slate-600" />
+          <PanelLeftOpen className="w-4 h-4 text-text-secondary" />
         </Button>
       </div>
     );
@@ -143,15 +143,15 @@ export const ChatHistorySidebar = ({
 
   return (
     <>
-      <div className="fixed left-0 md:left-20 top-0 h-screen w-64 glass-sidebar border-r border-white/10 flex flex-col z-40 bg-white/40 backdrop-blur-md transition-all duration-300 shadow-2xl md:shadow-none">
+      <div className="fixed left-0 md:left-20 top-0 h-screen w-64 glass-sidebar border-r border-border flex flex-col z-40 bg-card backdrop-blur-md transition-all duration-300 shadow-2xl md:shadow-none">
         {/* Header */}
-        <div className="p-4 pt-6 border-b border-white/10 flex items-center justify-between">
+        <div className="p-4 pt-6 border-b border-border flex items-center justify-between">
           <h3 className="font-semibold text-text-primary text-sm">Histórico</h3>
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="h-8 w-8 text-slate-500 hover:text-slate-700"
+            className="h-8 w-8 text-text-muted hover:text-text-secondary"
             title="Fechar Histórico"
           >
             <PanelLeftClose className="w-4 h-4" />
@@ -173,11 +173,11 @@ export const ChatHistorySidebar = ({
         <ScrollArea className="chat-history-scroll flex-1 px-3 min-w-0">
           <div className="space-y-1 pb-4">
             {loading && sessions.length === 0 ? (
-              <div className="text-center py-4 text-xs text-slate-400">Carregando...</div>
+              <div className="text-center py-4 text-xs text-text-muted">Carregando...</div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <p className="text-sm text-slate-500 mb-2">Nenhuma conversa anterior.</p>
-                <p className="text-xs text-slate-400">Inicie um novo chat para começar.</p>
+                <p className="text-sm text-text-muted mb-2">Nenhuma conversa anterior.</p>
+                <p className="text-xs text-text-muted">Inicie um novo chat para começar.</p>
               </div>
             ) : (
               sessions.map((session) => (
@@ -186,8 +186,8 @@ export const ChatHistorySidebar = ({
                   className={cn(
                     "group flex items-center justify-between p-2 rounded-lg transition-all text-sm mb-1 w-full max-w-full min-w-0 overflow-hidden",
                     currentSessionId === session.id
-                      ? "bg-[rgba(0,157,183,0.14)] text-brand-primary font-medium border border-[rgba(0,157,183,0.24)]"
-                      : "hover:bg-white/40 text-slate-600 hover:text-slate-900"
+                      ? "bg-primary/15 text-brand-accent font-medium border border-primary/30"
+                      : "hover:bg-accent text-text-secondary hover:text-foreground"
                   )}
                 >
                   <div 
@@ -197,7 +197,7 @@ export const ChatHistorySidebar = ({
                     <MessageSquare className="w-4 h-4 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="truncate">{session.title}</p>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className="text-[10px] text-text-muted truncate">
                         {format(new Date(session.updated_at), "d 'de' MMM, HH:mm", { locale: ptBR })}
                       </p>
                     </div>
@@ -209,14 +209,14 @@ export const ChatHistorySidebar = ({
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-white/50 rounded-full"
+                          className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-accent rounded-full"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="w-40 bg-white text-slate-900 border-slate-200 shadow-lg dark:bg-slate-950 dark:text-slate-50 dark:border-slate-800"
+                        className="w-40 bg-card text-foreground border-border shadow-lg dark:bg-slate-950 dark:text-text-secondary dark:border-border"
                       >
                         <DropdownMenuItem onClick={(e) => openRenameDialog(e, session)}>
                           <Pencil className="w-4 h-4 mr-2" />
@@ -224,7 +224,7 @@ export const ChatHistorySidebar = ({
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={(e) => openDeleteDialog(e, session.id)}
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          className="text-status-error focus:text-status-error focus:bg-destructive/10"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Excluir

@@ -69,19 +69,19 @@ export const PictureFilePreview = ({ file, resolveAccessUrl }: PictureFilePrevie
     }
   };
 
-  if (!file) return <div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-slate-500">Selecione um arquivo para visualizar.</div>;
-  if (loading) return <div className="flex min-h-48 items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />Preparando visualização...</div>;
-  if (error) return <div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-red-600">{error}</div>;
+  if (!file) return <div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-text-muted">Selecione um arquivo para visualizar.</div>;
+  if (loading) return <div className="flex min-h-48 items-center justify-center gap-2 text-sm text-text-muted"><Loader2 className="h-4 w-4 animate-spin" />Preparando visualização...</div>;
+  if (error) return <div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-status-error">{error}</div>;
   if (file.content_type.startsWith("image/") && url) {
-    return <img src={url} alt={file.filename} onError={() => void refreshImage()} className="max-h-[54vh] w-full rounded-xl bg-slate-100 object-contain" />;
+    return <img src={url} alt={file.filename} onError={() => void refreshImage()} className="max-h-[54vh] w-full rounded-xl bg-muted object-contain" />;
   }
-  if (isText(file)) return <pre className="max-h-[54vh] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{text}</pre>;
+  if (isText(file)) return <pre className="max-h-[54vh] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-4 text-xs text-text-secondary">{text}</pre>;
   if (url) {
     return (
       <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-center">
-        <FileQuestion className="h-8 w-8 text-slate-400" />
-        <p className="text-sm text-slate-600">Prévia não disponível para {file.content_type}.</p>
-        <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-brand-primary hover:underline">
+        <FileQuestion className="h-8 w-8 text-text-muted" />
+        <p className="text-sm text-text-secondary">Prévia não disponível para {file.content_type}.</p>
+        <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent hover:underline">
           <Download className="h-4 w-4" />Abrir arquivo
         </a>
       </div>

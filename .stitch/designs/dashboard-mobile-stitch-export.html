@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B — Visão de comando (Mobile)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            midnight: '#040814',
+            surface: {
+              base: '#0B101E',
+              card: '#111727',
+              raised: '#172033',
+            },
+            action: {
+              blue: '#0652C5',
+              hover: '#0860E4',
+              link: '#88B8FC',
+            },
+            navy: '#1A2338',
+            slate: '#3B4B6B',
+            mist: '#E2E8F0',
+            muted: '#9CA7BA',
+            borderSubtle: 'rgba(59, 75, 107, 0.35)',
+            borderHighlight: 'rgba(136, 184, 252, 0.25)',
+          },
+          fontFamily: {
+            sans: ['Space Grotesk', 'sans-serif'],
+            mono: ['Geist Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #040814;
+      color: #E2E8F0;
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  </style>
+</head>
+<body class="bg-midnight min-h-screen text-mist antialiased selection:bg-action-blue selection:text-white pb-12">
+
+  <!-- TOP HEADER (Compact Mobile with exact PNG logo) -->
+  <header class="sticky top-0 z-50 bg-[#040814]/95 backdrop-blur-md border-b border-borderSubtle px-4 py-3">
+    <div class="flex items-center justify-between gap-2 max-w-[390px] mx-auto">
+      <div class="flex items-center gap-2">
+        <!-- Exact PNG Data URI logo specified by user (140px width, contain) -->
+        <img
+          src="data:image/png;base64,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"
+          alt="Prometeus"
+          class="w-[140px] h-auto object-contain block"
+        />
+        <span class="text-[10px] uppercase tracking-wider text-muted font-mono hidden xs:inline">B2B</span>
+      </div>
+
+      <!-- Menu Button (replacing fixed desktop sidebar) -->
+      <button class="touch-target p-2 text-mist hover:text-white rounded-lg hover:bg-surface-card transition flex items-center justify-center" aria-label="Abrir menu de navegação">
+        <span class="material-symbols-outlined text-2xl">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-[390px] mx-auto px-4 pt-4 space-y-5">
+
+    <!-- 1. TITLE & PRIMARY ACTIONS -->
+    <section class="space-y-3">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight leading-tight">Visão de comando</h1>
+          <p class="text-xs text-muted mt-0.5">Clareza para decidir o próximo movimento.</p>
+        </div>
+        <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Demonstração · fictício</span>
+        </div>
+      </div>
+
+      <!-- Period & Controls Bar -->
+      <div class="bg-surface-base border border-borderSubtle rounded-xl p-2.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-mist font-medium">
+            <span class="material-symbols-outlined text-base text-action-link">calendar_today</span>
+            <span>24 ago — 20 set 2026</span>
+          </div>
+          <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Íntegra
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button class="touch-target flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-card border border-borderSubtle text-xs text-mist font-medium hover:bg-surface-raised active:scale-[0.98] transition">
+            <span class="material-symbols-outlined text-sm">tune</span>
+            <span>Filtros (3/6)</span>
+          </button>
+          <button class="touch-target flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-action-blue hover:bg-action-hover text-xs text-white font-medium shadow-sm active:scale-[0.98] transition">
+            <span class="material-symbols-outlined text-sm">refresh</span>
+            <span>Atualizar</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. EXECUTIVE STATEMENT & CRITICAL SIGNALS -->
+    <section class="bg-gradient-to-b from-surface-card to-surface-base border border-borderHighlight rounded-xl p-3.5 space-y-3 relative overflow-hidden">
+      <div class="flex items-center justify-between gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 text-[11px] font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+          Atenção à cobertura
+        </span>
+        <span class="text-[10px] font-mono text-muted">Status operacional</span>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-white leading-snug">
+          Resultados em crescimento; falta o fechamento semanal do WhatsApp.
+        </h2>
+      </div>
+
+      <!-- 3 Key Signals -->
+      <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-borderSubtle/60 text-center">
+        <div class="p-2 rounded-lg bg-surface-base/80 border border-borderSubtle/40">
+          <span class="block text-[10px] text-muted font-mono uppercase">Resultado</span>
+          <span class="text-sm font-bold text-emerald-400">86%</span>
+          <span class="block text-[9px] text-muted leading-tight mt-0.5">da meta</span>
+        </div>
+        <div class="p-2 rounded-lg bg-surface-base/80 border border-borderSubtle/40">
+          <span class="block text-[10px] text-muted font-mono uppercase">Execução</span>
+          <span class="text-sm font-bold text-amber-400">3</span>
+          <span class="block text-[9px] text-muted leading-tight mt-0.5">atrasadas</span>
+        </div>
+        <div class="p-2 rounded-lg bg-surface-base/80 border border-borderSubtle/40">
+          <span class="block text-[10px] text-muted font-mono uppercase">Dados</span>
+          <span class="text-sm font-bold text-action-link">23<span class="text-[10px] text-muted font-normal">/24</span></span>
+          <span class="block text-[9px] text-muted leading-tight mt-0.5">relatórios</span>
+        </div>
+      </div>
+
+      <div class="pt-1">
+        <a href="#prioridades" class="touch-target inline-flex items-center gap-1.5 text-xs font-medium text-action-link hover:underline">
+          <span>Revisar pendência</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 3. TYPOGRAPHIC METRIC PAIRS (2-column grid, no overflow) -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-mono uppercase tracking-wider text-muted">Métricas consolidadas</h3>
+        <span class="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Totais parciais</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <!-- Pair 1: Leads & Qualificados -->
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-muted block">Leads totais</span>
+          <span class="text-xl font-bold text-white tracking-tight mt-0.5 block">2.460</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">Total no período</span>
+        </div>
+
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-action-link block font-medium">Qualificados</span>
+          <span class="text-xl font-bold text-action-link tracking-tight mt-0.5 block">984</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">Taxa média 40,0%</span>
+        </div>
+
+        <!-- Pair 2: Oportunidades & Vendas -->
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-muted block">Oportunidades</span>
+          <span class="text-xl font-bold text-white tracking-tight mt-0.5 block">410</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">41,7% dos qualif.</span>
+        </div>
+
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-emerald-400 block font-medium">Vendas no período</span>
+          <span class="text-xl font-bold text-emerald-400 tracking-tight mt-0.5 block">126</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">Fechamentos reg.</span>
+        </div>
+
+        <!-- Pair 3: Receita & Investimento -->
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-muted block">Receita gerada</span>
+          <span class="text-lg font-bold text-white tracking-tight mt-0.5 block">R$ 378.000</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">Ticket méd. R$ 3.000</span>
+        </div>
+
+        <div class="bg-surface-card border border-borderSubtle rounded-xl p-3">
+          <span class="text-xs text-muted block">Investimento mídia</span>
+          <span class="text-lg font-bold text-white tracking-tight mt-0.5 block">R$ 24.600</span>
+          <span class="text-[10px] text-muted font-mono mt-1 block">Canais pagos diretos</span>
+        </div>
+      </div>
+
+      <!-- Paid CPL Insight note -->
+      <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle text-[11px] text-muted flex items-start gap-2">
+        <span class="material-symbols-outlined text-action-link text-sm shrink-0 mt-0.5">info</span>
+        <span>
+          <strong class="text-mist font-medium">CPL qualificado pago: R$ 41,00</strong> (base em 600 leads qualificados pagos). Sem rateio artificial em tráfego orgânico ou e-mail.
+        </span>
+      </div>
+    </section>
+
+    <!-- 4. WEEKLY LEADS GRAPH (Compact readable SVG, ~200px) -->
+    <section class="bg-surface-card border border-borderSubtle rounded-xl p-3.5 space-y-3">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Ritmo de aquisição semanal</h3>
+          <p class="text-[11px] text-muted">Volume de Leads vs Leads Qualificados</p>
+        </div>
+        <span class="text-[10px] font-mono text-muted bg-surface-base px-2 py-0.5 rounded border border-borderSubtle">4 semanas</span>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap items-center gap-3 text-[11px] font-medium pt-1">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-action-link"></span>
+          <span class="text-mist">Leads</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-[#3B82F6] border-b border-dashed border-white"></span>
+          <span class="text-mist">Qualificados</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-0.5 bg-amber-400"></span>
+          <span class="text-amber-300">Meta (600)</span>
+        </div>
+      </div>
+
+      <!-- SVG Chart: 320x160 viewport -->
+      <div class="w-full h-[180px] bg-midnight/70 rounded-lg p-2 border border-borderSubtle/50 flex flex-col justify-between">
+        <svg viewBox="0 0 320 130" class="w-full h-full overflow-visible" aria-label="Gráfico de ritmo semanal de leads">
+          <!-- Grid lines -->
+          <line x1="28" y1="20" x2="310" y2="20" stroke="#1E293B" stroke-dasharray="2 2" stroke-width="0.8"/>
+          <text x="22" y="23" fill="#64748B" font-size="9" text-anchor="end" font-family="Geist Mono">800</text>
+
+          <line x1="28" y1="55" x2="310" y2="55" stroke="#1E293B" stroke-dasharray="2 2" stroke-width="0.8"/>
+          <text x="22" y="58" fill="#64748B" font-size="9" text-anchor="end" font-family="Geist Mono">600</text>
+
+          <line x1="28" y1="90" x2="310" y2="90" stroke="#1E293B" stroke-dasharray="2 2" stroke-width="0.8"/>
+          <text x="22" y="93" fill="#64748B" font-size="9" text-anchor="end" font-family="Geist Mono">300</text>
+
+          <line x1="28" y1="120" x2="310" y2="120" stroke="#334155" stroke-width="1"/>
+
+          <!-- Meta horizontal reference line (600) -->
+          <line x1="28" y1="55" x2="310" y2="55" stroke="#F59E0B" stroke-dasharray="3 3" stroke-width="1.2" opacity="0.8"/>
+
+          <!-- Leads Line (Semana 35: 560 -> S36: 620 -> S37: 700 -> S38: 580) -->
+          <polyline
+            fill="none"
+            stroke="#88B8FC"
+            stroke-width="2.5"
+            points="55,62 135,51 215,38 290,56"
+          />
+          <!-- Leads Points -->
+          <circle cx="55" cy="62" r="3.5" fill="#88B8FC"/>
+          <circle cx="135" cy="51" r="3.5" fill="#88B8FC"/>
+          <circle cx="215" cy="38" r="3.5" fill="#88B8FC"/>
+          <circle cx="290" cy="56" r="3.5" fill="#F59E0B" stroke="#040814" stroke-width="1.5"/>
+
+          <!-- Qualificados Line (Semana 35: 220 -> S36: 250 -> S37: 290 -> S38: 224) -->
+          <polyline
+            fill="none"
+            stroke="#3B82F6"
+            stroke-width="2"
+            stroke-dasharray="4 2"
+            points="55,98 135,95 215,91 290,98"
+          />
+          <circle cx="55" cy="98" r="2.5" fill="#3B82F6"/>
+          <circle cx="135" cy="95" r="2.5" fill="#3B82F6"/>
+          <circle cx="215" cy="91" r="2.5" fill="#3B82F6"/>
+          <circle cx="290" cy="98" r="2.5" fill="#F59E0B"/>
+        </svg>
+
+        <!-- X Axis Labels -->
+        <div class="grid grid-cols-4 text-center text-[10px] font-mono pt-1 border-t border-borderSubtle/40">
+          <div>
+            <span class="text-mist block">Sem 35</span>
+            <span class="text-muted text-[9px] block">560 · 220</span>
+          </div>
+          <div>
+            <span class="text-mist block">Sem 36</span>
+            <span class="text-muted text-[9px] block">620 · 250</span>
+          </div>
+          <div>
+            <span class="text-mist block">Sem 37</span>
+            <span class="text-muted text-[9px] block">700 · 290</span>
+          </div>
+          <div class="text-amber-300">
+            <span class="font-bold block flex items-center justify-center gap-0.5">Sem 38 <span class="w-1 h-1 rounded-full bg-amber-400"></span></span>
+            <span class="text-amber-400/90 text-[9px] block">Parcial Wpp</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-[10px] text-muted">
+        Ritmo médio de 615 leads/sem contra meta de 600. Fechamento definitivo da Sem 38 aguarda consolidação do WhatsApp.
+      </p>
+    </section>
+
+    <!-- 5. PRIORIDADES DA SEMANA (Actionable cards with Hermes framing) -->
+    <section id="prioridades" class="bg-surface-card border border-borderSubtle rounded-xl p-3.5 space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Prioridades da semana</h3>
+          <p class="text-[11px] text-muted">Ações críticas para manter a cadência</p>
+        </div>
+        <span class="px-2 py-0.5 rounded-full bg-action-blue/20 text-action-link text-[10px] font-mono font-medium border border-action-link/30">
+          3 pendências
+        </span>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- Priority 1: WhatsApp Fechamento (Hermes receives report) -->
+        <div class="p-3 rounded-lg bg-surface-base border-l-4 border-l-amber-400 border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-mono text-[10px]">Dados / Hermes</span>
+            <span class="text-amber-400 font-mono text-[10px]">Atraso 24h</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-semibold text-white">WhatsApp: Fechamento pendente da semana 38</h4>
+            <p class="text-[11px] text-muted mt-0.5 leading-relaxed">
+              Impacta a consolidação analítica e o cálculo de CPL global.
+            </p>
+          </div>
+          <div class="pt-1">
+            <button class="touch-target w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-xs font-medium text-amber-300 hover:bg-amber-500/25 active:scale-[0.98] transition">
+              <span class="material-symbols-outlined text-sm">send</span>
+              <span>Informar resultado ao Hermes</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority 2: Execution Delay -->
+        <div class="p-3 rounded-lg bg-surface-base border-l-4 border-l-rose-500 border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300 font-mono text-[10px]">Execução / Calendário</span>
+            <span class="text-rose-400 font-mono text-[10px]">3 ações</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-semibold text-white">3 ações atrasadas na campanha Lançamento</h4>
+            <p class="text-[11px] text-muted mt-0.5 leading-relaxed">
+              2 criativos de conversão e 1 fluxo de nutrição de e-mail pendentes.
+            </p>
+          </div>
+          <div class="pt-1">
+            <button class="touch-target w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-card border border-borderSubtle text-xs font-medium text-mist hover:bg-surface-raised active:scale-[0.98] transition">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              <span>Replanejar prazos</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority 3: Creative Approval -->
+        <div class="p-3 rounded-lg bg-surface-base border-l-4 border-l-action-link border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="px-1.5 py-0.5 rounded bg-action-blue/20 text-action-link font-mono text-[10px]">Aprovação / Mídia</span>
+            <span class="text-action-link font-mono text-[10px]">LinkedIn</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-semibold text-white">2 peças de mídia LinkedIn aguardando validação</h4>
+            <p class="text-[11px] text-muted mt-0.5 leading-relaxed">
+              Gargalo para escala do canal com menor CPL institucional.
+            </p>
+          </div>
+          <div class="pt-1">
+            <button class="touch-target w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-card border border-borderSubtle text-xs font-medium text-action-link hover:bg-surface-raised active:scale-[0.98] transition">
+              <span class="material-symbols-outlined text-sm">fact_check</span>
+              <span>Avaliar criativos</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. RESPONSIVE FUNNEL: DA PRIMEIRA CONVERSA À VENDA -->
+    <section class="bg-surface-card border border-borderSubtle rounded-xl p-3.5 space-y-3">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Da primeira conversa à venda</h3>
+          <p class="text-[11px] text-muted">Coorte de entrada (24 ago a 20 set)</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-bold text-emerald-400">3,3%</span>
+          <span class="block text-[9px] font-mono text-muted">conversão final</span>
+        </div>
+      </div>
+
+      <!-- Connected Vertical Funnel Flow -->
+      <div class="space-y-1.5 relative">
+        <!-- Step 1: Lead -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-slate/40 text-[10px] font-mono flex items-center justify-center text-mist">1</span>
+            <div>
+              <span class="text-xs font-medium text-white block">Lead</span>
+              <span class="text-[10px] text-muted">Base de entrada</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-white block">2.460</span>
+            <span class="text-[10px] font-mono text-muted">100%</span>
+          </div>
+        </div>
+
+        <!-- Flow indicator -->
+        <div class="flex justify-center -my-1 text-muted">
+          <span class="material-symbols-outlined text-xs">south</span>
+        </div>
+
+        <!-- Step 2: Qualificado -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-action-blue/30 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-action-blue/20 text-[10px] font-mono flex items-center justify-center text-action-link">2</span>
+            <div>
+              <span class="text-xs font-medium text-action-link block">Qualificado</span>
+              <span class="text-[10px] text-muted">MQL validado</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-action-link block">984</span>
+            <span class="text-[10px] font-mono text-action-link">40,0% passagem</span>
+          </div>
+        </div>
+
+        <!-- Flow indicator -->
+        <div class="flex justify-center -my-1 text-muted">
+          <span class="material-symbols-outlined text-xs">south</span>
+        </div>
+
+        <!-- Step 3: Oportunidade -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-slate/40 text-[10px] font-mono flex items-center justify-center text-mist">3</span>
+            <div>
+              <span class="text-xs font-medium text-white block">Oportunidade</span>
+              <span class="text-[10px] text-muted">Diagnóstico agendado</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-white block">410</span>
+            <span class="text-[10px] font-mono text-muted">41,7% dos qualif.</span>
+          </div>
+        </div>
+
+        <!-- Flow indicator -->
+        <div class="flex justify-center -my-1 text-muted">
+          <span class="material-symbols-outlined text-xs">south</span>
+        </div>
+
+        <!-- Step 4: Proposta -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-slate/40 text-[10px] font-mono flex items-center justify-center text-mist">4</span>
+            <div>
+              <span class="text-xs font-medium text-white block">Proposta</span>
+              <span class="text-[10px] text-muted">Em negociação</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-white block">205</span>
+            <span class="text-[10px] font-mono text-muted">50,0% das oportun.</span>
+          </div>
+        </div>
+
+        <!-- Flow indicator -->
+        <div class="flex justify-center -my-1 text-muted">
+          <span class="material-symbols-outlined text-xs">south</span>
+        </div>
+
+        <!-- Step 5: Venda Coorte -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-emerald-500/30 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-[10px] font-mono flex items-center justify-center text-emerald-400">5</span>
+            <div>
+              <span class="text-xs font-medium text-emerald-400 block">Venda coorte</span>
+              <span class="text-[10px] text-muted">Clientes convertidos</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-emerald-400 block">82</span>
+            <span class="text-[10px] font-mono text-emerald-400">40,0% das propostas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cohort methodological note -->
+      <div class="p-2.5 rounded-lg bg-surface-base/60 border border-borderSubtle text-[11px] text-muted space-y-1">
+        <p>
+          <strong class="text-mist">Coorte de entrada:</strong> 82 vendas da coorte diferem das 126 fechadas no período (estas incluem ciclos de negociação de meses anteriores).
+        </p>
+        <span class="text-[10px] font-mono text-action-link block">Ciclo médio de vendas: 24 dias</span>
+      </div>
+    </section>
+
+    <!-- 7. ONDE O RESULTADO ACONTECE (Mobile Channel Summaries) -->
+    <section class="bg-surface-card border border-borderSubtle rounded-xl p-3.5 space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Onde o resultado acontece</h3>
+          <p class="text-[11px] text-muted">Desempenho discriminado por canal</p>
+        </div>
+        <span class="text-[10px] font-mono text-muted bg-surface-base px-2 py-0.5 rounded border border-borderSubtle">6 canais</span>
+      </div>
+
+      <!-- Channel cards optimized for mobile readability -->
+      <div class="space-y-2">
+        <!-- 1. Google Ads -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-action-blue"></span>
+              <span class="text-xs font-medium text-white">Google Ads</span>
+            </div>
+            <span class="text-[10px] font-mono text-muted bg-surface-card px-1.5 py-0.5 rounded">Fonte planejada</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">700</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-semibold text-action-link">280</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-semibold text-mist">R$ 11.200</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">CPL</span>
+              <span class="font-semibold text-white">R$ 40,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Meta Ads -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-action-blue"></span>
+              <span class="text-xs font-medium text-white">Meta Ads</span>
+            </div>
+            <span class="text-[10px] font-mono text-muted bg-surface-card px-1.5 py-0.5 rounded">Fonte planejada</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">800</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-semibold text-action-link">240</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-semibold text-mist">R$ 7.200</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">CPL</span>
+              <span class="font-semibold text-white">R$ 30,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. LinkedIn Ads -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-action-blue"></span>
+              <span class="text-xs font-medium text-white">LinkedIn Ads</span>
+            </div>
+            <span class="text-[10px] font-mono text-muted bg-surface-card px-1.5 py-0.5 rounded">Fonte planejada</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">200</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-semibold text-action-link">80</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-semibold text-mist">R$ 6.200</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">CPL</span>
+              <span class="font-semibold text-white">R$ 77,50</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Orgânico / Busca -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate"></span>
+              <span class="text-xs font-medium text-white">Orgânico / Busca</span>
+            </div>
+            <span class="text-[10px] font-mono text-muted bg-surface-card px-1.5 py-0.5 rounded">Tráfego próprio</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">400</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-semibold text-action-link">240</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">CPL</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. E-mail Marketing -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate"></span>
+              <span class="text-xs font-medium text-white">E-mail Marketing</span>
+            </div>
+            <span class="text-[10px] font-mono text-muted bg-surface-card px-1.5 py-0.5 rounded">Semanal manual</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">260</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-semibold text-action-link">144</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">CPL</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. WhatsApp -->
+        <div class="p-2.5 rounded-lg bg-surface-base border border-amber-500/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span class="text-xs font-medium text-white">WhatsApp</span>
+            </div>
+            <span class="text-[10px] font-mono text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">
+              Semana pendente
+            </span>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[11px] text-center pt-1 border-t border-borderSubtle/40">
+            <div>
+              <span class="text-[9px] text-muted block">Leads</span>
+              <span class="font-semibold text-white">100</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Qualif.</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Custo</span>
+              <span class="font-mono text-muted">—</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-muted block">Ação</span>
+              <a href="#prioridades" class="text-amber-400 font-semibold text-[10px] hover:underline">Informar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrity footer note -->
+      <p class="text-[10px] text-muted pt-1">
+        * Canais orgânicos e inbound relacional não recebem rateio artificial de mídia paga; o traço explícito (—) evita distorção de CPL.
+      </p>
+    </section>
+
+    <!-- 8. DESEMPENHO POR CAMPANHA ATIVA (3 compact rows) -->
+    <section class="bg-surface-card border border-borderSubtle rounded-xl p-3.5 space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Desempenho por campanha ativa</h3>
+          <p class="text-[11px] text-muted">Ações vinculadas ao calendário</p>
+        </div>
+        <span class="text-[10px] font-mono text-muted">3 campanhas</span>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- Campaign 1: Crescimento B2B -->
+        <div class="p-3 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-muted">Campanha 01</span>
+            <span class="text-xs font-bold text-emerald-400 font-mono">92% da meta</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Crescimento B2B</h4>
+            <div class="flex items-center gap-3 text-[11px] text-muted mt-0.5">
+              <span>Leads: <strong class="text-mist">1.280</strong></span>
+              <span>Qualificados: <strong class="text-action-link">540</strong></span>
+            </div>
+          </div>
+          <div class="pt-1.5 border-t border-borderSubtle/40 flex items-center justify-between text-[10px]">
+            <span class="text-muted">Próxima ação:</span>
+            <span class="font-medium text-mist flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs text-action-link">event</span>
+              Disparo newsletter técnica (23/09)
+            </span>
+          </div>
+        </div>
+
+        <!-- Campaign 2: Lançamento de solução -->
+        <div class="p-3 rounded-lg bg-surface-base border-l-2 border-l-amber-400 border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-muted">Campanha 02</span>
+            <span class="text-xs font-bold text-amber-400 font-mono">78% da meta</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Lançamento de solução</h4>
+            <div class="flex items-center gap-3 text-[11px] text-muted mt-0.5">
+              <span>Leads: <strong class="text-mist">740</strong></span>
+              <span>Qualificados: <strong class="text-action-link">280</strong></span>
+            </div>
+          </div>
+          <div class="pt-1.5 border-t border-borderSubtle/40 space-y-1">
+            <div class="flex items-center justify-between text-[10px] text-amber-300">
+              <span class="font-semibold">2 ações atrasadas</span>
+              <span class="text-muted font-mono">Gargalo criativo</span>
+            </div>
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="text-muted">Próxima ação:</span>
+              <span class="font-medium text-mist flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs text-amber-400">warning</span>
+                Reunião de criativos (22/09)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campaign 3: Relacionamento & Base -->
+        <div class="p-3 rounded-lg bg-surface-base border border-borderSubtle space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-muted">Campanha 03</span>
+            <span class="text-xs font-bold text-emerald-400 font-mono">88% da meta</span>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white">Relacionamento & Base</h4>
+            <div class="flex items-center gap-3 text-[11px] text-muted mt-0.5">
+              <span>Leads: <strong class="text-mist">440</strong></span>
+              <span>Qualificados: <strong class="text-action-link">164</strong></span>
+            </div>
+          </div>
+          <div class="pt-1.5 border-t border-borderSubtle/40 flex items-center justify-between text-[10px]">
+            <span class="text-muted">Próxima ação:</span>
+            <span class="font-medium text-mist flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs text-action-link">tune</span>
+              Ajuste de cadência (24/09)
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. AUDITORIA, STATUS DO SISTEMA E INTEGRIDADE DE DADOS -->
+    <footer class="pt-3 border-t border-borderSubtle text-[11px] text-muted space-y-3">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-[10px] font-mono">
+          <span>Cenário ilustrativo</span>
+          <span>21 set 2026, 09:00</span>
+        </div>
+        <p class="leading-relaxed text-[11px]">
+          E-mail e WhatsApp com fechamento semanal informado ao Hermes por campanha e ação de calendário. Conexão direta CRM planejada para etapa subsequente (arquitetura em validação de negócio).
+        </p>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-borderSubtle/40 text-[10px] font-mono">
+        <span class="text-action-link">Integridade & Auditoria</span>
+        <span class="text-muted">Prometeus · B2B</span>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- BOTTOM MOBILE ACTION BAR (Touch Target compliant) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-[#040814]/95 backdrop-blur-md border-t border-borderSubtle max-w-[390px] mx-auto px-4 py-2 flex items-center justify-around text-[10px] font-medium" aria-label="Navegação rápida">
+    <a href="#" class="touch-target flex flex-col items-center justify-center text-action-link">
+      <span class="material-symbols-outlined text-xl">dashboard</span>
+      <span>Comando</span>
+    </a>
+    <a href="#prioridades" class="touch-target flex flex-col items-center justify-center text-muted hover:text-mist relative">
+      <span class="material-symbols-outlined text-xl">notifications</span>
+      <span class="absolute top-1 right-2 w-2 h-2 rounded-full bg-amber-400"></span>
+      <span>Pendências</span>
+    </a>
+    <button class="touch-target flex flex-col items-center justify-center text-muted hover:text-mist">
+      <span class="material-symbols-outlined text-xl">tune</span>
+      <span>Filtros</span>
+    </button>
+    <button class="touch-target flex flex-col items-center justify-center text-muted hover:text-mist">
+      <span class="material-symbols-outlined text-xl">smart_toy</span>
+      <span>Hermes</span>
+    </button>
+  </nav>
+
+</body>
+</html>

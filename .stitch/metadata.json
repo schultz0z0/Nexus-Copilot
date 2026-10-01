@@ -1,0 +1,65 @@
+{
+  "projectId": "11535637910255965569",
+  "title": "Prometeus — Dashboard de marketing · alternativa B",
+  "url": "https://stitch.withgoogle.com/projects/11535637910255965569",
+  "designSystem": "assets/31500e6e139f4b77a51ec9a8f1189276",
+  "brandbookVersion": "1.0.0",
+  "status": "exploration-awaiting-user-choice",
+  "screens": [
+    {
+      "id": "40de1eb0f6e44d7aa686f75f4ade6b2b",
+      "role": "initial-generation",
+      "superseded": true,
+      "recommended": false
+    },
+    {
+      "id": "dd6f72e3d29f461fb8826553088d3e09",
+      "role": "desktop-generated-refinement",
+      "superseded": true,
+      "recommended": false
+    },
+    {
+      "id": "6f27ebac04264becbaecfb9146ba3153",
+      "role": "mobile-generated",
+      "superseded": true,
+      "recommended": false
+    },
+    {
+      "id": "15712684697494576747",
+      "role": "desktop-reviewed-export",
+      "recommended": false,
+      "path": "designs/dashboard-desktop.html"
+    },
+    {
+      "id": "15712684697494575410",
+      "role": "mobile-reviewed-export",
+      "recommended": false,
+      "path": "designs/dashboard-mobile.html"
+    },
+    {
+      "id": "16029582777659923861",
+      "role": "desktop-final",
+      "recommended": true,
+      "path": "designs/dashboard-desktop.html"
+    },
+    {
+      "id": "16029582777659922942",
+      "role": "mobile-final",
+      "recommended": true,
+      "path": "designs/dashboard-mobile.html"
+    }
+  ],
+  "localReview": [
+    "Embed byte-identical supplied PNG in all logo images; generated mobile data URI was truncated.",
+    "Remove false synchronization, Hermes audit, and lowest-CPL channel claims.",
+    "Clarify CRM is future internal development, not an existing integration.",
+    "Add visible keyboard focus and reduced-motion fallback; no composition redesign."
+  ],
+  "limitations": [
+    "Static visual concept; controls do not execute application flows.",
+    "Requires Google Fonts/Tailwind CDN for original exported appearance.",
+    "Generated theme includes automatic Material colors; not a canonical token source.",
+    "Metric values are illustrative and differ from option A; compare visual structure, not totals.",
+    "Full interaction and accessibility acceptance is deferred to implementation of selected design."
+  ]
+}

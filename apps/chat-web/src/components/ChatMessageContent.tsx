@@ -86,21 +86,21 @@ export const ChatMessageContent = memo(function ChatMessageContent({ role, conte
           li: ({ node, ...props }) => <li className="mb-1" {...props} />,
           p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
           table: ({ node, ...props }) => (
-            <div className="my-3 overflow-x-auto rounded-2xl border border-slate-200/70">
+            <div className="my-3 overflow-x-auto rounded-2xl border border-border">
               <table className="min-w-full border-collapse text-left text-xs" {...props} />
             </div>
           ),
-          thead: ({ node, ...props }) => <thead className="bg-slate-100/80 text-slate-700" {...props} />,
-          tbody: ({ node, ...props }) => <tbody className="divide-y divide-slate-200/70 bg-white/70" {...props} />,
-          tr: ({ node, ...props }) => <tr className="divide-x divide-slate-200/70" {...props} />,
+          thead: ({ node, ...props }) => <thead className="bg-muted text-text-secondary" {...props} />,
+          tbody: ({ node, ...props }) => <tbody className="divide-y divide-border bg-card" {...props} />,
+          tr: ({ node, ...props }) => <tr className="divide-x divide-border" {...props} />,
           th: ({ node, ...props }) => <th className="px-3 py-2 font-semibold" {...props} />,
           td: ({ node, ...props }) => <td className="px-3 py-2 align-top" {...props} />,
           strong: ({ node, ...props }) => (
-            <strong className={cn("font-bold", role === "assistant" ? "text-brand-primary" : "text-white")} {...props} />
+            <strong className={cn("font-bold", role === "assistant" ? "text-brand-accent" : "text-white")} {...props} />
           ),
           a: ({ node, href, children, ...props }) => {
             const className = cn(
-              role === "assistant" ? "text-brand-primary hover:underline" : "text-white underline",
+              role === "assistant" ? "text-brand-accent hover:underline" : "text-white underline",
             );
             if (typeof href === "string" && href.startsWith("/marketing-ops/")) {
               if (!parseMarketingOpsDeepLink(href)) {
@@ -136,7 +136,7 @@ export const ChatMessageContent = memo(function ChatMessageContent({ role, conte
 
             return (
               <img
-                className={cn("my-2 max-w-full rounded-xl border", role === "user" ? "border-white/20" : "border-slate-200/60")}
+                className={cn("my-2 max-w-full rounded-xl border", role === "user" ? "border-border" : "border-border")}
                 src={preview.url}
                 alt={alt ?? preview.name}
                 {...props}
@@ -153,7 +153,7 @@ export const ChatMessageContent = memo(function ChatMessageContent({ role, conte
                 <code
                   className={cn(
                     "rounded-md px-1.5 py-0.5 text-[0.9em]",
-                    role === "user" ? "bg-white/15 text-white" : "bg-slate-200/70 text-slate-900",
+                    role === "user" ? "bg-white/15 text-white" : "bg-muted text-foreground",
                   )}
                   {...props}
                 >
@@ -200,14 +200,14 @@ export const ChatMessageContent = memo(function ChatMessageContent({ role, conte
     const label = isMarkdown ? "Documento" : part.artifactType === "html" ? "Artifact HTML" : "Artifact";
 
     return (
-      <div key={part.id} className="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm">
+      <div key={part.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               {isMarkdown ? <FileText className="h-4 w-4" /> : <FileCode2 className="h-4 w-4" />}
               <span>{part.title}</span>
             </div>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-text-secondary">
               {label}
               {part.language ? ` • ${part.language}` : ""}
             </p>
@@ -218,7 +218,7 @@ export const ChatMessageContent = memo(function ChatMessageContent({ role, conte
           </Button>
         </div>
 
-        <div className="mt-3 rounded-xl bg-slate-950/95 p-3 text-xs text-slate-100">
+        <div className="mt-3 rounded-xl bg-slate-950/95 p-3 text-xs text-text-secondary">
           <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words">
             <code>{part.content}</code>
           </pre>

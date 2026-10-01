@@ -255,6 +255,14 @@ export function createApp(deps: AppDependencies) {
     next();
   });
   app.use((request: Request, response: Response, next: NextFunction) => {
+    // Anonymous capture uses its own bounded limiter, keyed by a short-lived
+    // BFF-signed visitor IP (or socket IP for direct calls). Applying this shared
+    // BFF socket limiter would throttle unrelated landing-page visitors.
+    const publicForm = /^(?:\/public\/capture\/)[A-Za-z0-9_-]{32}$/.test(request.path)
+      && (request.method === 'POST' || request.method === 'OPTIONS');
+    const publicWhatsApp = /^\/public\/capture\/[A-Za-z0-9_-]{32}\/whatsapp$/.test(request.path)
+      && request.method === 'GET';
+    if (publicForm || publicWhatsApp) return next();
     const now = Date.now();
     if (clients.size > 10_000) {
       for (const [client, entry] of clients) if (entry.resetAt <= now) clients.delete(client);

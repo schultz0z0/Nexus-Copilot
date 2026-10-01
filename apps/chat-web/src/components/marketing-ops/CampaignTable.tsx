@@ -24,7 +24,7 @@ const statusLabels: Record<MarketingOpsCampaignStatus, string> = {
 };
 
 const statusClasses: Record<MarketingOpsCampaignStatus, string> = {
-  draft: 'border-slate-300 bg-slate-100 text-slate-700',
+  draft: 'border-border bg-muted text-text-secondary',
   planned: 'border-cyan-200 bg-cyan-50 text-cyan-800',
   active: 'border-emerald-200 bg-emerald-50 text-emerald-800',
   completed: 'border-blue-200 bg-blue-50 text-blue-800',
@@ -84,7 +84,7 @@ function Attention({ items }: { items: MarketingOpsCampaignAttention[] }) {
   return (
     <div className="space-y-1">
       {items.map((item) => (
-        <div key={item} className="flex items-start gap-1.5 text-xs font-medium text-amber-800">
+        <div key={item} className="flex items-start gap-1.5 text-xs font-medium text-status-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{attentionLabels[item]}</span>
         </div>
@@ -106,10 +106,10 @@ function ResponsibleNames({ campaign }: { campaign: MarketingOpsCampaignSummary 
 export function CampaignTable({ campaigns, onOpen }: CampaignTableProps) {
   return (
     <>
-      <div className="glass-surface shadow-glass hidden overflow-hidden rounded-[8px] border-white/60 md:block">
+      <div className="glass-surface shadow-glass hidden overflow-hidden rounded-[8px] border-border md:block">
         <Table>
-          <TableHeader className="bg-white/45">
-            <TableRow className="hover:bg-white/45">
+          <TableHeader className="bg-card">
+            <TableRow className="hover:bg-accent">
               <TableHead className="w-[28%]">Campanha</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Período</TableHead>
@@ -121,14 +121,14 @@ export function CampaignTable({ campaigns, onOpen }: CampaignTableProps) {
           </TableHeader>
           <TableBody>
             {campaigns.map((campaign) => (
-              <TableRow key={campaign.id} className="group bg-white/35 hover:bg-white/55">
+              <TableRow key={campaign.id} className="group bg-card hover:bg-accent">
                 <TableCell>
                   <button
                     type="button"
                     onClick={() => onOpen(campaign.id)}
                     className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                   >
-                    <span className="block font-semibold text-text-primary group-hover:text-brand-primary">{campaign.name}</span>
+                    <span className="block font-semibold text-text-primary group-hover:text-brand-accent">{campaign.name}</span>
                     <span className="mt-1 block text-xs text-text-muted">
                       {campaign.referenceTitleSnapshot ?? 'Sem referência'} · Atualizada {formatUpdatedAt(campaign.updatedAt)}
                     </span>
@@ -169,7 +169,7 @@ export function CampaignTable({ campaigns, onOpen }: CampaignTableProps) {
 
       <div className="grid grid-cols-1 gap-3 md:hidden">
         {campaigns.map((campaign) => (
-          <article key={campaign.id} className="glass-surface shadow-glass rounded-[8px] border-white/60 p-4">
+          <article key={campaign.id} className="glass-surface shadow-glass rounded-[8px] border-border p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <button
@@ -197,7 +197,7 @@ export function CampaignTable({ campaigns, onOpen }: CampaignTableProps) {
                 <dd className="mt-1 text-text-secondary"><ResponsibleNames campaign={campaign} /></dd>
               </div>
             </dl>
-            <div className="mt-4 border-t border-slate-100 pt-3">
+            <div className="mt-4 border-t border-border pt-3">
               <Attention items={campaign.attention} />
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="text-xs text-text-muted">Atualizada {formatUpdatedAt(campaign.updatedAt)}</span>
