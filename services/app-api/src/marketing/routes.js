@@ -35,7 +35,8 @@ export async function marketingRoutes(fastify, options) {
       const suffixWithQuery = request.raw.url.slice("/api/marketing".length);
       const [rawPath, rawQuery] = suffixWithQuery.split("?", 2);
       const upstreamPath = `/v1${rawPath || "/"}`;
-      const providerOperation = /^\/v1\/web-analytics\/(ga4|clarity)\/(resources|resource|connect|sync)$/.test(upstreamPath);
+      const providerOperation = /^\/v1\/web-analytics\/(ga4|clarity)\/(resources|resource|connect|sync)$/.test(upstreamPath) || /^\/v1\/workspace\/(google_|microsoft_)/.test(upstreamPath)
+        || (request.method === 'POST' && /^\/v1\/campaigns\/[0-9a-f-]{36}\/workspace-links$/.test(upstreamPath));
       const upstreamUrl = `${marketing.internalUrl}${upstreamPath}${rawQuery ? `?${rawQuery}` : ""}`;
       const headers = new Headers();
       for (const name of requestHeaderAllowlist) {
@@ -43,7 +44,7 @@ export async function marketingRoutes(fastify, options) {
         if (typeof value === "string") headers.set(name, value);
       }
       headers.set("x-correlation-id", correlationId);
-      if (/^\/v1\/ads-integrations\/(meta|google|linkedin)\/(authorize|callback)$/.test(upstreamPath) || upstreamPath === "/v1/web-analytics/ga4/authorize") {
+      if (/^\/v1\/ads-integrations\/(meta|google|linkedin)\/(authorize|callback)$/.test(upstreamPath) || upstreamPath === "/v1/web-analytics/ga4/authorize" || /^\/v1\/workspace\/(google_drive|google_gmail|google_calendar|google_sheets|google_search_console|microsoft_files|microsoft_mail|microsoft_calendar)\/authorize$/.test(upstreamPath)) {
         headers.set("x-ens-oauth-session", oauthSessionBinding(sessionToken, marketing.assertion));
       }
       headers.set("x-ens-actor-assertion", await createActorAssertion({

@@ -23,6 +23,7 @@ const ApprovalQueuePage = lazy(() => import("./pages/marketing-ops/ApprovalQueue
 const ApprovalDetailPage = lazy(() => import("./pages/marketing-ops/ApprovalDetailPage"));
 const IntegrationsPage = lazy(() => import("./pages/settings/IntegrationsPage"));
 const WebAnalyticsPage = lazy(() => import("./pages/marketing-ops/WebAnalyticsPage"));
+const WorkspacePage = lazy(() => import("./pages/marketing-ops/WorkspacePage"));
 const marketingOps = marketingOpsFlags(import.meta.env);
 
 const CampaignRouteLoading = () => (
@@ -67,6 +68,7 @@ const AuthenticatedApp = () => {
               <>
                 <Route path="/settings/integrations" element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><IntegrationsPage /></Suspense></ProtectedRoute>} />
                 <Route path="/marketing-ops/analytics" element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><WebAnalyticsPage /></Suspense></ProtectedRoute>} />
+                <Route path="/marketing-ops/workspace" element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><WorkspacePage /></Suspense></ProtectedRoute>} />
                 <Route
                   path="/marketing-ops/dashboard"
                   element={<ProtectedRoute><Suspense fallback={<CampaignRouteLoading />}><MarketingDashboardPage /></Suspense></ProtectedRoute>}

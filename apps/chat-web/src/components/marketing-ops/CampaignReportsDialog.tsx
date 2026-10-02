@@ -9,15 +9,15 @@ import type { MarketingOpsClient } from '@/lib/marketingOps/client';
 import { LeadError } from './LeadUi';
 import { count, leadDialog, leadSelect, shortDate, useCampaignActions, useProposalKey, useDialogReturnFocus } from './leadUiHelpers';
 
-export function CampaignReportsDialog({ campaignId, api, ops, readOnly, onClose }: { campaignId: string; api: LeadClient; ops: MarketingOpsClient; readOnly: boolean; onClose: () => void }) {
+export function CampaignReportsDialog({ campaignId, api, ops, readOnly, onClose, initialReport }: { campaignId: string; api: LeadClient; ops: MarketingOpsClient; readOnly: boolean; onClose: () => void; initialReport?: Partial<ResultReportInput> }) {
   const qc = useQueryClient(); const key = useProposalKey();
   const returnFocus = useDialogReturnFocus();
   const reports = useQuery({ queryKey: leadKeys.reports(campaignId), queryFn: () => api.reports(campaignId) });
   const sources = useQuery({ queryKey: leadKeys.sources(campaignId), queryFn: () => api.sources(campaignId) });
   const actions = useCampaignActions(campaignId, ops, !readOnly);
-  const [target, setTarget] = useState<ResultReport | 'new' | null>(null);
-  const [form, setForm] = useState<ResultReportInput>({ sourceId: '', periodFrom: '', periodTo: '', timeZone: 'America/Sao_Paulo', metrics: {}, notes: '', actionId: null });
-  const [values, setValues] = useState<Partial<Record<keyof ReportMetrics, string>>>({});
+  const [target, setTarget] = useState<ResultReport | 'new' | null>(initialReport ? 'new' : null);
+  const [form, setForm] = useState<ResultReportInput>({ sourceId: '', periodFrom: '', periodTo: '', timeZone: 'America/Sao_Paulo', metrics: {}, notes: '', actionId: null, ...initialReport });
+  const [values, setValues] = useState<Partial<Record<keyof ReportMetrics, string>>>(() => Object.fromEntries(Object.entries(initialReport?.metrics ?? {}).map(([id, value]) => [id, String(value)])));
   const [proposal, setProposal] = useState<ResultReportInput | null>(null); const [historyId, setHistoryId] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null); const [busy, setBusy] = useState(false); const [receipt, setReceipt] = useState('');
   const [currentConflict, setCurrentConflict] = useState<ResultReport | null>(null);

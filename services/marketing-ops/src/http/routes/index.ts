@@ -27,6 +27,8 @@ import type { AdsIntegrationService } from '../../domain/ads.js';
 import { registerAds } from './ads.js';
 import type { WebAnalyticsService } from '../../domain/webAnalytics.js';
 import { registerWebAnalytics } from './webAnalytics.js';
+import { registerWorkspace } from './workspace.js';
+import type { WorkspaceIntegrationService } from '../../domain/workspace.js';
 
 export interface ApiRouterDependencies {
   pool: Pool;
@@ -44,6 +46,7 @@ export interface ApiRouterDependencies {
   captureKeyring?: CaptureKeyring;
   adsService?: AdsIntegrationService;
   webAnalyticsService?:WebAnalyticsService;
+  workspaceService?: WorkspaceIntegrationService;
 }
 
 export function createApiRouter(deps: ApiRouterDependencies): Router {
@@ -57,6 +60,7 @@ export function createApiRouter(deps: ApiRouterDependencies): Router {
   registerLeads(router, deps.pool, deps.features);
   if (deps.adsService) registerAds(router, deps.adsService, deps.features,deps.webAnalyticsService);
   if(deps.webAnalyticsService) registerWebAnalytics(router,deps.webAnalyticsService,deps.features);
+  if (deps.workspaceService) registerWorkspace(router, deps.workspaceService, deps.features);
   registerParticipants(router, deps.pool, deps.features);
   registerMaterials(router, deps.pool, deps.artifactClient, deps.features);
   registerReferences(router, deps.ragCourseClient, deps.features);
@@ -84,6 +88,7 @@ export function createApiRouter(deps: ApiRouterDependencies): Router {
     features: deps.features,
     keyring: deps.keyring,
     artifactClient: deps.artifactClient,
+    ...(deps.workspaceService ? { workspaceService: deps.workspaceService } : {}),
     ...(deps.metrics ? { metrics: deps.metrics } : {}),
     ...(deps.resolveDelegation ? { resolveDelegation: deps.resolveDelegation } : {}),
     ...(deps.refreshDelegation ? { refreshDelegation: deps.refreshDelegation } : {})

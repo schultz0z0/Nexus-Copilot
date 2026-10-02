@@ -20,6 +20,7 @@ import { adsProviders, type AdsProvider, type AdsProviderClient } from './integr
 import { openAdsSetupStore } from './integrations/ads/setupStore.js';
 import { resolve } from 'node:path';
 import { WebAnalyticsService } from './domain/webAnalytics.js';
+import { WorkspaceIntegrationService } from './domain/workspace.js';
 
 const config = loadConfig(process.env);
 const logger = createLogger();
@@ -35,10 +36,25 @@ for (const provider of adsProviders) {
 }
 const adsService = new AdsIntegrationService(pool, adsConfig, adsClients, { store: adsStore });
 const webAnalyticsService=new WebAnalyticsService(pool,adsService);
+const workspaceService = new WorkspaceIntegrationService(pool, {
+  key: adsStore.key,
+  publicOrigin: adsConfig.publicOrigin ?? '',
+  setupDirectory: resolve(process.env.ADS_SETUP_DIRECTORY || 'data/ads', 'workspace'),
+  googleFallback: async context => {
+    const runtime = await adsService.analyticsRuntime(context);
+    if (!runtime.google) return null;
+    return {
+      clientId: runtime.google.clientId,
+      clientSecret: runtime.google.clientSecret,
+      redirectUri: runtime.google.redirectUri
+    };
+  }
+});
 const router = createApiRouter({
   pool,
   adsService,
   webAnalyticsService,
+  workspaceService,
   corsOrigins: config.corsOrigins,
   features: config.features,
   artifactClient: new ArtifactClient({

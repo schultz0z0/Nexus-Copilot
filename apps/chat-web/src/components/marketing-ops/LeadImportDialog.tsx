@@ -13,14 +13,14 @@ const mappingLabels = { name: 'Nome', email: 'E-mail', phone: 'Telefone', compan
 const aliases: Record<keyof LeadMapping, string[]> = { name: ['nome', 'name', 'fullname', 'nomecompleto'], email: ['email', 'emailaddress'], phone: ['telefone', 'phone', 'whatsapp', 'celular', 'phonenumber'], company: ['empresa', 'company', 'companyname'], externalId: ['id', 'externalid', 'leadid', 'iddolead', 'identificadorexterno'], occurredAt: ['data', 'datadecaptacao', 'createdtime', 'createdat', 'occurredat', 'datacaptacao'] };
 const statuses = { new: 'Novo contato', duplicate: 'Já registrado', possible_duplicate: 'Possível duplicado', invalid: 'Linha inválida' };
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-export function LeadImportDialog({ campaignId, api, onClose, existingPreviewId }: { campaignId: string; api: LeadClient; onClose: () => void; existingPreviewId?: string }) {
+export function LeadImportDialog({ campaignId, api, onClose, existingPreviewId, initialTable }: { campaignId: string; api: LeadClient; onClose: () => void; existingPreviewId?: string; initialTable?: LeadTable }) {
   const qc = useQueryClient(); const previewKey = useProposalKey(); const confirmKey = useProposalKey();
   const returnFocus = useDialogReturnFocus();
   const sources = useQuery({ queryKey: leadKeys.sources(campaignId), queryFn: () => api.sources(campaignId), enabled: !existingPreviewId });
   const existing = useQuery({ queryKey: ['marketing-leads', 'import-preview', campaignId, existingPreviewId], queryFn: () => api.importPreview(campaignId, existingPreviewId!), enabled: !!existingPreviewId, retry: false });
   const [nativeInvalid, setNativeInvalid] = useState(false);
-  const [sourceId, setSourceId] = useState(''); const [table, setTable] = useState<LeadTable | null>(null);
-  const [mapping, setMapping] = useState<LeadMapping>({}); const [fallbackDate, setFallbackDate] = useState('');
+  const [sourceId, setSourceId] = useState(''); const [table, setTable] = useState<LeadTable | null>(initialTable ?? null);
+  const [mapping, setMapping] = useState<LeadMapping>(() => { const next: LeadMapping = {}; if (initialTable) for (const key of Object.keys(mappingLabels) as Array<keyof LeadMapping>) { const index = initialTable.headers.findIndex(header => aliases[key].includes(normalize(header))); if (index >= 0) next[key] = index; } return next; }); const [fallbackDate, setFallbackDate] = useState('');
   const [preview, setPreview] = useState<ImportPreview | null>(null); const [decisions, setDecisions] = useState<Record<number, string>>({});
   const [receipt, setReceipt] = useState<ImportReceipt | null>(null); const [error, setError] = useState<unknown>(null); const [busy, setBusy] = useState(false);
   useEffect(() => {

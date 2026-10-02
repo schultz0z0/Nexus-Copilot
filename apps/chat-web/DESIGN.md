@@ -210,6 +210,45 @@ weekly dialog still simulates review only. Full CRM work remains outside this
 delivery until the manager validates the dashboard. Contracts:
 `docs/integrations/campaign-acquisition.md` and `ads-white-label.md`.
 
+## Integrated marketing work
+
+`/settings/integrations?tab=workspace` groups eight independent services into
+Files, Mail, Calendar and Organic Search. Admins prepare the Google Workspace
+and Microsoft 365 applications with server-owned callbacks and a masked secret;
+secrets stay only in the mounted form and transient request. Users authorize,
+choose an actual resource, replace it and disconnect with explicit review.
+Consent alone never means connected. Changing an application invalidates all
+services in that family; Ads and GA4 application configuration remains separate.
+Resource pickers browse through the BFF, treat provider IDs as opaque and select
+folders/libraries, spreadsheets, mail folders or editable calendars. Empty,
+permission, busy and conflict states offer an honest next step.
+
+`/marketing-ops/workspace` and the campaign's **Trabalho** tab expose the same
+tools. Campaign context always comes from an authorized persisted campaign.
+Files and selected messages can be explicitly attached to that campaign.
+Links preserve history; links from an old connection generation are marked
+unavailable rather than automatically rebound. Provider-owned HTTPS links are
+allowlisted and open safely. Never render provider HTML as application markup.
+
+Mail shows at most 20 recent messages as plain text, without attachments. A
+message is edited locally, reviewed, saved as a provider draft and then sent
+through a separate explicit confirmation. Uncertain sends have no retry button;
+the user checks the provider first. A changed provider draft produces a blocked
+state requiring a newly reviewed draft. Calendar commitments also require a
+preview and explicit publication, with the calendar, local browser timezone and
+optional campaign/calendar-action relation visible. No send or publication is
+performed automatically by mounting a page, refreshing or by Hermes prose.
+
+Sheets exposes a bounded first-tab preview, with at most 500 rows and 52 columns.
+Contacts enter the existing mapping, deduplication and human confirmation flow;
+truncated contact reads cannot be silently imported. Result imports select one
+aggregate row, map metrics and prefill the existing report form for source,
+period and human review. Brazilian formatted numbers are parsed strictly;
+missing values remain unmeasured. Search Console keeps search traffic separate
+from people and sales, with totals, a nonanimated dual-axis trend and accessible
+daily/page/query tables. Top-row limits and previous snapshot preservation stay
+visible. All mutations use observed versions and stable proposal keys.
+
 ## Contract maintenance
 
 ## Ads integrations and campaign attribution

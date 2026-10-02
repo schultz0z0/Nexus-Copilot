@@ -1,7 +1,7 @@
 ---
 name: marketing-ops-operator
 description: Use when a Nexus user conversationally asks to inspect, create, or change Marketing Ops campaigns or campaign items, especially when a write requires one contextual confirmation.
-version: 1.4.0
+version: 1.5.0
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -56,6 +56,9 @@ Reads are allowed when the business question requires them:
 - `marketing_ops_get_content_v1` for assets, bounded versions and artifacts;
 - `marketing_ops_get_object_capabilities_v1` before proposing a contextual
   mutation when authority/state is uncertain.
+- `marketing_ops_get_workspace_context_v1` for a manager/admin asking about
+  campaign-linked external materials or an explicitly selected linked email.
+  Read `references/workspace-context.md` before using external correspondence.
 
 Every write is an action inside `marketing_ops_prepare_plan_v1`; never call a
 direct mutation tool. The exact action allowlist is:

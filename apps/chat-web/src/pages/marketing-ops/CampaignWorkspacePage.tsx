@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CampaignWebAnalytics } from '@/components/marketing-ops/CampaignWebAnalytics';
+import { WorkspaceWorkbench } from '@/components/marketing-ops/WorkspaceWorkbench';
 import { useAuth } from '@/contexts/AuthContext';
 import { MarketingOpsApiError, type MarketingOpsClient } from '@/lib/marketingOps/client';
 import { marketingOpsFlags } from '@/lib/marketingOps/flags';
@@ -393,7 +394,7 @@ function CampaignWorkspace({
               <TabsList aria-label="Seções da campanha" className="h-12 min-w-max justify-start gap-2 rounded-none border-b border-border bg-transparent p-0">
                 {[
                   ['overview', 'Visão geral'], ['planning', 'Planejamento'], ['team', 'Equipe'],
-                  ['sources', 'Fontes'], ['leads', 'Leads'], ...(managesTenant ? [['site', 'Navegação']] : []), ['materials', 'Materiais'], ['history', 'Histórico'],
+                  ['sources', 'Fontes'], ['leads', 'Leads'], ...(managesTenant ? [['site', 'Navegação'], ['workspace', 'Trabalho']] : []), ['materials', 'Materiais'], ['history', 'Histórico'],
                 ].map(([value, label]) => <TabsTrigger key={value} value={value} className="h-11 rounded-none border-b-2 border-transparent px-3 data-[state=active]:border-brand-accent data-[state=active]:bg-transparent data-[state=active]:text-brand-accent data-[state=active]:shadow-none">
                   {label}{value === 'planning' && dirty ? <><span aria-hidden="true" className="ml-2 h-1.5 w-1.5 rounded-full bg-status-warning" /><span className="sr-only"> · alterações não salvas</span></> : null}
                 </TabsTrigger>)}
@@ -409,6 +410,7 @@ function CampaignWorkspace({
           <TabsContent value="sources" className="mt-0"><LeadSourcesPanel key={campaign.id} campaignId={campaign.id} api={leadsClient} ops={client} readOnly={readOnly} adsApi={adsClient} adsReadOnly={readOnly || !managesTenant} /></TabsContent>
           <TabsContent value="leads" className="mt-0"><CampaignLeadsPanel key={campaign.id} campaignId={campaign.id} api={leadsClient} readOnly={readOnly} /></TabsContent>
           {managesTenant && <TabsContent value="site" className="mt-0"><CampaignWebAnalytics key={campaign.id} campaignId={campaign.id} canManage={!readOnly} /></TabsContent>}
+          {managesTenant && <TabsContent value="workspace" className="mx-auto max-w-5xl px-4 py-7 sm:px-6"><WorkspaceWorkbench key={campaign.id} campaign={campaign} canManage={!readOnly} /></TabsContent>}
           <TabsContent value="planning" className="mt-0">
         <CampaignFieldsForm
           values={values}

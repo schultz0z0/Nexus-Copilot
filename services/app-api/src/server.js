@@ -12,6 +12,7 @@ import { attachmentRoutes } from "./attachments/routes.js";
 import { marketingRoutes } from "./marketing/routes.js";
 import { captureRoutes } from "./marketing/capture.js";
 import { adsOAuthRoutes, requestLogSerializer } from "./marketing/adsOAuth.js";
+import { workspaceOAuthRoutes } from "./marketing/workspaceOAuth.js";
 
 /**
  * Creates and configures the Fastify App API application.
@@ -62,6 +63,7 @@ export async function createApp(options = {}) {
     await app.register(marketingRoutes, { db, config, fetch: options.fetch });
     await app.register(captureRoutes, { config, fetch: options.fetch, captureProxyLookup: options.captureProxyLookup });
     await app.register(adsOAuthRoutes, { db, config, fetch: options.fetch });
+    await app.register(workspaceOAuthRoutes, { db, config, fetch: options.fetch });
   }
 
   if (db?.close) {

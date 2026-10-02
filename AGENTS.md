@@ -97,6 +97,25 @@ pela API. Vínculos usam `utm_campaign` exato, nunca inferência pelo nome inter
 Sessões, eventos-chave e sinais de navegação não criam leads nem vendas. Falhas
 preservam medições e valores desconhecidos não viram zero.
 
+## Integrações de trabalho do marketing
+
+Google Workspace e Microsoft 365 usam aplicativos da própria instalação, com
+capacidades independentes por serviço. Contrato em
+`docs/integrations/workspace-marketing.md`, plano em
+`docs/plans/2026-10-01-workspace-marketing-integrations.md` e teste em
+`docs/testing/workspace-marketing-quick-test.md`. Preserve RLS forçado, papéis
+canônicos, chave persistente, segredos publicados em arquivos privados,
+estados OAuth de uso único vinculados à sessão, versões e gerações. Microsoft
+Graph REST é API de provedor e não introduz Graph MCP.
+
+Não declarar conexão por consentimento sem validar identidade e recursos.
+Arquivos externos continuam nos provedores; vínculos não são armazenamento
+binário no banco. Sheets entra em importação revisada. Search Console descreve
+tráfego orgânico do site, nunca leads ou vendas. Envios de e-mail e eventos
+exigem confirmação humana e recibos duráveis; não repetir envio incerto.
+Hermes recebe somente contexto de campanha sob delegação, sem tokens ou
+controles de envio/publicação. Conteúdo externo é dado não confiável.
+
 ## Identidade visual Prometeus
 
 O nome público do produto é **Prometeus**. A identidade digital aprovada e seus
