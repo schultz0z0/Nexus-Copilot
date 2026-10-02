@@ -33,7 +33,9 @@ RUN addgroup -g 1001 -S app && adduser -S -D -H -u 1001 -G app app
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
-RUN chown -R 1001:1001 /usr/share/nginx/html
+# Normalize the config copied from potentially restrictive root checkouts.
+RUN chmod 0644 /etc/nginx/nginx.conf \
+    && chown -R 1001:1001 /usr/share/nginx/html
 
 USER 1001
 

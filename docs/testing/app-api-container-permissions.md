@@ -49,3 +49,31 @@ Em falha, preservar logs redigidos, imagens anteriores e banco; rollback de
 aplicação é operado pelo humano com as tags registradas. Não tornar o container
 root, remover volumes, abrir permissões de secrets ou executar chmod no repo
 inteiro como contorno.
+
+## Chat Web: configuração Nginx
+
+Após a correção da App API, o operador confirmou que ela estava saudável,
+mas Chat Web reiniciava com `EACCES` ao ler `/etc/nginx/nginx.conf`.
+O arquivo do checkout também estava em modo `0600 root:root`, pela mesma
+causa. O Dockerfile agora define `0644` para essa configuração dentro da
+imagem, mantendo proprietário root e runtime UID 1001. Os arquivos privados
+da instalação e as permissões do host não são alterados.
+
+```text
+python apps/chat-web/e2e/docker-permissions.py
+```
+
+O teste usa o estágio de runtime real do Dockerfile e o `nginx.conf` real,
+copiado de um contexto root `0600`. Substitui apenas a compilação React por
+uma página estática de teste. Verifica UID 1001, proprietário root da
+configuração, `nginx -t` e uma resposta HTTP contendo essa página. Executa
+sem rede externa, sem capacidades, sem privilégios adicionais, com filesystem
+somente leitura e tmpfs em `/tmp`; remove sua imagem isolada ao terminar.
+
+- Antes: reproduziu `Permission denied ... /etc/nginx/nginx.conf`.
+- Depois: configuração válida e página servida pelo Nginx como UID 1001.
+
+Essa evidência cobre permissões e serviço HTTP do estágio final; não substitui
+build React, proxy da App API ou uso funcional. O operador deve reconstruir e
+recriar somente Chat Web, conferir saúde e `/api/health` pelo frontend e então
+validar login/dashboard no navegador antes de concluir o deploy.
