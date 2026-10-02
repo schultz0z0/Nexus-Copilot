@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { discoverMigrations } from './migration-files.mjs';
+import { checksumSql, discoverMigrations } from './migration-files.mjs';
 
 const MIGRATION_LOCK_ID = '6133943518902701';
 const APPLICATION_NAME = 'ens-schema-migrator';
@@ -68,7 +68,12 @@ export async function runMigrations({ client, migrations }) {
     for (const migration of migrations) {
       const appliedChecksum = appliedChecksums.get(migration.version);
       if (appliedChecksum !== undefined) {
-        if (appliedChecksum !== migration.checksum) {
+        // Git checkouts may translate LF/CRLF. Accept only that byte-level
+        // equivalence, leaving the historical ledger and SQL unchanged.
+        const lf = migration.sql.replace(/\r\n/g, '\n');
+        const equivalentLineEndings = migration.checksum === checksumSql(migration.sql)
+          && [checksumSql(lf), checksumSql(lf.replace(/\n/g, '\r\n'))].includes(appliedChecksum);
+        if (appliedChecksum !== migration.checksum && !equivalentLineEndings) {
           throw new Error(`Checksum mismatch for applied migration ${migration.version}`);
         }
         result.skipped.push(migration.version);

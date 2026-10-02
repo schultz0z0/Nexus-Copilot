@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { buildConnectionConfig, runMigrations } from '../src/migrate.mjs';
+import { checksumSql } from '../src/migration-files.mjs';
 
 class RecordingClient {
   constructor({ applied = [], failOn = null } = {}) {
@@ -76,6 +77,18 @@ test('rejects an altered applied migration and releases the advisory lock', asyn
   assert.equal(client.calls.some(({ text }) => text === firstMigration.sql), false);
   assert.match(client.calls.at(-1).text, /pg_advisory_unlock/);
 });
+
+for (const [storedSql, checkedOutSql] of [['select 1;\n', 'select 1;\r\n'], ['select 1;\r\n', 'select 1;\n']]) {
+  test(`accepts only equivalent LF/CRLF checkouts without rewriting ledger (${storedSql.includes('\r') ? 'CRLF' : 'LF'})`, async () => {
+    const client = new RecordingClient({ applied: [{ version: '0001', checksum: checksumSql(storedSql) }] });
+    const migration = { ...firstMigration, sql: checkedOutSql, checksum: checksumSql(checkedOutSql) };
+    assert.deepEqual(await runMigrations({ client, migrations: [migration] }), { applied: [], skipped: ['0001'] });
+    assert.equal(client.calls.some(({ text }) => /INSERT INTO infra.schema_migrations|UPDATE infra.schema_migrations/.test(text)), false);
+    const changed = { ...migration, sql: checkedOutSql.replace('1', '2') };
+    changed.checksum = checksumSql(changed.sql);
+    await assert.rejects(runMigrations({ client, migrations: [changed] }), /checksum mismatch/i);
+  });
+}
 
 test('rolls back a failed migration and still releases the advisory lock', async () => {
   const client = new RecordingClient({ failOn: 'select broken;' });
