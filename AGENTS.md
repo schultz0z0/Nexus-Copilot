@@ -97,6 +97,17 @@ pela API. Vínculos usam `utm_campaign` exato, nunca inferência pelo nome inter
 Sessões, eventos-chave e sinais de navegação não criam leads nem vendas. Falhas
 preservam medições e valores desconhecidos não viram zero.
 
+O dashboard unificado tem Visão geral, Orgânico, Campanhas e Trabalho, conforme
+`docs/plans/2026-10-02-unified-marketing-dashboard-design.md` e
+`docs/testing/unified-dashboard-quick-test.md`. Integrações é configuração;
+resultados e ferramentas são consultados pelo dashboard. GA4 orgânico usa os
+grupos oficiais de sessão e exige snapshots com métricas por canal; snapshots
+legados permanecem desconhecidos até atualização explícita. Não inferir orgânico
+pelo total geral nem atribuir visitas de todo o site a uma campanha selecionada.
+Insights têm fonte, período, evidência e próximo passo, com no máximo três na
+visão geral. Preserve leituras independentes, detalhes sob demanda e os fluxos
+humanos existentes de envio, publicação e importação.
+
 ## Integrações de trabalho do marketing
 
 Google Workspace e Microsoft 365 usam aplicativos da própria instalação, com

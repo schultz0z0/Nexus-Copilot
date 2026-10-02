@@ -9,6 +9,13 @@ Composição do dashboard revisada em 29/09/2026 e ligada aos dados persistidos 
 O app abre no modo real; a demonstração usa `?mode=demo`. Consultar
 `design-system.md`, `compositionRecipes` no JSON e `apps/chat-web/DESIGN.md`.
 
+Em 02/10/2026, o dashboard passa a reunir **Visão geral**, **Orgânico**,
+**Campanhas** e **Trabalho**. A visão geral preserva quatro indicadores, dois
+gráficos e até três insights fundamentados; os detalhes aparecem na aba ou
+diálogo pertinente. A paleta e os tokens permanecem os mesmos. O HTML e as
+receitas documentam essa atualização; o PDF estático conserva a edição de
+26/09/2026. Checklist: `docs/testing/unified-dashboard-quick-test.md`.
+
 | Arquivo | Para que serve |
 | --- | --- |
 | [manual-da-marca.html](manual-da-marca.html) | Manual visual navegável, responsivo, com componentes, estados e exemplos interativos locais. Abrir no navegador. |

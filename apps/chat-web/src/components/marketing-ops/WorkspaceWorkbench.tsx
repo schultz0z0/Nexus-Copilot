@@ -29,20 +29,23 @@ export function WorkspaceWorkbench({
   service: initialService,
   canManage,
   api = workspaceClient,
+  onServiceChange,
 }: {
   campaign?: MarketingOpsCampaign;
   service?: WorkspaceService;
   canManage: boolean;
   api?: WorkspaceClient;
+  onServiceChange?: (service: WorkspaceService) => void;
 }) {
   const connections = useQuery({
     queryKey: workspaceKeys.connections,
     queryFn: api.connections,
     retry: false,
   });
-  const [service, setService] = useState<WorkspaceService>(
+  const [localService, setService] = useState<WorkspaceService>(
     initialService ?? "google_drive",
   );
+  const service = onServiceChange && initialService ? initialService : localService;
   const connection = connections.data?.data.find(
     (row) => row.service === service,
   );
@@ -60,9 +63,11 @@ export function WorkspaceWorkbench({
             id="workspace-service"
             className={leadSelect}
             value={service}
-            onChange={(event) =>
-              setService(event.target.value as WorkspaceService)
-            }
+            onChange={(event) => {
+              const next = event.target.value as WorkspaceService;
+              setService(next);
+              onServiceChange?.(next);
+            }}
           >
             {Object.entries(workspaceServices).map(([id, name]) => (
               <option key={id} value={id}>

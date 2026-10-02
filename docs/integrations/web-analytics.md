@@ -36,6 +36,32 @@ Em **Campanha → Navegação → Vincular navegação**, informar o valor exato
 
 O vínculo usa o recurso selecionado no servidor e respeita a autorização da campanha. Ao trocar recurso, revisar os vínculos. Desativar remove o segmento da leitura vigente e preserva o histórico. Captação de pessoas permanece no contrato [campaign-acquisition.md](campaign-acquisition.md).
 
+## Consulta no dashboard
+
+A consulta cotidiana está em **Dashboard → Orgânico → Navegação orgânica**
+para GA4 orgânico e **Dashboard → Visão geral → Análise do site e experiência**
+para GA4 geral e Clarity. **Campanhas** abre a navegação atribuída da campanha
+selecionada; seus vínculos continuam geridos na página dessa campanha.
+Configurações → Integrações serve para conectar, escolher/trocar recursos e
+renovar autorizações. A rota antiga `/marketing-ops/analytics` redireciona ao
+diálogo correspondente, preservando provedor e datas.
+
+`GET .../ga4/results?scope=organic` lê snapshots persistidos dos grupos oficiais
+Organic Search, Organic Social, Organic Video e Organic Shopping. O relatório
+salva `sessionDefaultChannelGroup` e métricas de sessão por canal. Snapshots
+anteriores sem esse contrato permanecem desconhecidos, com
+`analytics_organic_not_measured`; o gestor deve usar **Atualizar Google Analytics**
+uma vez para coletar o novo recorte. Uma resposta completa sem canais orgânicos
+representa zero medido; respostas incompletas não permitem concluir ausência.
+O escopo orgânico é exclusivo do GA4 geral, não de Clarity ou segmentos UTM.
+GETs não chamam o provedor nem alteram dados. Nenhuma migração SQL é necessária.
+
+Os insights descrevem a medição disponível e propõem uma investigação, sem
+converter sessões/eventos em leads, inventar causalidade ou declarar saúde sem
+metas e cobertura. GA4 usa até 30 dias fechados no fuso da propriedade; Clarity
+mantém sua janela efetiva UTC, independentemente dos filtros do dashboard.
+Teste: `docs/testing/unified-dashboard-quick-test.md`.
+
 ## Contratos técnicos e operação
 
 - App API/BFF encaminha a identidade canônica e a vinculação da sessão; o navegador não chama APIs internas ou bancos.

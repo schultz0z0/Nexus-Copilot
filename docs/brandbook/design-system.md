@@ -209,6 +209,22 @@ zero medido. Contatos frios e cliques não são leads. Sem metas e cobertura
 suficientes, não concluir que a operação está saudável. Contratos completos em `apps/chat-web/DESIGN.md` e
 `compositionRecipes.marketingDashboard` no JSON.
 
+A organização aprovada em 02/10/2026 consolida integrações no dashboard em
+**Visão geral**, **Orgânico**, **Campanhas** e **Trabalho**. A visão geral conserva
+quatro KPIs e dois gráficos, com no máximo três insights curtos: fonte, período,
+evidência observada e próximo passo. Detalhes do site abrem em diálogo opaco;
+funil e comparação de campanhas pertencem à sua aba. Evitar repetir a mesma
+análise em todas as seções.
+
+Orgânico combina a busca do Search Console com GA4 recortado pelos grupos de
+sessão orgânicos; não usar o total geral do site como orgânico. O filtro de
+campanha não atribui essas visitas. Campanhas usa resultados comerciais e
+navegação vinculada por UTM exata, com fontes e coberturas separadas. Clarity
+conserva a janela móvel UTC. Trabalho incorpora os serviços conectados sem
+automatizar envios ou publicações. Integrações permanece a área de configuração.
+Abas e escolhas têm URL própria, foco visível e alvos de 44 px; no celular,
+empilhar os filtros e permitir rolagem apenas dentro das tabelas.
+
 ## 9. Responsividade
 
 Breakpoints Tailwind: sm 640, md 768, lg 1024, xl 1280 e 2xl 1536 px. A largura máxima do container é **1400 px**; isso não muda o breakpoint 2xl. Header existente: 64 px; rail desktop: 80 px a partir de md. Balões do mascote: lg+.

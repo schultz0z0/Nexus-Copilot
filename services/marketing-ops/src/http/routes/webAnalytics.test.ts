@@ -22,6 +22,16 @@ function setup(write = true) {
     return { app, analytics, ads };
 }
 describe('web analytics HTTP boundaries', () => {
+    it('accepts a strict organic GA4 read scope and rejects it for Clarity or synchronization', async () => {
+        const { app, analytics } = setup();
+        const query = 'from=2026-09-01&to=2026-09-02&scope=organic';
+        expect((await request(app).get(`/v1/web-analytics/ga4/results?${query}`)).status).toBe(200);
+        expect(analytics.results).toHaveBeenCalledWith(expect.anything(),'ga4',{from:'2026-09-01',to:'2026-09-02',scope:'organic'});
+        expect((await request(app).get(`/v1/web-analytics/clarity/results?${query}`)).status).toBe(400);
+        expect((await request(app).get('/v1/web-analytics/ga4/results?scope=paid')).status).toBe(400);
+        expect((await request(app).post('/v1/web-analytics/ga4/sync').set('Idempotency-Key','read-only-scope').send({from:'2026-09-01',to:'2026-09-02',scope:'organic'})).status).toBe(400);
+        expect(analytics.sync).not.toHaveBeenCalled();
+    });
     it('preserves the trusted GA4 intent header on a denied callback without consuming an Ads state', async () => {
         const { app, analytics, ads } = setup();
         analytics.callback.mockRejectedValueOnce(new AppError('analytics_permission_required', 403, 'Authorization denied'));

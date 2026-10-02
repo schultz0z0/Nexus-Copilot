@@ -103,7 +103,7 @@ describe("Workspace human review", () => {
     await screen.findByRole("region", { name: "Prévia da planilha" });
     expect(sheet).toHaveBeenLastCalledWith("sheet1");
     await user.click(
-      screen.getByRole("button", { name: "Todas as planilhas", exact: true }),
+      screen.getByRole("button", { name: "Todas as planilhas" }),
     );
     expect(
       screen.queryByRole("region", { name: "Prévia da planilha" }),
@@ -171,7 +171,7 @@ describe("Workspace human review", () => {
     await screen.findByText("Criativos");
     await user.type(screen.getByLabelText("Buscar arquivos"), "Criativos");
     await user.click(
-      screen.getByRole("button", { name: "Buscar", exact: true }),
+      screen.getByRole("button", { name: "Buscar" }),
     );
     await waitFor(() =>
       expect(files).toHaveBeenLastCalledWith(
@@ -266,6 +266,8 @@ describe("Workspace human review", () => {
     const create = vi.spyOn(leadClient, "createReport");
     vi.spyOn(marketingOpsClient, "listProductionSchedule").mockResolvedValue({
       data: [],
+      correlationId: null,
+      etag: null,
     });
     const api = {
       sheet: vi.fn().mockResolvedValue({

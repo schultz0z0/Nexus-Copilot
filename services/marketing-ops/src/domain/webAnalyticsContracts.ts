@@ -3,6 +3,7 @@ import { appError } from '../errors.js';
 export const AnalyticsProviderSchema = z.enum(['ga4', 'clarity']);
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v);
 export const AnalyticsPeriodSchema = z.object({ from: day.optional(), to: day.optional() }).strict().refine(v => !!v.from === !!v.to && (!v.from || v.from <= v.to!));
+export const AnalyticsResultsSchema = z.object({ from: day.optional(), to: day.optional(), scope: z.literal('organic').optional() }).strict().refine(v => !!v.from === !!v.to && (!v.from || v.from <= v.to!));
 export const AnalyticsResourceSchema = z.object({ resourceId: z.string().regex(/^[0-9]{1,30}$/), confirmReplacement: z.boolean().optional() }).strict();
 export const ClarityConnectSchema = z.object({ token: z.string().min(20).max(12000).regex(/^[A-Za-z0-9_.-]+$/), projectId: z.string().regex(/^[a-zA-Z0-9]{1,40}$/), projectName: z.string().trim().min(1).max(120), confirmReplacement: z.boolean().optional() }).strict();
 export const AnalyticsLinkSchema = z.object({ provider: AnalyticsProviderSchema, utmCampaign: z.string().min(1).max(200).refine(v => v.trim() === v && !/[\u0000-\u001f]/.test(v)) }).strict();

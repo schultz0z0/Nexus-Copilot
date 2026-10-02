@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAnalyticsClient, analyticsCallbackMessage, validAnalyticsPeriod } from './analytics';
+import { createAnalyticsClient, analyticsCallbackMessage, validAnalyticsPeriod, analyticsKeys } from './analytics';
 
 describe('Native web analytics client', () => {
+  it('keeps organic reads and cache entries separate from global results without triggering synchronization', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({data:{}}));
+    const client = createAnalyticsClient({fetch});
+    const period = {from:'2026-09-01',to:'2026-09-02'};
+    await client.results('ga4',period,'organic');
+    expect(fetch.mock.calls[0][0]).toBe('/api/marketing/web-analytics/ga4/results?from=2026-09-01&to=2026-09-02&scope=organic');
+    expect(fetch.mock.calls[0][1].method).toBe('GET');
+    expect(analyticsKeys.results('ga4',period,'organic')).not.toEqual(analyticsKeys.results('ga4',period));
+  });
   it('uses BFF credentials, version and idempotency without adding token to any URL', async () => {
     const fetch = vi.fn().mockResolvedValue(Response.json({ data: {} }));
     await createAnalyticsClient({ fetch }).connectClarity({ token: 'private-project-token', projectId: 'project1', projectName: 'Site' }, 4, 'proposal');

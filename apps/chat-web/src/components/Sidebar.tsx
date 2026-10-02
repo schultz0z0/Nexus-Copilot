@@ -282,8 +282,8 @@ export const Sidebar = ({ activeTab, onTabChange, isMobile, onMobileClose }: Sid
 
           <div className="grid grid-cols-1 gap-6">
             {marketingOps.read && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/settings/integrations"); onMobileClose?.(); }}><Link2 aria-hidden="true" className="mr-2 h-4 w-4" />Integrações</Button>}
-            {marketingOps.read && ['admin', 'manager'].includes(normalizedRole) && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/marketing-ops/analytics"); onMobileClose?.(); }}><BarChart3 aria-hidden="true" className="mr-2 h-4 w-4" />Análise do site</Button>}
-            {marketingOps.read && ['admin', 'manager'].includes(normalizedRole) && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/marketing-ops/workspace"); onMobileClose?.(); }}><FolderOpen aria-hidden="true" className="mr-2 h-4 w-4" />Trabalho integrado</Button>}
+            {marketingOps.read && ['admin', 'manager'].includes(normalizedRole) && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/marketing-ops/dashboard?tab=overview&detail=site"); onMobileClose?.(); }}><BarChart3 aria-hidden="true" className="mr-2 h-4 w-4" />Análise do site</Button>}
+            {marketingOps.read && ['admin', 'manager'].includes(normalizedRole) && <Button variant="outline" className="min-h-11 justify-start" onClick={() => { setIsProfileOpen(false); navigate("/marketing-ops/dashboard?tab=work"); onMobileClose?.(); }}><FolderOpen aria-hidden="true" className="mr-2 h-4 w-4" />Trabalho integrado</Button>}
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16 border-2 border-border">
                 <AvatarImage src={avatarPreview || undefined} />

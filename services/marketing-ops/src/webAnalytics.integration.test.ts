@@ -39,6 +39,50 @@ async function connect(svc = service()) {
 }
 afterAll(() => Promise.all([pool.end(), adminPool.end()]));
 describe.runIf(enabled)('native web analytics isolation', () => {
+    it('reads all official organic groups from snapshots without paid traffic, campaign inference or provider calls', async () => {
+        const groups=['Organic Search','Organic Social','Organic Video','Organic Shopping','Paid Search','Direct','Referral','Email'];
+        const report=vi.fn(async()=>({...batch,channelMetricsVersion:1 as const,channels:groups.map((channelGroup,i)=>({date:'2026-09-01',channelGroup,source:`source-${i}`,medium:i<4?'organic':'other',sessions:i+1,engagedSessions:i+2,pageViews:i+3,keyEvents:i+4}))}));
+        const svc=await connect(service({...ga4,report}));
+        await svc.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());
+        const result=await svc.results(context(manager),'ga4',{from:'2026-09-01',to:'2026-09-01',scope:'organic'});
+        expect(result.totals).toMatchObject({sessions:10,engagedSessions:14,pageViews:18,keyEvents:22});
+        expect(result.daily).toEqual([{date:'2026-09-01',sessions:10,engagedSessions:14,pageViews:18,keyEvents:22}]);
+        expect(result.channels.map(c=>c.channelGroup).sort()).toEqual(groups.slice(0,4).sort());
+        expect(result.campaigns).toEqual([]);
+        expect(result.warnings).toEqual([]);
+        expect(report).toHaveBeenCalledTimes(1);
+        await expect(svc.results(context(member),'ga4',{scope:'organic'})).rejects.toMatchObject({code:'forbidden'});
+        await expect(svc.results(context(),'clarity',{scope:'organic'})).rejects.toThrow();
+        expect((await svc.results(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'})).totals?.sessions).toBe(10);
+    });
+    it('distinguishes legacy organic coverage from a measured complete zero', async()=>{
+        const svc=await connect();
+        await svc.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());
+        const legacy=await svc.results(context(),'ga4',{from:'2026-09-01',to:'2026-09-01',scope:'organic'});
+        expect(legacy.totals).toBeNull();expect(legacy.daily).toEqual([]);expect(legacy.warnings).toContain('analytics_organic_not_measured');
+        const complete=service({...ga4,report:async()=>({...batch,channelMetricsVersion:1,channels:[]})});
+        await complete.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());
+        const zero=await svc.results(context(),'ga4',{from:'2026-09-01',to:'2026-09-01',scope:'organic'});
+        expect(zero.totals).toMatchObject({sessions:0,engagedSessions:0,pageViews:0,keyEvents:0});expect(zero.warnings).toEqual([]);
+    });
+    it('does not treat a marker without the measured channel fields as organic zero',async()=>{
+        const svc=await connect(service({...ga4,report:async()=>({...batch,channelMetricsVersion:1})}));
+        await svc.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());
+        const result=await svc.results(context(),'ga4',{from:'2026-09-01',to:'2026-09-01',scope:'organic'});
+        expect(result.totals).toBeNull();expect(result.warnings).toContain('analytics_organic_not_measured');
+    });
+    it('preserves organic measurements and oldest freshness across reduced overlapping revisions',async()=>{
+        const organic={...batch,channelMetricsVersion:1 as const,channels:[{date:'2026-09-01',source:'google',medium:'organic',channelGroup:'Organic Search',sessions:3,engagedSessions:2,pageViews:4,keyEvents:1}]};
+        const svc=await connect(service({...ga4,report:async()=>organic}));
+        await svc.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());
+        const old='2026-09-02T00:00:00.000Z';
+        await adminPool.query("update marketing_ops.web_analytics_snapshots set observed_at=$1 where provider='ga4'",[old]);
+        const reduced=service({...ga4,report:async()=>({...organic,channels:[],warnings:['analytics_thresholded']})});
+        await reduced.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-02'},randomUUID());
+        const result=await svc.results(context(),'ga4',{from:'2026-09-01',to:'2026-09-02',scope:'organic'});
+        expect(result.totals?.sessions).toBe(3);expect(result.daily).toHaveLength(1);expect(result.lastSyncAt).toBe(old);expect(result.stale).toBe(true);
+        expect(result.warnings).toEqual(expect.arrayContaining(['analytics_thresholded','analytics_incomplete_coverage']));
+    });
     it('reports freshness from requested-period measurements rather than another recently synchronized period',async()=>{
         const svc=await connect();
         await svc.sync(context(),'ga4',{from:'2026-09-01',to:'2026-09-01'},randomUUID());

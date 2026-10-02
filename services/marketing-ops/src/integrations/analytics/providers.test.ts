@@ -4,6 +4,16 @@ const config = { clientId: 'example', clientSecret: 'private', redirectUri: 'htt
 const tokens = { accessToken: 'private-token', refreshToken: 'refresh', scopes: ['https://www.googleapis.com/auth/analytics.readonly'] };
 const response = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status });
 describe('analytics provider boundary', () => {
+    it('retains official channel groups and all organic metrics with a versioned snapshot marker', async () => {
+        const fetcher = vi.fn(async (_url: unknown, init: any) => {
+            const body = JSON.parse(init.body);
+            const dims = body.dimensions.map((d: any) => d.name);
+            return response({ dimensionHeaders: body.dimensions, metricHeaders: body.metrics, rowCount: 1, rows: [{ dimensionValues: dims.map((name: string) => ({ value: ({ date: '20260901', sessionDefaultChannelGroup: 'Organic Search', sessionSource: 'google', sessionMedium: 'organic', sessionManualCampaignName: 'launch' } as Record<string,string>)[name] })), metricValues: ['10','6','20','2'].map(value => ({ value })) }] });
+        });
+        const result = await new Ga4Client(config, fetcher).report(tokens,'123','2026-09-01','2026-09-01');
+        expect(result).toMatchObject({ channelMetricsVersion: 1, channels: [{ date: '2026-09-01', source:'google', medium:'organic', channelGroup:'Organic Search', sessions:10, engagedSessions:6, pageViews:20, keyEvents:2 }] });
+        expect(JSON.parse(fetcher.mock.calls[1]![1].body).dimensions.map((d:any)=>d.name)).toContain('sessionDefaultChannelGroup');
+    });
     it('Clarity keeps sessions with null dimensions without inventing campaign attribution', async () => {
         const fetcher = vi.fn()
             .mockResolvedValueOnce(response([{ metricName: 'Traffic', information: [{ totalSessionCount: 6, totalBotSessionCount: 0 }] }]))

@@ -1194,22 +1194,34 @@
   "compositionRecipes": {
     "marketingDashboard": {
       "provenance": "implemented real results and explicit demonstration; palette and runtime tokens unchanged",
-      "updatedAt": "2026-09-30",
+      "updatedAt": "2026-10-02",
       "source": "apps/chat-web/DESIGN.md",
+      "tabs": ["overview", "organic", "campaigns", "work"],
+      "urlState": ["tab", "from", "to", "campaignId", "source", "provider", "detail", "service"],
       "overview": {
         "indicators": [
           "leads",
           "periodSales",
           "periodRevenue",
-          "paidMediaInvestment"
+          "reportedInvestment"
         ],
         "charts": [
           "weeklyLeadTrend",
           "leadChannelDistribution"
         ],
         "health": "one short measurement notice; no positive conclusion without goals and adequate coverage",
-        "campaigns": "compact linked rows"
+        "campaigns": "linked rows in the campaigns tab",
+        "maximumInsights": 3,
+        "insightEvidence": ["source", "observedPeriod", "measuredEvidence", "nextStep"]
       },
+      "organic": {
+        "sources": ["Search Console", "GA4 organic session groups"],
+        "channelGroups": ["Organic Search", "Organic Social", "Organic Video", "Organic Shopping"],
+        "legacySnapshot": "unknown until explicit synchronization collects channel metrics",
+        "attribution": "whole site; campaign filter never infers organic attribution; cold prospects disclosed separately"
+      },
+      "work": "embedded files, Sheets, mail and calendars; mutations retain explicit review",
+      "siteDetail": "opaque dialog; GA4 period and Clarity rolling UTC window stay distinct",
       "onDemand": [
         "contactImports",
         "captureIdentityReview",

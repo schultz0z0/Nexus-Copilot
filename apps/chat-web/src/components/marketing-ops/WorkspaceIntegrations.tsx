@@ -378,7 +378,7 @@ export function WorkspaceIntegrations({
                     {connection.selectedResource && (
                       <Button asChild variant="link" className="min-h-11 px-0">
                         <Link
-                          to={`/marketing-ops/workspace?service=${connection.service}`}
+                          to={connection.service === "google_search_console" ? "/marketing-ops/dashboard?tab=organic&source=search" : `/marketing-ops/dashboard?tab=work&service=${connection.service}`}
                         >
                           Abrir {workspaceServices[connection.service]}
                         </Link>

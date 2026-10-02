@@ -8,7 +8,7 @@ export type AnalyticsStatus = 'unprepared' | 'prepared' | 'pending_resource' | '
 export interface AnalyticsResource { id: string; name: string; timeZone: string; currency?: string }
 export interface AnalyticsConnection { provider: AnalyticsProvider; status: AnalyticsStatus; version: number; resources: AnalyticsResource[]; selectedResourceId: string | null; lastSyncAt: string | null; safeError: string | null }
 export interface AnalyticsTotals { sessions: number; botSessions?: number | null; engagedSessions: number | null; pageViews: number | null; keyEvents: number | null; rageClicks: number | null; deadClicks: number | null; scrollDepth: number | null }
-export interface AnalyticsResults { provider: AnalyticsProvider; resource: AnalyticsResource | null; from: string; to: string; lastSyncAt: string | null; totals: AnalyticsTotals | null; daily: { date: string; sessions: number; engagedSessions: number | null; pageViews: number | null; keyEvents: number | null }[]; channels: { source: string; medium: string; sessions: number }[]; campaigns: { utmCampaign: string; sessions: number }[]; warnings: string[]; window: null | { from: string; to: string }; stale: boolean }
+export interface AnalyticsResults { provider: AnalyticsProvider; resource: AnalyticsResource | null; from: string; to: string; lastSyncAt: string | null; totals: AnalyticsTotals | null; daily: { date: string; sessions: number; engagedSessions: number | null; pageViews: number | null; keyEvents: number | null }[]; channels: { source: string; medium: string; sessions: number; channelGroup?: string; engagedSessions?: number | null; pageViews?: number | null; keyEvents?: number | null }[]; campaigns: { utmCampaign: string; sessions: number }[]; warnings: string[]; window: null | { from: string; to: string }; stale: boolean }
 export interface AnalyticsLink { id: string; campaignId: string; provider: AnalyticsProvider; resourceId: string; utmCampaign: string; enabled: boolean; version: number }
 export interface AnalyticsPeriod { from: string; to: string }
 export interface ClarityInput { token: string; projectId: string; projectName: string; confirmReplacement?: boolean }
@@ -16,7 +16,7 @@ export interface AnalyticsReceipt { id: string; status: 'completed' | 'partial';
 export const analyticsKeys = {
   all: ['web-analytics'] as const, connections: ['web-analytics', 'connections'] as const,
   resources: ['web-analytics', 'ga4', 'resources'] as const,
-  results: (provider: AnalyticsProvider, period: AnalyticsPeriod) => ['web-analytics', 'results', provider, period] as const,
+  results: (provider: AnalyticsProvider, period: AnalyticsPeriod, scope?: 'organic') => scope ? ['web-analytics', 'results', provider, period, scope] as const : ['web-analytics', 'results', provider, period] as const,
   links: (id: string) => ['web-analytics', 'links', id] as const,
   campaign: (id: string, period: AnalyticsPeriod) => ['web-analytics', 'campaign', id, period] as const,
 };
@@ -55,6 +55,7 @@ export const analyticsMessages: Record<string, string> = {
   feature_disabled: 'Esta operação está desabilitada na instalação.',
 };
 export const analyticsWarnings: Record<string, string> = {
+  analytics_organic_not_measured: 'Esta leitura ainda não mede os canais orgânicos. Atualize o GA4 para coletar esse recorte; os totais gerais não substituem esses dados.',
   analytics_thresholded: 'O Google aplicou limites de privacidade aos dados deste período.',
   analytics_sampled: 'O Google retornou dados amostrados.',
   analytics_other_row: 'Parte dos dados foi agrupada como outros pelo Google.',
@@ -99,7 +100,7 @@ export function createAnalyticsClient(options: { fetch?: typeof globalThis.fetch
     connectClarity: (input: ClarityInput, version: number, key: string) => request<AnalyticsConnection>('/web-analytics/clarity/connect', 'POST', input, version, key),
     disconnect: (provider: AnalyticsProvider, version: number) => request<AnalyticsConnection>(`${route(provider)}/disconnect`, 'POST', {}, version),
     sync: (provider: AnalyticsProvider, period: AnalyticsPeriod, key: string) => request<AnalyticsReceipt>(`${route(provider)}/sync`, 'POST', provider === 'ga4' ? period : {}, undefined, key),
-    results: (provider: AnalyticsProvider, period: AnalyticsPeriod) => request<AnalyticsResults>(`${route(provider)}/results?${query(period)}`),
+    results: (provider: AnalyticsProvider, period: AnalyticsPeriod, scope?: 'organic') => request<AnalyticsResults>(`${route(provider)}/results?${query(period)}${scope ? `&scope=${scope}` : ''}`),
     links: (campaignId: string) => request<AnalyticsLink[]>(links(campaignId)),
     createLink: (campaignId: string, input: { provider: AnalyticsProvider; utmCampaign: string }, key: string) => request<AnalyticsLink>(links(campaignId), 'POST', input, undefined, key),
     disableLink: (campaignId: string, link: AnalyticsLink) => request<AnalyticsLink>(`${links(campaignId)}/${encodeURIComponent(link.id)}/disable`, 'POST', {}, link.version),

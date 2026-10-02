@@ -24,6 +24,10 @@ export interface AnalyticsDaily {
     keyEvents: number | null;
 }
 export interface AnalyticsChannel {
+    channelGroup?: string;
+    engagedSessions?: number | null;
+    pageViews?: number | null;
+    keyEvents?: number | null;
     source: string;
     medium: string;
     sessions: number;
@@ -74,6 +78,8 @@ export interface AnalyticsSyncReceipt {
     warnings: string[];
 }
 export interface AnalyticsBatch {
+    /** Version 1 measures official session channel groups and every channel metric. */
+    channelMetricsVersion?: 1;
     totals: AnalyticsTotals;
     daily: AnalyticsDaily[];
     channels: (AnalyticsChannel & {

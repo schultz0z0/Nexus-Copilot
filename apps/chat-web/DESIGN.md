@@ -75,7 +75,7 @@ entered in a password field, validated server-side and never redisplayed.
 Changing an authorized Google identity/resource or project requires confirmation
 and explains preserved history and campaign link review.
 
-Site analytics live on their own page and in the campaign Navigation tab. Use
+Site analytics live in the dashboard hub and in the campaign Navigation tab. Use
 the existing four-KPI/two-chart composition, visible partial/stale summaries,
 accessible data tables and optional detailed coverage. Explicit UTM attribution
 never infers a campaign from its name. Clarity rolling UTC windows remain distinct
@@ -129,6 +129,33 @@ and WhatsApp clicks are separate counts, not leads. Measured zero remains zero;
 unmeasured values remain unavailable. Without goals and adequate measurement,
 do not declare the operation healthy or invent conversion rates from aggregates.
 Crossing reports are excluded with a coverage notice, never prorated silently.
+
+The approved hub (2026-10-02) has URL-driven **Visão geral**, **Orgânico**,
+**Campanhas** and **Trabalho** tabs. The overview contains four KPIs, two charts
+and at most three insights with an observed source, period, evidence and a next
+step. Campaign rows/funnel belong in Campanhas; site analysis is disclosed in an
+opaque dialog. Failures of one source must not erase the other sources' results.
+Settings manages authorization/resources only. Legacy analytics/workspace routes
+redirect into the hub; campaign-bound workspace context remains supported.
+
+Orgânico separates Search Console from GA4's official Organic Search, Organic
+Social, Organic Video and Organic Shopping session groups. Paid, direct and
+referral traffic are excluded. Both sources use dashboard dates (up to 30 closed
+days), but retain their own coverage and timezone notices. A campaign filter
+does not narrow whole-site organic traffic or the cold-prospecting total.
+Legacy GA4 snapshots without channel metrics remain unknown until explicit
+synchronization; do not substitute the whole-site total. Search Console clicks
+are searches, not people. Cold contacts remain a separate disclosure.
+
+Campanhas shows commercial results and opens exact-UTM navigation on demand;
+provider conversions, site key events and identified leads remain distinct.
+Clarity retains its actual rolling UTC window independently of selected dates.
+Trabalho embeds the existing files, Sheets, mail and calendar tools, preserving
+their reviewed write flows. Loading a tab or changing filters never sends mail,
+publishes events or synchronizes providers. Respect canonical role/write flags.
+Tabs, source, service, provider, detail and dates survive links/reload; keyboard
+navigation and dialog focus return remain required. Validation checklist:
+`docs/testing/unified-dashboard-quick-test.md`.
 
 ### Explicit demonstration
 
@@ -223,8 +250,10 @@ Resource pickers browse through the BFF, treat provider IDs as opaque and select
 folders/libraries, spreadsheets, mail folders or editable calendars. Empty,
 permission, busy and conflict states offer an honest next step.
 
-`/marketing-ops/workspace` and the campaign's **Trabalho** tab expose the same
-tools. Campaign context always comes from an authorized persisted campaign.
+The dashboard's **Trabalho** tab and the campaign's **Trabalho** tab expose the
+same tools. `/marketing-ops/workspace` redirects to the hub, except when an
+authorized campaign context is explicitly supplied. Campaign context always
+comes from an authorized persisted campaign.
 Files and selected messages can be explicitly attached to that campaign.
 Links preserve history; links from an old connection generation are marked
 unavailable rather than automatically rebound. Provider-owned HTTPS links are

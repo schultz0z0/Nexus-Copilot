@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { workspaceDashboardTarget } from "@/lib/marketingOps/dashboardNavigation";
 import { FolderOpen } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { MarketingOpsMobileBar } from "@/components/marketing-ops/MarketingOpsMobileBar";
@@ -32,6 +33,7 @@ export default function WorkspacePage() {
     Object.prototype.hasOwnProperty.call(workspaceServices, requested)
       ? (requested as WorkspaceService)
       : undefined;
+  if (!campaignId) return <Navigate replace to={workspaceDashboardTarget(params)} />;
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Sidebar />

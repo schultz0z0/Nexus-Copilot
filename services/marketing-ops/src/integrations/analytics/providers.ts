@@ -208,7 +208,7 @@ export class Ga4Client implements Ga4ProviderClient {
         const signal=parent?AbortSignal.any([parent,AbortSignal.timeout(90000)]):AbortSignal.timeout(90000);
         const warnings = new Set<string>();
         const global = await this.rows(tokens, id, from, to, ['date'], warnings,signal);
-        const channels = await this.rows(tokens, id, from, to, ['date', 'sessionSource', 'sessionMedium'], warnings,signal);
+        const channels = await this.rows(tokens, id, from, to, ['date', 'sessionSource', 'sessionMedium', 'sessionDefaultChannelGroup'], warnings,signal);
         const campaigns = await this.rows(tokens, id, from, to, ['date', 'sessionManualCampaignName'], warnings,signal);
         const campaignChannels = await this.rows(tokens, id, from, to, ['date', 'sessionManualCampaignName', 'sessionSource', 'sessionMedium'], warnings,signal);
         const date = (s: string) => `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
@@ -222,7 +222,7 @@ export class Ga4Client implements Ga4ProviderClient {
             aggregate.pageViews += d.pageViews;
             aggregate.keyEvents += d.keyEvents;
         }
-        return { totals: aggregate, daily, channels: channels.map(r => ({ date: date(r.d[0]!), source: r.d[1]!, medium: r.d[2]!, sessions: r.m[0]! })), campaigns: campaigns.map(r => ({ date: date(r.d[0]!), utmCampaign: r.d[1]!, sessions: r.m[0]!, engagedSessions: r.m[1]!, pageViews: r.m[2]!, keyEvents: r.m[3]! })), campaignChannels: campaignChannels.map(r => ({ date: date(r.d[0]!), utmCampaign: r.d[1]!, source: r.d[2]!, medium: r.d[3]!, sessions: r.m[0]! })), warnings: [...warnings], window: null };
+        return { channelMetricsVersion: 1, totals: aggregate, daily, channels: channels.map(r => ({ date: date(r.d[0]!), source: r.d[1]!, medium: r.d[2]!, channelGroup: r.d[3]!, sessions: r.m[0]!, engagedSessions: r.m[1]!, pageViews: r.m[2]!, keyEvents: r.m[3]! })), campaigns: campaigns.map(r => ({ date: date(r.d[0]!), utmCampaign: r.d[1]!, sessions: r.m[0]!, engagedSessions: r.m[1]!, pageViews: r.m[2]!, keyEvents: r.m[3]! })), campaignChannels: campaignChannels.map(r => ({ date: date(r.d[0]!), utmCampaign: r.d[1]!, source: r.d[2]!, medium: r.d[3]!, sessions: r.m[0]! })), warnings: [...warnings], window: null };
     }
 }
 export class ClarityClient implements ClarityProviderClient {

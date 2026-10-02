@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
@@ -29,14 +29,21 @@ export function SearchConsoleResults({
   connection,
   canManage,
   api = workspaceClient,
+  period: controlledPeriod,
+  embedded = false,
+  onReport,
 }: {
   connection: WorkspaceConnection;
   canManage: boolean;
   api?: WorkspaceClient;
+  period?: { from?: string; to?: string };
+  embedded?: boolean;
+  onReport?: (report: SearchConsoleReport | null) => void;
 }) {
   const qc = useQueryClient();
   const key = useProposalKey();
-  const [period, setPeriod] = useState({ from: date(30), to: date(3) });
+  const [localPeriod, setPeriod] = useState({ from: date(30), to: date(3) });
+  const period = { from: controlledPeriod?.from ?? localPeriod.from, to: controlledPeriod?.to ?? localPeriod.to };
   const [error, setError] = useState<unknown>(null);
   const [outcome, setOutcome] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,6 +56,9 @@ export function SearchConsoleResults({
     enabled: valid,
     retry: false,
   });
+  useEffect(() => {
+    onReport?.(valid && !report.isError ? report.data?.data ?? null : null);
+  }, [report.data, report.isError, valid, onReport]);
   const sync = async () => {
     if (lock.current || !valid) return;
     lock.current = true;
@@ -82,8 +92,10 @@ export function SearchConsoleResults({
           <p className="mt-2 break-all text-sm text-muted-foreground">
             {connection.selectedResource?.name}
           </p>
+          {embedded && <p className="mt-2 text-xs text-muted-foreground">{shortDate(period.from)} a {shortDate(period.to)} · datas da busca no Google.</p>}
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          {!embedded && <>
           <div className="space-y-2">
             <Label htmlFor="search-from">De</Label>
             <Input
@@ -107,6 +119,7 @@ export function SearchConsoleResults({
               }
             />
           </div>
+          </>}
           {canManage && (
             <Button
               className="min-h-11"
@@ -147,7 +160,7 @@ export function SearchConsoleResults({
         {outcome}
       </p>
       {report.isLoading && <p role="status">Carregando leitura orgânica…</p>}
-      {report.data && <OrganicReport report={report.data.data} />}
+      {report.data && valid && <OrganicReport report={report.data.data} />}
     </section>
   );
 }

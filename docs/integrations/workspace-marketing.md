@@ -183,7 +183,15 @@ conta externa ativa. Validar cada serviço com identidade autorizada e leitura
 real; envio/publicação exigem um teste humano deliberado com destinatário e
 calendário de teste. Não enviar segredos no chat ou anexar callbacks completos.
 
-Checklist: `docs/testing/workspace-marketing-quick-test.md`.
+O acesso cotidiano está em **Dashboard → Trabalho**: arquivos, planilhas,
+e-mail e agenda. **Dashboard → Orgânico → Busca no Google** reúne o Search
+Console com os filtros do dashboard. Configurações → Integrações gerencia
+conexões e recursos. A rota geral `/marketing-ops/workspace` redireciona à aba
+correspondente, preservando o serviço; o contexto explícito de campanha continua
+suportado. Abrir uma aba não envia mensagens, publica eventos ou importa dados.
+
+Checklists: `docs/testing/workspace-marketing-quick-test.md` e
+`docs/testing/unified-dashboard-quick-test.md`.
 
 Validação local desta entrega: 515 testes de Marketing Ops com PostgreSQL
 isolado, 303 testes do frontend (execução sequencial), 114 do BFF, 24 do

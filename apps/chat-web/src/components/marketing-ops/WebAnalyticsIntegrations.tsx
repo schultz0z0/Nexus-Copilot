@@ -55,7 +55,7 @@ export function WebAnalyticsIntegrations({ api = analyticsClient, canManage, can
             </>}
             {key === 'clarity' && canConfigure && <Button variant={resource ? 'outline' : 'default'} className="min-h-11" disabled={busy} onClick={() => open('clarity')}>{resource ? 'Trocar projeto ou token' : 'Conectar Microsoft Clarity'}</Button>}
             {authorized && canManage && <Button variant="ghost" className="min-h-11" disabled={busy} onClick={() => open('disconnect')}>Desconectar {analyticsProviders[key]}</Button>}
-            {resource && <Button asChild variant="link" className="min-h-11"><Link to={`/marketing-ops/analytics?provider=${key}`}>Ver resultados do site</Link></Button>}
+            {resource && <Button asChild variant="link" className="min-h-11"><Link to={`/marketing-ops/dashboard?tab=overview&detail=site&provider=${key}`}>Ver resultados no dashboard</Link></Button>}
           </div>}
           {key === 'clarity' && !canConfigure && <p className="text-xs text-muted-foreground">O administrador cadastra ou troca o token do projeto.</p>}
         </article>;

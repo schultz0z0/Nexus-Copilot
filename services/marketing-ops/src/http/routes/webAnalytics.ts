@@ -1,7 +1,7 @@
 import type { Router, Request } from 'express';
 import { z } from 'zod';
 import type { WebAnalyticsService } from '../../domain/webAnalytics.js';
-import { AnalyticsProviderSchema, AnalyticsPeriodSchema, AnalyticsResourceSchema, ClarityConnectSchema, AnalyticsLinkSchema } from '../../domain/webAnalyticsContracts.js';
+import { AnalyticsProviderSchema, AnalyticsPeriodSchema, AnalyticsResultsSchema, AnalyticsResourceSchema, ClarityConnectSchema, AnalyticsLinkSchema } from '../../domain/webAnalyticsContracts.js';
 import { actorFrom, asyncRoute, parseIfMatch, requireFeature, requireIdempotencyKey } from '../middleware.js';
 import { appError } from '../../errors.js';
 const params = z.object({ id: z.string().uuid(), linkId: z.string().uuid().optional() });
@@ -58,7 +58,10 @@ export function registerWebAnalytics(router: Router, service: WebAnalyticsServic
     }));
     router.get('/v1/web-analytics/:provider/results', asyncRoute(async (req, res) => {
         requireFeature(features.read, 'read');
-        res.json({ data: await service.results(context(req), provider(req), AnalyticsPeriodSchema.parse(req.query)) });
+        const input = AnalyticsResultsSchema.parse(req.query);
+        const selectedProvider = provider(req);
+        if (input.scope && selectedProvider !== 'ga4') throw appError('validation_error', 400, 'Organic scope requires GA4');
+        res.json({ data: await service.results(context(req), selectedProvider, input) });
     }));
     router.get('/v1/campaigns/:id/web-analytics-links', asyncRoute(async (req, res) => {
         requireFeature(features.read, 'read');

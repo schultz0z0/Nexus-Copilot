@@ -4,14 +4,14 @@ import { resolveActor } from '../auth/actor.js';
 import { withActorTransaction } from '../db/actorTransaction.js';
 import { appError } from '../errors.js';
 import { Ga4Client, ClarityClient } from '../integrations/analytics/providers.js';
-import type { AnalyticsProvider, AnalyticsResource, AnalyticsConnection, AnalyticsLink, AnalyticsResults, AnalyticsTotals, AnalyticsBatch, AnalyticsSyncReceipt, Ga4ProviderClient, ClarityProviderClient } from '../integrations/analytics/types.js';
+import type { AnalyticsProvider, AnalyticsResource, AnalyticsConnection, AnalyticsLink, AnalyticsResults, AnalyticsTotals, AnalyticsBatch, AnalyticsChannel, AnalyticsSyncReceipt, Ga4ProviderClient, ClarityProviderClient } from '../integrations/analytics/types.js';
 import type { AdsProviderConfig, AdsTokens } from '../integrations/ads/types.js';
 import type { AdsIntegrationService } from './ads.js';
 import type { CommandContext } from './context.js';
 import { sealAdsSecret, openAdsSecret } from './adsCrypto.js';
 import { hashCanonicalPayload } from './hash.js';
 import { writeAudit } from './audit.js';
-import { AnalyticsLinkSchema, AnalyticsResourceSchema, ClarityConnectSchema, analyticsPeriod } from './webAnalyticsContracts.js';
+import { AnalyticsLinkSchema, AnalyticsResultsSchema, AnalyticsResourceSchema, ClarityConnectSchema, analyticsPeriod } from './webAnalyticsContracts.js';
 type Row = Record<string, any>;
 type Runtime = Awaited<ReturnType<AdsIntegrationService['analyticsRuntime']>>;
 const digest = (v: string) => createHash('sha256').update(v).digest('hex');
@@ -30,6 +30,12 @@ function version(r: Row | undefined, v: number) {
 }
 function qualityStatus(batch: AnalyticsBatch): 'partial' | 'completed' {
     return batch.warnings.some(w => ['analytics_thresholded', 'analytics_sampled', 'analytics_other_row', 'analytics_clarity_row_limit'].includes(w)) ? 'partial' : 'completed';
+}
+const organicGroups = new Set(['Organic Search', 'Organic Social', 'Organic Video', 'Organic Shopping']);
+function measuredChannels(batch: AnalyticsBatch, from: string, to: string) {
+    return batch.channelMetricsVersion === 1 && Array.isArray(batch.channels) && batch.channels.every(c =>
+        typeof c.channelGroup === 'string' && typeof c.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(c.date) && c.date >= from && c.date <= to &&
+        [c.sessions, c.engagedSessions, c.pageViews, c.keyEvents].every(value => typeof value === 'number' && Number.isFinite(value) && value >= 0));
 }
 function requireSession(session: string) {
     if (!/^[a-f0-9]{64}$/.test(session))
@@ -400,31 +406,27 @@ export class WebAnalyticsService {
         });
     }
     async results(context: CommandContext, provider: AnalyticsProvider, input: unknown, utmCampaign?: string,expectedResourceId?:string): Promise<AnalyticsResults> {
+        const { scope, ...periodInput } = AnalyticsResultsSchema.parse(input);
+        if (scope && (provider !== 'ga4' || utmCampaign)) throw appError('validation_error', 400, 'Organic scope requires global GA4 results');
+        const organic = scope === 'organic';
         const runtime = await this.runtime(context);
         return this.tx(context, runtime, async (db) => {
             const connection = await this.connection(db, context, provider);
             if(expectedResourceId&&connection?.selected_resource_id!==expectedResourceId)
                 throw appError('analytics_connection_changed',409,'Analytics resource changed while reading campaign results');
             const resource: AnalyticsResource | null = connection?.resources.find((r: AnalyticsResource) => r.id === connection.selected_resource_id) ?? null;
-            const period = provider === 'clarity' ? analyticsPeriod({}, 'UTC') : analyticsPeriod(input, resource?.timeZone ?? 'UTC');
+            const period = provider === 'clarity' ? analyticsPeriod({}, 'UTC') : analyticsPeriod(periodInput, resource?.timeZone ?? 'UTC');
             const result: AnalyticsResults = { provider, resource, ...period, lastSyncAt: iso(connection?.last_sync_at), totals: null, daily: [], channels: [], campaigns: [], warnings: [], window: null, stale: !connection?.last_sync_at || Date.now() - new Date(connection.last_sync_at).getTime() > 12 * 3600000 || !!connection.safe_error };
             if (!resource)
                 return result;
             const snapshots = (await db.query('select * from marketing_ops.web_analytics_snapshots where tenant_id=$1 and provider=$2 and resource_id=$3 and ($2=\'clarity\' or (period_from<=$5::date and period_to>=$4::date)) order by observed_at desc,id desc limit 200', [context.actor.tenantId, provider, resource.id, period.from, period.to])).rows;
-            const channelMap = new Map<string, {
-                source: string;
-                medium: string;
-                sessions: number;
-            }>();
+            const channelMap = new Map<string, AnalyticsChannel>();
             const campaignMap = new Map<string, number>();
-            const addChannel = (r: {
-                source: string;
-                medium: string;
-                sessions: number;
-            }) => {
-                const key = JSON.stringify([r.source, r.medium]);
+            const addChannel = (r: AnalyticsChannel) => {
+                const key = JSON.stringify([r.source, r.medium, ...(organic ? [r.channelGroup] : [])]);
                 const existing = channelMap.get(key);
-                channelMap.set(key, { source: r.source, medium: r.medium, sessions: (existing?.sessions ?? 0) + r.sessions });
+                channelMap.set(key, { source: r.source, medium: r.medium, sessions: (existing?.sessions ?? 0) + r.sessions,
+                    ...(organic ? { channelGroup: r.channelGroup, engagedSessions: (existing?.engagedSessions ?? 0) + r.engagedSessions!, pageViews: (existing?.pageViews ?? 0) + r.pageViews!, keyEvents: (existing?.keyEvents ?? 0) + r.keyEvents! } : {}) });
             };
             if (provider === 'clarity') {
                 const batch = snapshots[0]?.payload as AnalyticsBatch | undefined;
@@ -463,9 +465,14 @@ export class WebAnalyticsService {
                         const upper = new Date(snapshot.period_to).toISOString().slice(0, 10);
                         if (covered.has(date) || date < lower || date > upper)
                             continue;
+                        if (organic && !measuredChannels(batch, lower, upper)) {
+                            warnings.add('analytics_organic_not_measured');
+                            continue;
+                        }
                         const partial = batch.warnings.some(w => ['analytics_thresholded', 'analytics_sampled', 'analytics_other_row'].includes(w));
+                        const organicRows = organic ? batch.channels.filter(c => c.date === date && organicGroups.has(c.channelGroup!)) : [];
                         // Absent rows in a reduced report are unknown, not zero.
-                        if (partial && !(utmCampaign ? batch.campaigns.some(c => c.date === date && c.utmCampaign === utmCampaign) : batch.daily.some(d => d.date === date))) {
+                        if (partial && !(organic ? organicRows.length : utmCampaign ? batch.campaigns.some(c => c.date === date && c.utmCampaign === utmCampaign) : batch.daily.some(d => d.date === date))) {
                             for (const w of batch.warnings)
                                 warnings.add(w);
                             continue;
@@ -474,7 +481,7 @@ export class WebAnalyticsService {
                         contributors.push(new Date(snapshot.observed_at).getTime());
                         for (const w of batch.warnings)
                             warnings.add(w);
-                        const measured = utmCampaign ? batch.campaigns.filter(c => c.date === date && c.utmCampaign === utmCampaign) : batch.daily.filter(d => d.date === date);
+                        const measured = organic ? organicRows : utmCampaign ? batch.campaigns.filter(c => c.date === date && c.utmCampaign === utmCampaign) : batch.daily.filter(d => d.date === date);
                         const daily = { date, sessions: 0, engagedSessions: 0, pageViews: 0, keyEvents: 0 };
                         for (const d of measured) {
                             daily.sessions += d.sessions;
@@ -483,11 +490,11 @@ export class WebAnalyticsService {
                             daily.keyEvents += d.keyEvents ?? 0;
                         }
                         result.daily.push(daily);
-                        for (const c of utmCampaign ? batch.campaignChannels : batch.channels) {
+                        for (const c of organic ? organicRows : utmCampaign ? batch.campaignChannels : batch.channels) {
                             if (c.date === date && (!utmCampaign || c.utmCampaign === utmCampaign))
                                 addChannel(c);
                         }
-                        for (const c of batch.campaigns) {
+                        for (const c of organic ? [] : batch.campaigns) {
                             if (c.date === date && (!utmCampaign || c.utmCampaign === utmCampaign))
                                 campaignMap.set(c.utmCampaign, (campaignMap.get(c.utmCampaign) ?? 0) + c.sessions);
                         }
