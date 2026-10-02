@@ -23,6 +23,29 @@ artificialmente. Também não comprova a execução na VPS.
 
 ## Objetivo e regras
 
+### Distribuição de marketing de 2026-10-02
+
+A distribuição `ens@0.1.4` identifica as skills de marketing da release do
+dashboard e integrações. A skill `marketing-ops-operator@1.5.0` inclui as
+referências de resultados de campanhas e contexto externo de trabalho. A
+release anterior alterou essas instruções sem avançar a versão da distribuição;
+o contrato de teste ainda exigia a versão antiga da skill. Ambos os marcadores
+agora correspondem ao conteúdo distribuído.
+
+Essa atualização não troca o core fixado, `config.yaml`, `mcp.json`, URLs MCP,
+provider ou modelo. O MCP Marketing Ops roda no backend já publicado; a
+atualização do perfil e reinício do runtime permitem conferir a descoberta
+atual das ferramentas. Não use a contagem histórica de dez ferramentas como
+critério desta release; confirme as capacidades atuais do servidor.
+
+Antes da operação, confira o nome do perfil, a origem da distribuição e os
+mounts reais. Pare os escritores e salve o volume consistentemente antes do
+init oficial, preservando a configuração privada. Compare os hashes dos quatro
+arquivos de marketing alterados entre checkout e perfil instalado; um init com
+exit zero não substitui essa comparação. Confirme também saúde, MCP e um novo
+chat funcional. A VPS continua operada exclusivamente pelo humano, com uma
+etapa validada antes da seguinte.
+
 Atualizar separadamente o comportamento ENS e o core oficial, sempre com pin,
 backup e rollback verificáveis. Os comandos partem da raiz do repositório na
 VPS e usam `/etc/ens/hermes.env` como arquivo de ambiente externo ao Git.

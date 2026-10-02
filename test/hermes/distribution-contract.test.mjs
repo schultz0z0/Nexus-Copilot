@@ -46,8 +46,8 @@ test('the ENS operator contract supports sequential plans without reusing author
     'utf8',
   );
 
-  assert.match(manifest, /^version:\s*0\.1\.3\s*$/m);
-  assert.match(skill, /^version:\s*1\.3\.3\s*$/m);
+  assert.match(manifest, /^version:\s*0\.1\.4\s*$/m);
+  assert.match(skill, /^version:\s*1\.5\.0\s*$/m);
   assert.match(skill, /terminal plan.*same chat.*new Run/is);
   assert.match(skill, /plan.*still pending.*revise or replace/is);
   assert.match(skill, /delegation error.*current MCP call.*current Run/is);
