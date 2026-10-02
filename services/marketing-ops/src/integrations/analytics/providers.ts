@@ -277,11 +277,15 @@ export class ClarityClient implements ClarityProviderClient {
         }[] = [];
         const campaigns = new Map<string, number>();
         for (const row of segments.information) {
-            if (typeof row.Campaign !== 'string' || typeof row.Source !== 'string' || typeof row.Medium !== 'string')
+            // Clarity sends explicit null dimensions for unattributed visits.
+            // Missing fields and other types still indicate malformed data.
+            if (![row.Campaign, row.Source, row.Medium].every(value => value === null || typeof value === 'string'))
                 throw invalid();
             const sessions = number(row.totalSessionCount);
-            channels.push({ utmCampaign: row.Campaign, source: row.Source, medium: row.Medium, sessions });
-            campaigns.set(row.Campaign, (campaigns.get(row.Campaign) ?? 0) + sessions);
+            const utmCampaign = row.Campaign === null ? '' : row.Campaign as string;
+            channels.push({ utmCampaign, source: row.Source === null ? '(not set)' : row.Source as string, medium: row.Medium === null ? '(not set)' : row.Medium as string, sessions });
+            if (utmCampaign)
+                campaigns.set(utmCampaign, (campaigns.get(utmCampaign) ?? 0) + sessions);
         }
         return { totals: aggregate, daily: [], channels, campaigns: [...campaigns].map(([utmCampaign, sessions]) => ({ utmCampaign, sessions })), campaignChannels: [], warnings: [...warnings], window: { from: start.toISOString(), to: end.toISOString() } };
     }

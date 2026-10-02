@@ -4,6 +4,33 @@ const config = { clientId: 'example', clientSecret: 'private', redirectUri: 'htt
 const tokens = { accessToken: 'private-token', refreshToken: 'refresh', scopes: ['https://www.googleapis.com/auth/analytics.readonly'] };
 const response = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status });
 describe('analytics provider boundary', () => {
+    it('Clarity keeps sessions with null dimensions without inventing campaign attribution', async () => {
+        const fetcher = vi.fn()
+            .mockResolvedValueOnce(response([{ metricName: 'Traffic', information: [{ totalSessionCount: 6, totalBotSessionCount: 0 }] }]))
+            .mockResolvedValueOnce(response([{ metricName: 'Traffic', information: [
+                { Campaign: null, Source: 'google', Medium: 'organic', totalSessionCount: 1 },
+                { Campaign: null, Source: null, Medium: null, totalSessionCount: 2 },
+                { Campaign: 'launch', Source: 'newsletter', Medium: 'email', totalSessionCount: 3 },
+            ] }]));
+        const result = await new ClarityClient(fetcher).report('fixture-token');
+        expect(result.totals.sessions).toBe(6);
+        expect(result.channels).toEqual([
+            { utmCampaign: '', source: 'google', medium: 'organic', sessions: 1 },
+            { utmCampaign: '', source: '(not set)', medium: '(not set)', sessions: 2 },
+            { utmCampaign: 'launch', source: 'newsletter', medium: 'email', sessions: 3 },
+        ]);
+        expect(result.campaigns).toEqual([{ utmCampaign: 'launch', sessions: 3 }]);
+    });
+    it('Clarity still rejects missing or malformed dimension fields', async () => {
+        for (const row of [
+            { Source: 'google', Medium: 'organic', totalSessionCount: 1 },
+            { Campaign: null, Source: {}, Medium: 'organic', totalSessionCount: 1 },
+            { Campaign: false, Source: 'google', Medium: 'organic', totalSessionCount: 1 },
+        ]) {
+            const fetcher = vi.fn().mockResolvedValueOnce(response([{ metricName: 'Traffic', information: [{ totalSessionCount: 1 }] }])).mockResolvedValueOnce(response([{ metricName: 'Traffic', information: [row] }]));
+            await expect(new ClarityClient(fetcher).report('fixture-token')).rejects.toMatchObject({ code: 'analytics_invalid_response' });
+        }
+    });
     it('limits resource metadata fetches to five concurrent requests under one overall deadline',async()=>{
         let active=0,maximum=0;const signals:AbortSignal[]=[];
         const fetcher=vi.fn(async(url:unknown,init:any)=>{

@@ -28,6 +28,8 @@ A API oficial usa token do projeto; não oferece o mesmo fluxo OAuth Google docu
 
 Indicadores confirmados pelo contrato Traffic incluem sessões e sessões de bots; origens e campanhas vêm da distribuição recebida. Campos ausentes não viram zero. Contagens de atrito e unidades de rolagem não confirmadas não são inventadas. Mapas de calor, gravações e sinais detalhados continuam no Clarity, com link para o projeto. Snapshots de janelas móveis não são somados como série diária nem comparados diretamente com um período fechado GA4.
 
+O Clarity pode retornar dimensões explicitamente nulas em visitas sem atribuição. Essas sessões permanecem no total e na distribuição geral; origem/meio nulos aparecem como `(not set)`. Campanha nula não cria um segmento UTM nem entra nos resultados de uma campanha. Campos de dimensão ausentes ou com tipos inválidos continuam sendo rejeitados.
+
 ## Campanhas
 
 Em **Campanha → Navegação → Vincular navegação**, informar o valor exato de `utm_campaign` das URLs divulgadas e o provedor conectado. Exemplo: `?utm_campaign=oferta_outubro` usa `oferta_outubro`, incluindo a capitalização original. Não inferir pelo nome interno da campanha. Um mesmo segmento/recurso não pode estar ativo em duas campanhas. Vincular dois provedores não significa somar suas sessões: GA4 e Clarity possuem métodos e janelas distintos.
