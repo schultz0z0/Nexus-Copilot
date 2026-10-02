@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import pg from 'pg';
 import { afterAll, beforeEach, describe, it, expect, vi } from 'vitest';
 import { WorkspaceIntegrationService } from './domain/workspace.js';
-import type { WorkspaceProviderClient, WorkspaceService } from './integrations/workspace/types.js';
+import type { WorkspaceProviderClient, WorkspaceService, WorkspaceTokens } from './integrations/workspace/types.js';
 import type { Actor } from './auth/actor.js';
 import { withActorTransaction } from './db/actorTransaction.js';
 import { createCampaignDraft } from './domain/campaigns.js';
@@ -43,6 +43,24 @@ afterAll(async () => {
         rmSync(d, { recursive: true, force: true });
 });
 describe.runIf(enabled)('workspace durable integration contracts', () => {
+    it('opens authorized spreadsheets from the library without replacing the saved selection and validates their kind', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'prometeus-workspace-'));
+        directories.push(dir);
+        const readSheet = vi.fn(async (_tokens: WorkspaceTokens, id: string) => ({ name: id, headers: [], rows: [], truncated: false }));
+        const provider: WorkspaceProviderClient = { ...client, resource: async (_tokens, id: string) => ({ ...resource, id, kind: id === 'root' ? 'folder' : id === 'pdf' ? 'file' : 'spreadsheet' }), sheet: readSheet };
+        const svc = await prepared(new WorkspaceIntegrationService(pool, { key: Buffer.alloc(32, 7), setupDirectory: dir, publicOrigin: 'http://127.0.0.1:8088' }, () => provider));
+        const connected = await connect(svc, 'google_sheets');
+        await svc.sheet(context(), { resourceId: 'sheet2' });
+        expect(readSheet).toHaveBeenLastCalledWith(expect.any(Object), 'sheet2');
+        expect((await svc.list(context())).find(row => row.service === 'google_sheets')?.selectedResource?.id).toBe('folder1');
+        readSheet.mockClear();
+        await expect(svc.sheet(context(), { resourceId: 'pdf' })).rejects.toMatchObject({ code: 'workspace_resource_unavailable' });
+        expect(readSheet).not.toHaveBeenCalled();
+        await svc.selectResource(context(), 'google_sheets', connected.version, { resourceId: 'root', confirmReplacement: true }, randomUUID());
+        await expect(svc.sheet(context())).rejects.toMatchObject({ code: 'workspace_resource_required' });
+        await svc.sheet(context(), { resourceId: 'sheet2' });
+        await expect(svc.sheet(context(member), { resourceId: 'sheet2' })).rejects.toMatchObject({ code: 'forbidden' });
+    });
     beforeEach(async () => {
         await adminPool.query('delete from marketing_ops.workspace_search_snapshots; delete from marketing_ops.workspace_links; delete from marketing_ops.workspace_drafts; delete from marketing_ops.workspace_receipts; delete from marketing_ops.workspace_oauth_states; delete from marketing_ops.workspace_connections; delete from marketing_ops_private.workspace_apps');
     });

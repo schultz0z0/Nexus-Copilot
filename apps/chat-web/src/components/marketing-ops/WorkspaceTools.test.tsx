@@ -9,7 +9,11 @@ import {
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { WorkspaceCalendar, WorkspaceSheets } from "./WorkspaceTools";
+import {
+  WorkspaceCalendar,
+  WorkspaceSheets,
+  WorkspaceFiles,
+} from "./WorkspaceTools";
 import type {
   WorkspaceClient,
   WorkspaceConnection,
@@ -55,13 +59,170 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("Workspace human review", () => {
+  it("browses the Sheets library and opens different previews without replacing the integration", async () => {
+    const resources = vi.fn().mockResolvedValue({
+      data: {
+        items: [
+          { id: "sheet1", name: "Leads", kind: "spreadsheet", url: null },
+          { id: "sheet2", name: "Resultados", kind: "spreadsheet", url: null },
+        ],
+        nextPage: null,
+        truncated: false,
+      },
+    });
+    const sheet = vi.fn(async (id: string) => ({
+      data: {
+        name: id === "sheet1" ? "Leads" : "Resultados",
+        headers: ["Nome"],
+        rows: [["Exemplo"]],
+        truncated: false,
+      },
+    }));
+    const selectResource = vi.fn();
+    mount(
+      <WorkspaceSheets
+        connection={{
+          ...connection,
+          service: "google_sheets",
+          selectedResource: {
+            id: "root",
+            name: "Todas as planilhas",
+            kind: "folder",
+            url: null,
+          },
+        }}
+        api={{ resources, sheet, selectResource } as unknown as WorkspaceClient}
+        canManage
+      />,
+    );
+    expect(sheet).not.toHaveBeenCalled();
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Abrir planilha Leads" }),
+    );
+    await screen.findByRole("region", { name: "Prévia da planilha" });
+    expect(sheet).toHaveBeenLastCalledWith("sheet1");
+    await user.click(
+      screen.getByRole("button", { name: "Todas as planilhas", exact: true }),
+    );
+    expect(
+      screen.queryByRole("region", { name: "Prévia da planilha" }),
+    ).toBeNull();
+    await user.click(
+      await screen.findByRole("button", { name: "Abrir planilha Resultados" }),
+    );
+    await screen.findByRole("region", { name: "Prévia da planilha" });
+    expect(sheet).toHaveBeenLastCalledWith("sheet2");
+    expect(selectResource).not.toHaveBeenCalled();
+  });
+  it("browses whole Drive with nested folder breadcrumbs and clears the search when changing folders", async () => {
+    const files = vi.fn(
+      async (
+        _service: string,
+        query: { parentId?: string; search?: string; page?: string },
+      ) => ({
+        data: {
+          items:
+            query.parentId === "nested"
+              ? [
+                  {
+                    id: "doc",
+                    name: "Brief.pdf",
+                    kind: "file",
+                    url: "https://drive.google.com/file/d/doc/view",
+                  },
+                ]
+              : [
+                  {
+                    id: query.parentId === "marketing" ? "nested" : "marketing",
+                    name:
+                      query.parentId === "marketing"
+                        ? "Criativos"
+                        : "Marketing",
+                    kind: "folder",
+                    url: null,
+                  },
+                ],
+          nextPage: "next",
+          truncated: false,
+        },
+      }),
+    );
+    mount(
+      <WorkspaceFiles
+        connection={{
+          ...connection,
+          service: "google_drive",
+          selectedResource: {
+            id: "root",
+            name: "Meu Drive inteiro",
+            kind: "folder",
+            url: null,
+          },
+        }}
+        api={{ files } as unknown as WorkspaceClient}
+        canManage
+      />,
+    );
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Abrir pasta" }),
+    );
+    await screen.findByText("Criativos");
+    await user.type(screen.getByLabelText("Buscar arquivos"), "Criativos");
+    await user.click(
+      screen.getByRole("button", { name: "Buscar", exact: true }),
+    );
+    await waitFor(() =>
+      expect(files).toHaveBeenLastCalledWith(
+        "google_drive",
+        expect.objectContaining({ parentId: "marketing", search: "Criativos" }),
+      ),
+    );
+    await user.click(screen.getByRole("button", { name: "Abrir pasta" }));
+    await screen.findByText("Brief.pdf");
+    expect(
+      (screen.getByLabelText("Buscar arquivos") as HTMLInputElement).value,
+    ).toBe("");
+    const path = screen.getByRole("navigation", {
+      name: "Caminho dos arquivos",
+    });
+    expect(path.textContent).toContain("Meu Drive inteiro");
+    expect(path.textContent).toContain("Marketing");
+    expect(path.textContent).toContain("Criativos");
+    await user.click(
+      screen.getByRole("button", { name: "Voltar para Marketing" }),
+    );
+    await waitFor(() =>
+      expect(files).toHaveBeenLastCalledWith("google_drive", {
+        parentId: "marketing",
+        search: "",
+        page: undefined,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Próxima página" }));
+    await waitFor(() =>
+      expect(files).toHaveBeenLastCalledWith(
+        "google_drive",
+        expect.objectContaining({ parentId: "marketing", page: "next" }),
+      ),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Voltar para Meu Drive inteiro" }),
+    );
+    await waitFor(() =>
+      expect(files).toHaveBeenLastCalledWith("google_drive", {
+        parentId: undefined,
+        search: "",
+        page: undefined,
+      }),
+    );
+  });
   it("publishes a calendar commitment only after preview and explicit confirmation", async () => {
     const api = {
-      events: vi
-        .fn()
-        .mockResolvedValue({
-          data: { items: [], nextPage: null, truncated: false },
-        }),
+      events: vi.fn().mockResolvedValue({
+        data: { items: [], nextPage: null, truncated: false },
+      }),
       publishEvent: vi
         .fn()
         .mockResolvedValue({ data: { status: "completed", id: "receipt1" } }),
@@ -107,20 +268,27 @@ describe("Workspace human review", () => {
       data: [],
     });
     const api = {
-      sheet: vi
-        .fn()
-        .mockResolvedValue({
-          data: {
-            name: "Relatório semanal",
-            headers: ["Receita", "Enviados"],
-            rows: [["R$ 1.234,56", "100"]],
-            truncated: false,
-          },
-        }),
+      sheet: vi.fn().mockResolvedValue({
+        data: {
+          name: "Relatório semanal",
+          headers: ["Receita", "Enviados"],
+          rows: [["R$ 1.234,56", "100"]],
+          truncated: false,
+        },
+      }),
     } as unknown as WorkspaceClient;
     mount(
       <WorkspaceSheets
-        connection={{ ...connection, service: "google_sheets" }}
+        connection={{
+          ...connection,
+          service: "google_sheets",
+          selectedResource: {
+            id: "sheet1",
+            name: "Relatório semanal",
+            kind: "spreadsheet",
+            url: null,
+          },
+        }}
         api={api}
         canManage
         campaign={campaign}

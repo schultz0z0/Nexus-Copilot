@@ -6,6 +6,14 @@ import {
   safeWorkspaceResourceUrl,
 } from "./workspace";
 describe("Workspace BFF contract", () => {
+  it("requests an explicitly opened spreadsheet without replacing the account or resource preference", async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ data: {} }));
+    await createWorkspaceClient({ fetch }).sheet("sheet/2");
+    expect(fetch.mock.calls[0][0]).toBe(
+      "/api/marketing/workspace/google_sheets/sheet?resourceId=sheet%2F2",
+    );
+    expect(fetch.mock.calls[0][1].method).toBe("GET");
+  });
   it("parses explicit Brazilian spreadsheet values without making blanks zero", () => {
     expect(parseWorkspaceMetric("R$ 1.234,56")).toBe(1234.56);
     expect(parseWorkspaceMetric("1.234")).toBe(1234);

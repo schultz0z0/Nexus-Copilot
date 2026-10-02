@@ -403,7 +403,10 @@ export function createWorkspaceClient(
         version,
         key,
       ),
-    sheet: () => request<WorkspaceSheet>("/workspace/google_sheets/sheet"),
+    sheet: (resourceId?: string) =>
+      request<WorkspaceSheet>(
+        `/workspace/google_sheets/sheet${resourceId ? `?${query({ resourceId })}` : ""}`,
+      ),
     report: (period: { from: string; to: string }) =>
       request<SearchConsoleReport>(
         `/workspace/google_search_console/report?${query(period)}`,

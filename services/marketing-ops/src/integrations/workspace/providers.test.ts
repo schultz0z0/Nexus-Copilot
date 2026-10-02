@@ -71,6 +71,36 @@ describe('workspace provider transport and OAuth', () => {
     });
 });
 describe('native workspace operations', () => {
+    it('offers the entire Sheets library while keeping spreadsheet discovery separate from Drive folders', async () => {
+        const fetcher = transport({ files: [{ id: 'sheet1', name: 'Leads', mimeType: 'application/vnd.google-apps.spreadsheet' }] }, { id: 'real-root', name: 'My Drive', mimeType: 'application/vnd.google-apps.folder' });
+        const client = createWorkspaceProviderClient('google_sheets', config, fetcher);
+        const page = await client.resources(tokens('google_sheets'));
+        expect(page.items.map(item => item.id)).toEqual(['root', 'sheet1']);
+        expect(page.items[0]).toMatchObject({ name: 'Todas as planilhas', kind: 'folder' });
+        expect(new URL(String(fetcher.mock.calls[0]![0])).searchParams.get('q')).toContain("mimeType = 'application/vnd.google-apps.spreadsheet'");
+        expect(await client.resource(tokens('google_sheets'), 'root')).toMatchObject({ id: 'root', name: 'Todas as planilhas', kind: 'folder' });
+    });
+    it('offers whole My Drive even when there are no selectable folders, without repeating it in children or later pages', async () => {
+        const fetcher = transport({ files: [], nextPageToken: 'next' }, { files: [] }, { files: [{ id: 'doc', name: 'Brief.pdf', mimeType: 'application/pdf' }] });
+        const client = createWorkspaceProviderClient('google_drive', config, fetcher);
+        const first = await client.resources(tokens('google_drive'));
+        expect(first.items).toContainEqual(expect.objectContaining({ id: 'root', name: 'Meu Drive inteiro', kind: 'folder' }));
+        const next = await client.resources(tokens('google_drive'), { page: first.nextPage! });
+        expect(next.items).toEqual([]);
+        const children = await client.resources(tokens('google_drive'), { parentId: 'root' });
+        expect(children.items.map(item => item.id)).toEqual(['doc']);
+        expect(new URL(String(fetcher.mock.calls[2]![0])).searchParams.get('q')).toContain("'root' in parents");
+    });
+    it('validates the native Drive root with the provider while preserving its selectable alias', async () => {
+        const fetcher = transport({ id: 'real-root-id', name: 'My Drive', mimeType: 'application/vnd.google-apps.folder' });
+        const root = await createWorkspaceProviderClient('google_drive', config, fetcher).resource(tokens('google_drive'), 'root');
+        expect(root).toMatchObject({ id: 'root', name: 'Meu Drive inteiro', kind: 'folder', url: 'https://drive.google.com/drive/my-drive' });
+        expect(String(fetcher.mock.calls[0]![0])).toContain('/drive/v3/files/root?');
+    });
+    it('does not invent whole Drive access when the provider denies root metadata', async () => {
+        const client = createWorkspaceProviderClient('google_drive', config, transport(new Response(null, { status: 403 })));
+        await expect(client.resource(tokens('google_drive'), 'root')).rejects.toMatchObject({ code: 'workspace_permission_required' });
+    });
     it('exposes only native operations authorized for each independent service', () => {
         const drive = createWorkspaceProviderClient('google_drive', config);
         expect(drive.message).toBeUndefined();

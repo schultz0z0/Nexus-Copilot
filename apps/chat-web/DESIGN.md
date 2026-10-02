@@ -240,6 +240,16 @@ optional campaign/calendar-action relation visible. No send or publication is
 performed automatically by mounting a page, refreshing or by Hermes prose.
 
 Sheets exposes a bounded first-tab preview, with at most 500 rows and 52 columns.
+Drive resource selection offers native `root` as **Meu Drive inteiro** as well
+as specific folders. File browsing uses wrapping, keyboard-accessible ancestor
+breadcrumbs and clears search/page state when changing folders. The same path
+navigation applies to OneDrive/SharePoint libraries; no provider writes occur.
+Sheets offers **Todas as planilhas** or a preferred initial spreadsheet. A paged,
+searchable library opens local previews without replacing the saved resource or
+connection generation. Each read validates the actual spreadsheet on the server.
+Returning to the library unmounts the preview; opening another spreadsheet resets
+mapping/import state and uses a distinct query key. Calendars and mail keep an
+explicit destination selection for external effects.
 Contacts enter the existing mapping, deduplication and human confirmation flow;
 truncated contact reads cannot be silently imported. Result imports select one
 aggregate row, map metrics and prefill the existing report form for source,

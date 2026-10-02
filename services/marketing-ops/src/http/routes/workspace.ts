@@ -1,7 +1,7 @@
 import type { Router, Request } from 'express';
 import { z } from 'zod';
 import type { WorkspaceIntegrationService } from '../../domain/workspace.js';
-import { WorkspaceServiceSchema, WorkspaceFamilySchema, WorkspaceSetupSchema, WorkspaceAuthorizeSchema, WorkspaceSelectSchema, WorkspaceBrowseSchema, WorkspaceMailSchema, WorkspaceSendSchema, WorkspaceEventSchema, WorkspaceLinkSchema, WorkspacePeriodSchema } from '../../domain/workspaceContracts.js';
+import { WorkspaceServiceSchema, WorkspaceFamilySchema, WorkspaceSetupSchema, WorkspaceAuthorizeSchema, WorkspaceSelectSchema, WorkspaceBrowseSchema, WorkspaceSheetSchema, WorkspaceMailSchema, WorkspaceSendSchema, WorkspaceEventSchema, WorkspaceLinkSchema, WorkspacePeriodSchema } from '../../domain/workspaceContracts.js';
 import { actorFrom, asyncRoute, parseIfMatch, requireFeature, requireIdempotencyKey } from '../middleware.js';
 import { appError } from '../../errors.js';
 const empty = z.object({}).strict();
@@ -48,7 +48,7 @@ export function registerWorkspace(router: Router, service: WorkspaceIntegrationS
     write('/v1/workspace/:service/drafts/:draftId/send', req => service.sendDraft(context(req), s(req), version(req), z.string().uuid().parse(req.params.draftId), WorkspaceSendSchema.parse(req.body), requireIdempotencyKey(req)));
     read('/v1/workspace/:service/events', req => service.events(context(req), s(req), WorkspacePeriodSchema.parse(req.query)));
     write('/v1/workspace/:service/events', req => service.publishEvent(context(req), s(req), version(req), WorkspaceEventSchema.parse(req.body), requireIdempotencyKey(req)));
-    read('/v1/workspace/google_sheets/sheet', req => service.sheet(context(req)));
+    read('/v1/workspace/google_sheets/sheet', req => service.sheet(context(req), WorkspaceSheetSchema.parse(req.query)));
     read('/v1/workspace/google_search_console/report', req => service.report(context(req), WorkspacePeriodSchema.parse(req.query)));
     write('/v1/workspace/google_search_console/report', req => service.report(context(req), WorkspacePeriodSchema.parse(req.body), true, requireIdempotencyKey(req), version(req)));
     read('/v1/campaigns/:id/workspace-links', req => service.listLinks(context(req), z.string().uuid().parse(req.params.id)));

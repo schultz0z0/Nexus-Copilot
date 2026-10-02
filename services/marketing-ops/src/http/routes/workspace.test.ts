@@ -18,6 +18,16 @@ function setup(write = true) {
     return { app, service };
 }
 describe('workspace HTTP trust boundaries', () => {
+    it('forwards a selected library spreadsheet through the BFF query and rejects unknown query fields', async () => {
+        const { app, service } = setup();
+        const sheet = vi.fn(async () => ({ name: 'Leads', headers: [], rows: [], truncated: false }));
+        Object.assign(service, { sheet });
+        expect((await request(app).get('/v1/workspace/google_sheets/sheet?resourceId=sheet2')).status).toBe(200);
+        expect(sheet).toHaveBeenCalledWith(expect.any(Object), { resourceId: 'sheet2' });
+        sheet.mockClear();
+        expect((await request(app).get('/v1/workspace/google_sheets/sheet?url=https://evil.invalid')).status).toBe(400);
+        expect(sheet).not.toHaveBeenCalled();
+    });
     it('requires mutation headers and refuses arbitrary callback config', async () => {
         const { app, service } = setup();
         const path = '/v1/workspace/apps/google';

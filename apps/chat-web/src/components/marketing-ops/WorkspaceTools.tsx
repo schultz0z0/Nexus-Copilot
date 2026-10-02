@@ -74,7 +74,8 @@ export function WorkspaceFiles({
 }: ToolProps) {
   const qc = useQueryClient();
   const key = useProposalKey();
-  const [parentId, setParent] = useState<string>();
+  const [trail, setTrail] = useState<WorkspaceResource[]>([]);
+  const parentId = trail.at(-1)?.id;
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState<string>();
@@ -89,6 +90,7 @@ export function WorkspaceFiles({
       "files",
       connection.service,
       connection.generation,
+      connection.selectedResource?.id,
       parentId,
       filter,
       page,
@@ -157,17 +159,38 @@ export function WorkspaceFiles({
           Buscar
         </Button>
       </form>
-      {parentId && (
-        <Button
-          variant="ghost"
-          className="min-h-11"
-          onClick={() => {
-            setParent(undefined);
-            setPage(undefined);
-          }}
-        >
-          Voltar ao recurso selecionado
-        </Button>
+      {connection.selectedResource && (
+        <nav aria-label="Caminho dos arquivos">
+          <ol className="flex flex-wrap items-center gap-1">
+            {[connection.selectedResource, ...trail].map((folder, index) => (
+              <li
+                key={`${index}:${folder.id}`}
+                className="flex min-w-0 items-center gap-1"
+              >
+                {index > 0 && (
+                  <span aria-hidden="true" className="text-muted-foreground">
+                    /
+                  </span>
+                )}
+                <Button
+                  variant="ghost"
+                  className="min-h-11 h-auto max-w-full whitespace-normal break-words text-left"
+                  aria-label={`Voltar para ${folder.name}`}
+                  aria-current={index === trail.length ? "page" : undefined}
+                  disabled={index === trail.length}
+                  onClick={() => {
+                    setTrail(trail.slice(0, index));
+                    setSearch("");
+                    setFilter("");
+                    setPage(undefined);
+                  }}
+                >
+                  {folder.name}
+                </Button>
+              </li>
+            ))}
+          </ol>
+        </nav>
       )}
       <LeadError
         error={error || files.error}
@@ -208,7 +231,9 @@ export function WorkspaceFiles({
                   variant="outline"
                   className="min-h-11"
                   onClick={() => {
-                    setParent(file.id);
+                    setTrail([...trail, file]);
+                    setSearch("");
+                    setFilter("");
                     setPage(undefined);
                   }}
                 >
@@ -249,6 +274,15 @@ export function WorkspaceFiles({
           onClick={() => setPage(files.data!.data.nextPage!)}
         >
           Próxima página
+        </Button>
+      )}
+      {page && (
+        <Button
+          variant="outline"
+          className="min-h-11"
+          onClick={() => setPage(undefined)}
+        >
+          Primeira página
         </Button>
       )}
       {!campaign && (
@@ -1152,9 +1186,149 @@ export function WorkspaceSheets({
   canManage,
   campaign,
 }: ToolProps) {
+  const [opened, setOpened] = useState<WorkspaceResource | null>(
+    connection.selectedResource?.kind === "spreadsheet"
+      ? connection.selectedResource
+      : null,
+  );
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("");
+  const [page, setPage] = useState<string>();
+  const resources = useQuery({
+    queryKey: [
+      "workspace",
+      "sheets-library",
+      connection.generation,
+      filter,
+      page,
+    ],
+    queryFn: () => api.resources("google_sheets", { search: filter, page }),
+    enabled: !opened,
+    retry: false,
+  });
+  if (opened)
+    return (
+      <WorkspaceSheetPreview
+        key={opened.id}
+        connection={connection}
+        api={api}
+        canManage={canManage}
+        campaign={campaign}
+        resourceId={opened.id}
+        onBack={() => setOpened(null)}
+      />
+    );
+  const sheets =
+    resources.data?.data.items.filter((item) => item.kind === "spreadsheet") ??
+    [];
+  return (
+    <section className="space-y-5" aria-label="Biblioteca de planilhas">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-medium">Todas as planilhas</h2>
+        <Button
+          variant="outline"
+          className="min-h-11"
+          disabled={resources.isFetching}
+          onClick={() => {
+            void resources.refetch();
+          }}
+        >
+          Atualizar planilhas
+        </Button>
+      </header>
+      <p className="text-sm text-muted-foreground">
+        Abra uma planilha para consultar ou preparar uma importação revisada.
+        Sua conexão permanece a mesma.
+      </p>
+      <form
+        className="flex gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setFilter(search);
+          setPage(undefined);
+        }}
+      >
+        <Input
+          aria-label="Buscar planilhas"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <Button type="submit" variant="outline" className="min-h-11">
+          Buscar
+        </Button>
+      </form>
+      <LeadError
+        error={resources.error}
+        retry={() => {
+          void resources.refetch();
+        }}
+      />
+      {resources.isLoading && <p role="status">Consultando planilhas…</p>}
+      {resources.data && !sheets.length && (
+        <p className="text-sm text-muted-foreground">
+          Nenhuma planilha encontrada. Refine a busca ou confira os arquivos na
+          conta Google autorizada.
+        </p>
+      )}
+      <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+        {sheets.map((item) => (
+          <li
+            key={item.id}
+            className="flex flex-wrap items-center justify-between gap-3 p-4"
+          >
+            <p className="min-w-0 break-words text-sm font-medium">
+              {item.name}
+            </p>
+            <Button
+              variant="outline"
+              className="min-h-11"
+              aria-label={`Abrir planilha ${item.name}`}
+              onClick={() => setOpened(item)}
+            >
+              Abrir planilha
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {resources.data?.data.truncated && (
+        <p className="text-xs text-status-warning">
+          Lista parcial. Consulte as próximas páginas ou refine a busca.
+        </p>
+      )}
+      <div className="flex flex-wrap gap-3">
+        {page && (
+          <Button
+            variant="outline"
+            className="min-h-11"
+            onClick={() => setPage(undefined)}
+          >
+            Primeira página
+          </Button>
+        )}
+        {resources.data?.data.nextPage && (
+          <Button
+            variant="outline"
+            className="min-h-11"
+            onClick={() => setPage(resources.data!.data.nextPage!)}
+          >
+            Próxima página
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}
+function WorkspaceSheetPreview({
+  connection,
+  api,
+  canManage,
+  campaign,
+  resourceId,
+  onBack,
+}: ToolProps & { resourceId: string; onBack: () => void }) {
   const sheet = useQuery({
-    queryKey: ["workspace", "sheet", connection.generation],
-    queryFn: api.sheet,
+    queryKey: ["workspace", "sheet", connection.generation, resourceId],
+    queryFn: () => api.sheet(resourceId),
     retry: false,
   });
   const [importing, setImporting] = useState(false);
@@ -1200,6 +1374,9 @@ export function WorkspaceSheets({
   };
   return (
     <section className="space-y-5" aria-label="Planilha conectada">
+      <Button variant="ghost" className="min-h-11" onClick={onBack}>
+        Todas as planilhas
+      </Button>
       <header className="flex flex-wrap justify-between gap-3">
         <h2 className="text-lg font-medium">
           {table?.name ?? connection.selectedResource?.name}

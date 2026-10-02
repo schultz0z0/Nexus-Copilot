@@ -8,6 +8,7 @@ export const WorkspaceSetupSchema = z.object({ clientId: z.string().trim().min(3
 export const WorkspaceAuthorizeSchema = z.object({ confirmReplacement: z.boolean().optional() }).strict();
 export const WorkspaceSelectSchema = z.object({ resourceId: identifier, confirmReplacement: z.boolean().optional() }).strict();
 export const WorkspaceBrowseSchema = z.object({ parentId: identifier.optional(), search: z.string().max(200).optional(), page: z.string().max(4000).optional() }).strict();
+export const WorkspaceSheetSchema = z.object({ resourceId: identifier.optional() }).strict();
 export const WorkspaceMailSchema = z.object({ to: z.array(z.string().email().max(254)).min(1).max(20), subject: z.string().min(1).max(300).refine(v => !/[\r\n]/.test(v)), text: z.string().min(1).max(50000), campaignId: z.string().uuid().optional() }).strict();
 export const WorkspaceSendSchema = z.object({ confirm: z.literal(true), campaignId: z.string().uuid().optional() }).strict();
 const timestamp = z.string().datetime({ offset: true });

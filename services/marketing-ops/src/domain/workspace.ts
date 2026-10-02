@@ -10,7 +10,7 @@ import { writeAudit } from './audit.js';
 import { WorkspaceSetupStore } from '../integrations/workspace/setupStore.js';
 import { createWorkspaceProviderClient } from '../integrations/workspace/providers.js';
 import { workspaceFamily, workspaceServices, type WorkspaceService, type WorkspaceFamily, type WorkspaceAppConfig, type WorkspaceProviderClient, type WorkspaceTokens, type WorkspaceResource } from '../integrations/workspace/types.js';
-import { WorkspaceSetupSchema, WorkspaceAuthorizeSchema, WorkspaceSelectSchema, WorkspaceBrowseSchema, WorkspaceMailSchema, WorkspaceSendSchema, WorkspaceEventSchema, WorkspaceLinkSchema, workspacePeriod } from './workspaceContracts.js';
+import { WorkspaceSetupSchema, WorkspaceAuthorizeSchema, WorkspaceSelectSchema, WorkspaceBrowseSchema, WorkspaceSheetSchema, WorkspaceMailSchema, WorkspaceSendSchema, WorkspaceEventSchema, WorkspaceLinkSchema, workspacePeriod } from './workspaceContracts.js';
 type Row = Record<string, any>;
 export interface WorkspaceOptions {
     key: Buffer;
@@ -349,7 +349,8 @@ export class WorkspaceIntegrationService {
             throw appError('workspace_confirmation_required', 409, 'Confirm resource replacement');
         const resource = await a.client.resource(a.tokens, v.resourceId);
         const kinds: Record<WorkspaceService, string[]> = { google_drive: ['folder'], google_gmail: ['mailbox'], google_calendar: ['calendar'], google_sheets: ['spreadsheet'], google_search_console: ['site'], microsoft_files: ['folder', 'site'], microsoft_mail: ['mailbox'], microsoft_calendar: ['calendar'] };
-        if (!kinds[s].includes(resource.kind))
+        const sheetsLibrary = s === 'google_sheets' && resource.id === 'root' && resource.kind === 'folder';
+        if (!kinds[s].includes(resource.kind) && !sheetsLibrary)
             throw appError('workspace_resource_unavailable', 422, 'Choose a resource matching this service');
         await this.fence(c, a.runtime);
         return this.tx(c, async (db) => {
@@ -556,11 +557,18 @@ export class WorkspaceIntegrationService {
                 throw appError('workspace_permission_required', 403, 'Selected calendar is read only');
         });
     }
-    async sheet(c: CommandContext) {
-        return this.read(c, 'google_sheets', a => {
+    async sheet(c: CommandContext, input: unknown = {}) {
+        const v = WorkspaceSheetSchema.parse(input);
+        return this.read(c, 'google_sheets', async a => {
             if (!a.client.sheet)
                 throw appError('workspace_capability_unavailable', 422, 'Sheets unavailable');
-            return a.client.sheet(a.tokens, a.row.selected_resource.id);
+            const id = v.resourceId ?? a.row.selected_resource.id;
+            if (id === 'root')
+                throw appError('workspace_resource_required', 422, 'Choose a spreadsheet from the library');
+            const resource = await a.client.resource(a.tokens, id);
+            if (resource.kind !== 'spreadsheet')
+                throw appError('workspace_resource_unavailable', 422, 'Choose a spreadsheet');
+            return a.client.sheet(a.tokens, resource.id);
         });
     }
     async report(c: CommandContext, input: unknown, refresh = false, key?: string, expected?: number) {

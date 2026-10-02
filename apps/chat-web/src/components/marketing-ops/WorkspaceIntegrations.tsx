@@ -124,7 +124,9 @@ export function WorkspaceIntegrations({
   useEffect(() => {
     const result = params.get("result");
     if (!result) return;
-    const knownService = callbackService && Object.prototype.hasOwnProperty.call(workspaceServices, callbackService);
+    const knownService =
+      callbackService &&
+      Object.prototype.hasOwnProperty.call(workspaceServices, callbackService);
     const copy: Record<string, string> = {
       connected:
         "Autorização recebida. Escolha um recurso para concluir a conexão.",
@@ -132,13 +134,16 @@ export function WorkspaceIntegrations({
       invalid: "A autorização expirou. Inicie uma nova conexão.",
       permission_required:
         "Confira as permissões e APIs do serviço antes de conectar novamente.",
-      api_disabled: "Habilite a API deste serviço no projeto Google da empresa e conecte novamente.",
-      rate_limited: "O provedor limitou as consultas. Aguarde antes de tentar novamente.",
+      api_disabled:
+        "Habilite a API deste serviço no projeto Google da empresa e conecte novamente.",
+      rate_limited:
+        "O provedor limitou as consultas. Aguarde antes de tentar novamente.",
       unavailable: "O provedor não concluiu a autorização. Tente novamente.",
       session_required: "Entre novamente e inicie a conexão.",
     };
     setOutcome(
-      copy[result === 'connected' && !knownService ? 'invalid' : result] ?? "Atualize as conexões para conferir o resultado.",
+      copy[result === "connected" && !knownService ? "invalid" : result] ??
+        "Atualize as conexões para conferir o resultado.",
     );
     void qc.invalidateQueries({ queryKey: workspaceKeys.connections });
     const next = new URLSearchParams(params);
@@ -578,11 +583,16 @@ export function WorkspaceResourceDialog({
       api.resources(connection.service, { parentId, search: filter, page }),
     retry: false,
   });
-  const selectable = (resource: { kind: string; writable?: boolean }) =>
+  const selectable = (resource: {
+    id: string;
+    kind: string;
+    writable?: boolean;
+  }) =>
     ["google_drive", "microsoft_files"].includes(connection.service)
       ? ["folder", "site"].includes(resource.kind)
       : connection.service === "google_sheets"
-        ? resource.kind === "spreadsheet"
+        ? resource.kind === "spreadsheet" ||
+          (resource.id === "root" && resource.kind === "folder")
         : connection.service.endsWith("_calendar")
           ? resource.kind === "calendar" && resource.writable !== false
           : true;
@@ -632,8 +642,11 @@ export function WorkspaceResourceDialog({
             Escolher recurso · {workspaceServices[connection.service]}
           </DialogTitle>
           <DialogDescription>
-            Selecione um recurso acessível à conta autorizada. Nenhum arquivo ou
-            mensagem será alterado.
+            {connection.service === "google_drive"
+              ? "Escolha Meu Drive inteiro para navegar por todas as suas pastas e arquivos, ou selecione uma pasta específica. Nenhum arquivo será alterado."
+              : connection.service === "google_sheets"
+                ? "Escolha Todas as planilhas para explorar sua biblioteca, ou uma planilha inicial. Você pode abrir outras planilhas dentro do app sem trocar a integração."
+                : "Selecione um recurso acessível à conta autorizada. Nenhum arquivo ou mensagem será alterado."}
           </DialogDescription>
         </DialogHeader>
         <LeadError

@@ -12,8 +12,12 @@ O gestor conecta cada serviço necessário, autoriza no provedor e escolhe o
 recurso pelo nome. Trocar conta, trocar recurso e desconectar permanecem
 disponíveis. Substituições conservam histórico e exigem confirmação.
 
-- Arquivos: escolher pasta/biblioteca e vincular materiais às campanhas. O
+- Arquivos: escolher **Meu Drive inteiro** ou uma pasta/biblioteca e vincular materiais às campanhas. O
   documento continua no provedor; um vínculo não duplica o arquivo no banco.
+  A raiz do Meu Drive permite consultar arquivos e navegar por todas as pastas
+  aninhadas, com caminho clicável, busca e paginação. OneDrive/SharePoint usam
+  a mesma navegação por níveis dentro da biblioteca escolhida. Drives
+  compartilhados separados não são listados como raízes neste seletor.
 - E-mail: consultar mensagens, vincular a uma campanha e preparar um rascunho
   editável. Envio exige revisão e confirmação explícita. Aceitação pela API não
   comprova entrega ao destinatário. Esta conexão não substitui uma plataforma
@@ -22,13 +26,41 @@ disponíveis. Substituições conservam histórico e exigem confirmação.
   calendário escolhido. Datas e fusos são explícitos; publicação não significa
   que uma ação de marketing foi executada. O calendário operacional do Prometeus
   continua sendo a autoridade do planejamento.
-- Sheets: selecionar planilha, ler uma prévia limitada e mapear os valores para
+- Sheets: escolher **Todas as planilhas** ou uma planilha inicial. A biblioteca
+  permite buscar, paginar e abrir outras planilhas acessíveis sem substituir
+  a conta ou o recurso salvo. Cada abertura é validada pelo servidor e mantém
+  o isolamento da instalação. Ler uma prévia limitada e mapear os valores para
   os fluxos de importação/revisão existentes. Dados externos não criam contatos
   nem substituem resultados de campanha sem confirmação.
 - Search Console: consultar cliques, impressões, CTR e posição média por dia,
   página e pesquisa. Métricas são orgânicas do site, não leads identificados ou
   vendas. Os detalhes podem representar apenas as principais linhas da API;
   seus totais vêm de uma consulta agregada independente.
+
+## Uso prático para o analista
+
+| Momento do trabalho | Integrações e benefício | Ação explícita no Prometeus |
+| --- | --- | --- |
+| Preparar uma campanha | Drive/OneDrive/SharePoint reúnem briefing, criativos, apresentações e documentos | Navegar e vincular os originais à campanha, sem duplicar arquivos |
+| Atualizar contatos e resultados | Sheets reduz exportações CSV recorrentes e permite revisar listas ou relatórios do fornecedor | Abrir uma planilha, mapear colunas e confirmar importação/revisão; nada entra automaticamente |
+| Coordenar execução | Google/Outlook Calendar ajudam a consultar agenda e marcar revisão de materiais ou entregas | Revisar calendário, data e fuso antes de publicar um compromisso |
+| Acompanhar relacionamento | Gmail/Outlook permitem consultar conversas e preparar uma comunicação individual no contexto da campanha | Vincular a mensagem, revisar rascunho e confirmar envio separadamente |
+| Investigar aquisição | Ads medem divulgação paga; Search Console mostra visibilidade e cliques da busca orgânica | Conectar/selecionar contas ou propriedade, atualizar leituras e analisar o mesmo período |
+| Investigar navegação | GA4 mostra tráfego/eventos e Clarity sinais de fricção | Consultar resultados do site e vínculos UTM explícitos; gravações/mapas de calor permanecem no Clarity |
+
+Exemplo: o analista abre a campanha, vincula o briefing e criativos, consulta
+uma planilha de contatos e confirma a importação revisada. Depois organiza um
+compromisso de revisão e registra o relatório semanal de e-mail/WhatsApp.
+Ao analisar resultados, compara os indicadores comerciais registrados com as
+leituras de mídia e navegação. Uma visita, clique ou evento de navegação não
+prova qualificação ou venda. Gmail não mede disparos de uma plataforma externa;
+esses relatórios continuam sendo importados/registrados com revisão humana.
+
+Hermes pode consultar o contexto autorizado e os vínculos preparados; não lê
+automaticamente todo o Drive ou caixa postal, nem envia/publica por conta própria.
+Navegação entre planilhas não substitui o recurso salvo nem invalida histórico.
+Calendários e caixas de e-mail continuam com destino selecionado para tornar
+inequívoco onde uma publicação/envio ocorrerá.
 
 ## Limites da entrega
 

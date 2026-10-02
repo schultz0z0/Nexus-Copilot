@@ -432,7 +432,12 @@ class WorkspaceClient implements WorkspaceProviderClient {
                 query.push(`name contains '${escaped(options.search)}'`);
             const url = new URL(`${G}/drive/v3/files`);
             url.search = new URLSearchParams({ q: query.join(' and '), pageSize: '50', fields: 'nextPageToken,incompleteSearch,files(id,name,mimeType,webViewLink,parents)', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true', orderBy: 'folder,name' }).toString();
-            return this.googlePage(tokens, url, 'files', googleFile, context, options.page, signal);
+            const page = await this.googlePage(tokens, url, 'files', googleFile, context, options.page, signal);
+            // The root is a native alias, not an ordinary child of My Drive.
+            // Selecting it is still validated through files.get below.
+            if (!options.parentId && !options.search && !options.page)
+                page.items.unshift({ id: 'root', name: this.service === 'google_drive' ? 'Meu Drive inteiro' : 'Todas as planilhas', kind: 'folder', url: 'https://drive.google.com/drive/my-drive' });
+            return page;
         }
         if (this.service === 'google_calendar') {
             const url = new URL(`${G}/calendar/v3/users/me/calendarList?maxResults=50`);
@@ -484,8 +489,14 @@ class WorkspaceClient implements WorkspaceProviderClient {
         return { ...sites, items: [...personal, ...sites.items] };
     }
     async resource(tokens: WorkspaceTokens, id: string): Promise<WorkspaceResource> {
-        if (['google_drive', 'google_sheets'].includes(this.service))
-            return googleFile(await this.read(tokens, `${G}/drive/v3/files/${pathId(id)}?fields=id,name,mimeType,webViewLink,parents&supportsAllDrives=true`));
+        if (['google_drive', 'google_sheets'].includes(this.service)) {
+            const resource = googleFile(await this.read(tokens, `${G}/drive/v3/files/${pathId(id)}?fields=id,name,mimeType,webViewLink,parents&supportsAllDrives=true`));
+            if (id === 'root') {
+                if (resource.kind !== 'folder') throw invalid();
+                return { ...resource, id: 'root', name: this.service === 'google_drive' ? 'Meu Drive inteiro' : 'Todas as planilhas', url: 'https://drive.google.com/drive/my-drive' };
+            }
+            return resource;
+        }
         if (this.service === 'google_calendar')
             return googleCalendar(await this.read(tokens, `${G}/calendar/v3/users/me/calendarList/${pathId(id)}`));
         if (this.service === 'google_gmail') {
